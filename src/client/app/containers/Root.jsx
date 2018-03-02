@@ -9,7 +9,7 @@ export class Root extends React.Component {
             <br />
             <MapProperties />
             <br />
-            <svg width={600} height={600} style={{
+            <svg width={1000} height={600} style={{
                 border: "1px solid black",
             }}>
                 <Terrain />
