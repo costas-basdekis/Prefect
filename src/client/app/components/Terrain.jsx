@@ -5,6 +5,13 @@ import { TILE_TYPES, GROUND_TYPES } from '../reducers/prefect.js'
 class UCTerrain extends React.Component {
     size = 20;
 
+    constructor() {
+        super();
+        this.state = {
+            hovered: {x: null, y: null},
+        };
+    }
+
     static mapPropsToState(state, ownProps) {
         return {
             terrain: state.terrain,
@@ -69,11 +76,20 @@ class UCTerrain extends React.Component {
     }
 
     baseRenderTile({x, y, key, stroke="black", fill="black"}) {
+        const {x: hoverX, y: hoverY} = this.state.hovered;
+        const isHovered = x === hoverX && y === hoverY;
         return <rect
             x={x * this.size} y={y * this.size}
             width={this.size} height={this.size}
-            stroke={stroke} fill={fill}
-            key={key}/>
+            stroke={isHovered ? 'red' : stroke} strokeWidth={isHovered ? 3 : 1}
+            fill={fill}
+            key={key}
+            onMouseLeave={this.onTileHover(null, null)}
+            onMouseEnter={this.onTileHover(x, y)}/>
+    }
+
+    onTileHover = (x, y) => (e) => {
+        this.setState({hovered: {x, y}});
     }
 }
 
