@@ -32,7 +32,7 @@ export class BaseGrid extends React.Component {
         return <g transform={`
                 scale(1 0.8)
                 translate(${centerX * Math.sqrt(2) / 3} ${centerY * Math.sqrt(2) / 3})
-                rotate(45 ${centerX} ${centerY})
+                rotate(-45 ${centerX} ${centerY})
             `} style={this.mouseEvents ? {} : {pointerEvents: "none"}}>
             {this.props.tiles.map(tile => this.renderTile(tile))}
         </g>;
@@ -59,15 +59,34 @@ export class BaseGrid extends React.Component {
             fill={fill}
             key={key}
             onMouseLeave={this.onTileUnHover(x, y)}
-            onMouseEnter={this.onTileHover(x, y)}/>
+            onMouseEnter={this.onTileHover(x, y)}
+            onMouseDown={this.onMouseDown(x, y)}
+            onMouseUp={this.onMouseUp(x, y)} />
     }
 
     onTileHover = (x, y) => (e) => {
         this.setHovered(x, y);
+        if (e.buttons === 1) {
+            this.setSelectionEnd(x, y);
+        }
     }
 
     onTileUnHover = (x, y) => (e) => {
         this.setHovered(null, null);
+    }
+
+    onMouseDown = (x, y) => (e) => {
+        if (e.buttons !== 1) {
+            return;
+        }
+        this.setSelectionStart(x, y);
+    }
+
+    onMouseUp = (x, y) => (e) => {
+        if (e.buttons & 1) {
+            return;
+        }
+        this.clearSelection();
     }
 
     isHovered(x, y) {
@@ -76,5 +95,21 @@ export class BaseGrid extends React.Component {
 
     setHovered(x, y) {
         this.props.setHovered(x, y);
+    }
+
+    isSelected(x, y) {
+        return this.props.isSelected(x, y);
+    }
+
+    setSelectionStart(x, y) {
+        this.props.setSelectionStart(x, y);
+    }
+
+    setSelectionEnd(x, y) {
+        this.props.setSelectionEnd(x, y);
+    }
+
+    clearSelection() {
+        this.props.clearSelection();
     }
 }

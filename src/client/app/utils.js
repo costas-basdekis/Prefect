@@ -5,18 +5,18 @@ export function connect4(component) {
     return connect((s, oP) => component.mapPropsToState(s, oP), actions)(component);
 }
 
-export function range(minOrMax, max) {
-    let min = 0;
-    if (typeof max === typeof undefined) {
-        max = minOrMax;
+export function range(startOrEnd, end, step=1) {
+    let start = 0;
+    if (typeof end === typeof undefined) {
+        end = startOrEnd;
     } else {
-        min = minOrMax;
+        start = startOrEnd;
     }
 
-    const size = max - min;
+    const size = parseInt(Math.abs(end - start));
     let array = Array.from(Array(size).keys());
-    if (min) {
-        array = array.map(i => i + min);
+    if (start) {
+        array = array.map(i => i * step + start);
     }
 
     return array;

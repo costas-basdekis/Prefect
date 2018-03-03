@@ -9,6 +9,7 @@ import { Roads } from '../components/Roads.jsx';
 export class Root extends React.Component {
     state = {
         hovered: {x: null, y: null},
+        selection: {start: {x: null, y: null}, end: {x: null, y: null}},
     };
 
     render() {
@@ -25,7 +26,12 @@ export class Root extends React.Component {
                 <Grid
                     hovered={this.state.hovered}
                     isHovered={this.isHovered}
-                    setHovered={this.setHovered} />
+                    setHovered={this.setHovered}
+                    selection={this.state.selection}
+                    isSelected={this.isSelected}
+                    setSelectionStart={this.setSelectionStart}
+                    setSelectionEnd={this.setSelectionEnd}
+                    clearSelection={this.clearSelection}/>
                 <Toolbox selection={this.state.selection} />
             </svg>
             <FPSStats isActive={true} bottom="auto" left="auto" top="0" right="0" />
@@ -43,6 +49,55 @@ export class Root extends React.Component {
         if (!this.isHovered(x, y)) {
             this.setState({hovered: {x, y}});
         }
+    }
+
+    getSelected = () => {
+
+    }
+
+    isSelected = (x, y) => {
+        const {start, end} = this.state.selection;
+        if (start.x === null) {
+            return false;
+        }
+        if (y === start.y) {
+            const minX = Math.min(start.x, end.x);
+            const maxX = Math.max(start.x, end.x);
+            return (minX <= x) && (x <= maxX);
+        }
+        if (x === end.x) {
+            const minY = Math.min(start.y, end.y);
+            const maxY = Math.max(start.y, end.y);
+            return (minY <= y) && (y <= maxY);
+        }
+        return false;
+    }
+
+    setSelectionStart = (x, y) => {
+        this.setState({
+            selection: {
+                start: {x, y},
+                end: {x, y},
+            },
+        });
+    }
+
+    setSelectionEnd = (x, y) => {
+        this.setState({
+            selection: {
+                start: this.state.selection.start,
+                end: {x, y},
+            },
+        });
+    }
+
+    clearSelection = () => {
+        this.setState({
+            selection: {
+                start: {x: null, y: null},
+                end: {x: null, y: null},
+            },
+        });
     }
 }
 

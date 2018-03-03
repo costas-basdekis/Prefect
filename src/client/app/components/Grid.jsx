@@ -11,14 +11,28 @@ class UCGrid extends BaseGrid {
 
     OPTIONS = {
         true: {
-            stroke: "red",
-            strokeWidth: 3,
+            true: {
+                stroke: "red",
+                strokeWidth: 3,
+            },
+            false: {
+                stroke: "red",
+                strokeWidth: 3,
+            },
+        },
+        false: {
+            true: {
+                stroke: "blue",
+                strokeWidth: 3,
+            },
         },
     }
 
     getTileOptions(tile) {
         const isHovered = this.isHovered(tile.x, tile.y);
-        const options = this.OPTIONS[isHovered] || {};
+        const hoveredOptions = this.OPTIONS[isHovered] || {};
+        const isSelected = this.isSelected(tile.x, tile.y);
+        const options = hoveredOptions[isSelected] || {};
         return options;
     }
 }
