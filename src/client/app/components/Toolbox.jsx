@@ -4,9 +4,13 @@ import { TILE_TYPES, GROUND_TYPES } from '../reducers/prefect.js'
 
 class UCToolbox extends React.Component {
     TOOLS = [
-        {"label": "Road", "key": "ROAD"},
-        {"label": "Clear", "key": "CLEAR"},
+        {label: "Road", key: "ROAD", selectionType: "ROAD"},
+        {label: "Clear", key: "CLEAR", selectionType: "SQUARE"},
     ];
+
+    static mapPropsToState(state, ownProps) {
+        return ownProps;
+    }
 
     constructor(props) {
         super(props);
@@ -31,7 +35,7 @@ class UCToolbox extends React.Component {
                 width={width} height={height}
                 fill={isSelected ? "beige" : "#eee"} stroke="gold"
                 key={tool.key} style={{cursor: "pointer"}}
-                onClick={this.onToolClick(tool.key)}/>
+                onClick={this.onToolClick(tool)}/>
             <text
                 x={x + width / 2} y={y + height / 2}
                 textAnchor="middle" dominantBaseline="middle"
@@ -41,13 +45,19 @@ class UCToolbox extends React.Component {
         </g>;
     }
 
-    onToolClick = key => e => {
+    onToolClick = ({key, selectionType}) => e => {
         if (this.state.selected === key) {
             this.setState({selected: null});
+            this.setSelectionType(null);
         } else {
             this.setState({selected: key});
+            this.setSelectionType(selectionType);
         }
+    }
+
+    setSelectionType(type) {
+        this.props.setSelectionType(type);
     }
 }
 
-export const Toolbox = (UCToolbox);
+export const Toolbox = connect4(UCToolbox);

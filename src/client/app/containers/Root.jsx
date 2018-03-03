@@ -9,7 +9,11 @@ import { Roads } from '../components/Roads.jsx';
 export class Root extends React.Component {
     state = {
         hovered: {x: null, y: null},
-        selection: {start: {x: null, y: null}, end: {x: null, y: null}},
+        selection: {
+            start: {x: null, y: null},
+            end: {x: null, y: null},
+            type: null,
+        },
     };
 
     render() {
@@ -32,7 +36,7 @@ export class Root extends React.Component {
                     setSelectionStart={this.setSelectionStart}
                     setSelectionEnd={this.setSelectionEnd}
                     clearSelection={this.clearSelection}/>
-                <Toolbox selection={this.state.selection} />
+                <Toolbox setSelectionType={this.setSelectionType} />
             </svg>
             <FPSStats isActive={true} bottom="auto" left="auto" top="0" right="0" />
         </div>;
@@ -51,11 +55,37 @@ export class Root extends React.Component {
         }
     }
 
-    getSelected = () => {
-
+    setSelectionType = type => {
+        this.setState({selection: {...this.state.selection, type}});
     }
 
     isSelected = (x, y) => {
+        const IS_SELECTED_TYPES = {
+            null: this.isSelectedFalse,
+            'SQUARE': this.isSelectedSquare,
+            'ROAD': this.isSelectedRoad,
+        };
+
+        return IS_SELECTED_TYPES[this.state.selection.type](x, y);
+    }
+
+    isSelectedFalse = (x, y) => {
+        return false;
+    }
+
+    isSelectedSquare = (x, y) => {
+        const {start, end} = this.state.selection;
+        if (start.x === null) {
+            return false;
+        }
+        const minX = Math.min(start.x, end.x);
+        const maxX = Math.max(start.x, end.x);
+        const minY = Math.min(start.y, end.y);
+        const maxY = Math.max(start.y, end.y);
+        return (minX <= x) && (x <= maxX) && (minY <= y) && (y <= maxY);
+    }
+
+    isSelectedRoad = (x, y) => {
         const {start, end} = this.state.selection;
         if (start.x === null) {
             return false;
@@ -76,6 +106,7 @@ export class Root extends React.Component {
     setSelectionStart = (x, y) => {
         this.setState({
             selection: {
+                ...this.state.selection,
                 start: {x, y},
                 end: {x, y},
             },
@@ -85,6 +116,7 @@ export class Root extends React.Component {
     setSelectionEnd = (x, y) => {
         this.setState({
             selection: {
+                ...this.state.selection,
                 start: this.state.selection.start,
                 end: {x, y},
             },
@@ -94,6 +126,7 @@ export class Root extends React.Component {
     clearSelection = () => {
         this.setState({
             selection: {
+                ...this.state.selection,
                 start: {x: null, y: null},
                 end: {x: null, y: null},
             },
