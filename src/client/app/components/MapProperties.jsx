@@ -29,7 +29,7 @@ class UCMapProperties extends React.Component {
             </div>;
         }
 
-        return <div>
+        return <div id="map_properties">
             {editable('width')}
             {editable('height')}
             <button type="submit" onClick={this.onSave}>Save</button>

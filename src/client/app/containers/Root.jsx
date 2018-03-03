@@ -18,8 +18,6 @@ export class Root extends React.Component {
 
     render() {
         return <div>
-            Hello!
-            <br />
             <MapProperties />
             <br />
             <svg width={900} height={600} style={{
