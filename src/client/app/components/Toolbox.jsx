@@ -8,6 +8,7 @@ class UCToolbox extends React.Component {
         {label: "Clear", key: "CLEAR", selectionType: "SQUARE"},
         {label: "Entry", key: "ENTRY", selectionType: "TILE", data: {type: 'ENTRY'}},
         {label: "Exit", key: "EXIT", selectionType: "TILE", data: {type: 'EXIT'}},
+        {label: "Housing", key: "HOUSE", selectionType: "SQUARE"},
     ];
 
     static mapPropsToState(state, ownProps) {

@@ -16,6 +16,7 @@ export const TILE_TYPES = toDict([
 export const STRUCTURE_TYPES = toDict([
     'ENTRY',
     'EXIT',
+    'HOUSE',
 ], key => key);
 
 export const STRUCTURES = {
@@ -34,6 +35,14 @@ export const STRUCTURES = {
             fill: "blue",
         },
         unique: true,
+    },
+    [STRUCTURE_TYPES.HOUSE]: {
+        size: {width: 1, height: 1},
+        renderOptions: {
+            stroke: "salmon",
+            fill: "orange",
+        },
+        unique: false,
     },
 };
 
@@ -168,6 +177,8 @@ class Reducer {
             return this.setStructure({...state}, tool, selectedTiles);
         } else if (tool.key === 'EXIT') {
             return this.setStructure({...state}, tool, selectedTiles);
+        } else if (tool.key === 'HOUSE') {
+            return this.setHouses({...state}, tool, selectedTiles);
         }
 
         return state;
@@ -239,6 +250,14 @@ class Reducer {
             } else {
                 state.structures[key] = {main: structure[key], key};
             }
+        }
+
+        return state;
+    }
+
+    static setHouses(state, _, selectedTiles) {
+        for (const tile of selectedTiles) {
+            this.setStructure(state, {data: {type: STRUCTURE_TYPES.HOUSE}}, [tile]);
         }
 
         return state;
