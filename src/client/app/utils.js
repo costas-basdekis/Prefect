@@ -45,7 +45,11 @@ export function cartesian(...lists) {
 
 export function lattice(...rangeDefinitions) {
     const ranges = rangeDefinitions.map(
-        rangeDefinition => range(rangeDefinition)
+        rangeDefinition => (
+            typeof rangeDefinition.length === typeof undefined
+            ? range(rangeDefinition)
+            : range.apply(this, rangeDefinition)
+        )
     );
     return cartesian(...ranges);
 }

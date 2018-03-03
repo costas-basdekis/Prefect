@@ -6,6 +6,8 @@ class UCToolbox extends React.Component {
     TOOLS = [
         {label: "Road", key: "ROAD", selectionType: "ROAD"},
         {label: "Clear", key: "CLEAR", selectionType: "SQUARE"},
+        {label: "Entry", key: "ENTRY", selectionType: "TILE", data: {type: 'ENTRY'}},
+        {label: "Exit", key: "EXIT", selectionType: "TILE", data: {type: 'EXIT'}},
     ];
 
     static mapPropsToState(state, ownProps) {
@@ -45,15 +47,15 @@ class UCToolbox extends React.Component {
         </g>;
     }
 
-    onToolClick = ({key, selectionType}) => e => {
+    onToolClick = ({key, selectionType, data}) => e => {
         if (this.state.selected === key) {
             this.setState({selected: null});
             this.setSelectionType(null);
-            this.setToolKey(null);
+            this.setTool(null, null);
         } else {
             this.setState({selected: key});
             this.setSelectionType(selectionType);
-            this.setToolKey(key);
+            this.setTool(key, data);
         }
     }
 
@@ -61,8 +63,8 @@ class UCToolbox extends React.Component {
         this.props.setSelectionType(type);
     }
 
-    setToolKey(key) {
-        this.props.setToolKey(key);
+    setTool(key, data) {
+        this.props.setTool(key, data);
     }
 }
 

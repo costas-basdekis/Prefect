@@ -7,8 +7,8 @@ export const resizeTerrain = (width, height) => ({
     height,
 });
 
-export const selectionEnd = (toolKey, selectedTiles) => ({
+export const selectionEnd = (tool, selectedTiles) => ({
     type: SELECTION_END,
-    toolKey,
+    tool,
     selectedTiles,
 });

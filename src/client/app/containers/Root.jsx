@@ -5,6 +5,7 @@ import { Grid } from '../components/Grid.jsx';
 import { Terrain } from '../components/Terrain.jsx';
 import { Toolbox } from '../components/Toolbox.jsx';
 import { Roads } from '../components/Roads.jsx';
+import { Structures } from '../components/Structures.jsx';
 import { connect4, lattice } from '../utils.js'
 
 export class UCRoot extends React.Component {
@@ -15,7 +16,7 @@ export class UCRoot extends React.Component {
             end: {x: null, y: null},
             type: null,
         },
-        toolKey: null,
+        tool: {tool: null, data: null},
     };
 
     static mapPropsToState(state, ownProps) {
@@ -34,6 +35,7 @@ export class UCRoot extends React.Component {
             }}>
                 <Terrain />
                 <Roads />
+                <Structures />
                 <Grid
                     hovered={this.state.hovered}
                     isHovered={this.isHovered}
@@ -45,7 +47,7 @@ export class UCRoot extends React.Component {
                     clearSelection={this.clearSelection}/>
                 <Toolbox
                     setSelectionType={this.setSelectionType}
-                    setToolKey={this.setToolKey} />
+                    setTool={this.setTool} />
             </svg>
             <FPSStats isActive={true} bottom="auto" left="auto" top="0" right="0" />
         </div>;
@@ -68,8 +70,8 @@ export class UCRoot extends React.Component {
         this.setState({selection: {...this.state.selection, type}});
     }
 
-    setToolKey = key => {
-        this.setState({toolKey: key});
+    setTool = (key, data) => {
+        this.setState({tool: {key, data}});
     }
 
     getSelectedTiles = () => {
@@ -85,6 +87,7 @@ export class UCRoot extends React.Component {
             null: this.isSelectedFalse,
             'SQUARE': this.isSelectedSquare,
             'ROAD': this.isSelectedRoad,
+            'TILE': this.isSelectedTile,
         };
 
         return IS_SELECTED_TYPES[this.state.selection.type](x, y);
@@ -92,6 +95,14 @@ export class UCRoot extends React.Component {
 
     isSelectedFalse = (x, y) => {
         return false;
+    }
+
+    isSelectedTile = (x, y) => {
+        const {start, end} = this.state.selection;
+        if (start.x === null) {
+            return false;
+        }
+        return (x === end.x) && (y === end.y);
     }
 
     isSelectedSquare = (x, y) => {
@@ -177,7 +188,7 @@ export class UCRoot extends React.Component {
 
     clearSelection = () => {
         this.props.selectionEnd(
-            this.state.toolKey,
+            this.state.tool,
             this.getSelectedTiles(),
         );
         this.setState({
