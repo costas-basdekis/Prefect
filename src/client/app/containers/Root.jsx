@@ -111,17 +111,48 @@ export class UCRoot extends React.Component {
         if (start.x === null) {
             return false;
         }
-        if (y === start.y) {
-            const minX = Math.min(start.x, end.x);
-            const maxX = Math.max(start.x, end.x);
-            return (minX <= x) && (x <= maxX);
-        }
-        if (x === end.x) {
-            const minY = Math.min(start.y, end.y);
-            const maxY = Math.max(start.y, end.y);
-            return (minY <= y) && (y <= maxY);
+        const isRight = end.x >= start.x;
+        const isBeneath = end.y >= start.y;
+        if (isRight === isBeneath) {
+            return this.isSelectedRoadXThenY(x, y);
+        } else {
+            return this.isSelectedRoadYThenX(x, y);
         }
         return false;
+    }
+
+    isSelectedRoadXThenY(x, y) {
+        const {start, end} = this.state.selection;
+        if (x === start.x) {
+            return this.isSelectedRoadX(x, y);
+        }
+        if (y === end.y) {
+            return this.isSelectedRoadY(x, y);
+        }
+    }
+
+    isSelectedRoadYThenX(x, y) {
+        const {start, end} = this.state.selection;
+        if (y === start.y) {
+            return this.isSelectedRoadY(x, y);
+        }
+        if (x === end.x) {
+            return this.isSelectedRoadX(x, y);
+        }
+    }
+
+    isSelectedRoadY(x, y) {
+        const {start, end} = this.state.selection;
+        const minX = Math.min(start.x, end.x);
+        const maxX = Math.max(start.x, end.x);
+        return (minX <= x) && (x <= maxX);
+    }
+
+    isSelectedRoadX(x, y) {
+        const {start, end} = this.state.selection;
+        const minY = Math.min(start.y, end.y);
+        const maxY = Math.max(start.y, end.y);
+        return (minY <= y) && (y <= maxY);
     }
 
     setSelectionStart = (x, y) => {
