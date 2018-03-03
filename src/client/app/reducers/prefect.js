@@ -57,11 +57,11 @@ class Reducer {
         state.terrain = {};
         for (const [x, y] of lattice(width, height)) {
             const key = `${x}.${y}`;
-            const type = choice(Object.keys(TILE_TYPES));
+            const type = TILE_TYPES.GROUND; // choice(Object.keys(TILE_TYPES));
             state.terrain[key] = oldTerrain[key] || {
                 type: type,
                 subType: type === TILE_TYPES.GROUND
-                    ? choice(Object.keys(GROUND_TYPES))
+                    ? GROUND_TYPES.GRASS // choice(Object.keys(GROUND_TYPES))
                     : undefined,
             }
         }
