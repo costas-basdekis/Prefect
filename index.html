@@ -23,6 +23,9 @@
                 const prop = el.name;
                 const state = JSON.parse(
                     localStorage.getItem('displayOptions') || '{}');
+                if (!(prop in state)) {
+                    state[prop] = true;
+                }
                 el.checked = !!state[prop];
             }
 
