@@ -16,6 +16,7 @@ export const TILE_TYPES = toDict([
 class Reducer {
     static actions = [
         actions.RESIZE_TERRAIN,
+        actions.SELECTION_END,
     ];
 
     static reduce(state, action) {
@@ -87,6 +88,40 @@ class Reducer {
                 continue;
             }
             state.roads[key] = oldRoads[key];
+        }
+
+        return state;
+    }
+
+    static [actions.SELECTION_END] (state, action) {
+        const {toolKey, selectedTiles} = action;
+
+        if (toolKey === 'ROAD') {
+            return this.addRoads({...state}, selectedTiles);
+        } else if (toolKey === 'CLEAR') {
+            return this.clearSpace({...state}, selectedTiles);
+        }
+
+        return state;
+    }
+
+    static addRoads(state, selectedTiles) {
+        for (const {key} of selectedTiles) {
+            state.roads[key] = true;
+        }
+
+        return state;
+    }
+
+    static clearSpace(state, selectedTiles) {
+        this.clearRoads(state, selectedTiles);
+
+        return state;
+    }
+
+    static clearRoads(state, selectedTiles) {
+        for (const {key} of selectedTiles) {
+            delete state.roads[key];
         }
 
         return state;

@@ -49,14 +49,20 @@ class UCToolbox extends React.Component {
         if (this.state.selected === key) {
             this.setState({selected: null});
             this.setSelectionType(null);
+            this.setToolKey(null);
         } else {
             this.setState({selected: key});
             this.setSelectionType(selectionType);
+            this.setToolKey(key);
         }
     }
 
     setSelectionType(type) {
         this.props.setSelectionType(type);
+    }
+
+    setToolKey(key) {
+        this.props.setToolKey(key);
     }
 }
 
