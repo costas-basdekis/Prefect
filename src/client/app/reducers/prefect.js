@@ -19,27 +19,28 @@ class Reducer {
     ];
 
     static reduce(state, action) {
-        if (Reducer.actions.indexOf(action.type) < 0) {
+        if (this.actions.indexOf(action.type) < 0) {
             return state;
         }
 
-        return Reducer[action.type](state, action);
+        return this[action.type](state, action);
     }
 
     static initialState() {
-        return Reducer.resizeTerrain({
+        return this.resizeTerrain({
             properties: {
                 width: 25,
                 height: 25,
             },
             terrain: {},
+            roads: {},
         });
     }
 
     static [actions.RESIZE_TERRAIN] (state, action) {
         const newWidth = parseInt(action.width),
             newHeight = parseInt(action.height);
-        const newState = Reducer.resizeTerrain({
+        const newState = this.resize({
             ...state,
             properties: {
                 ...state.properties,
@@ -49,6 +50,13 @@ class Reducer {
         });
 
         return newState;
+    }
+
+    static resize(state) {
+        this.resizeTerrain(state);
+        this.resizeRoads(state);
+
+        return state;
     }
 
     static resizeTerrain(state) {
@@ -68,7 +76,22 @@ class Reducer {
 
         return state;
     }
+
+    static resizeRoads(state) {
+        const oldRoads = state.roads;
+        const {width, height} = state.properties;
+        state.roads = {};
+        for (const [x, y] of lattice(width, height)) {
+            const key = `${x}.${y}`;
+            if (!oldRoads[key]) {
+                continue;
+            }
+            state.roads[key] = oldRoads[key];
+        }
+
+        return state;
+    }
 }
 
-export const reducer = Reducer.reduce;
-export const initialState = Reducer.initialState;
+export const reducer = Reducer.reduce.bind(Reducer);
+export const initialState = Reducer.initialState.bind(Reducer);

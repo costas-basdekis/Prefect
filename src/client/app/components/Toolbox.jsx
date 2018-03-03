@@ -8,8 +8,8 @@ class UCToolbox extends React.Component {
         {"label": "Clear", "key": "CLEAR"},
     ];
 
-    constructor() {
-        super();
+    constructor(props) {
+        super(props);
         this.state = {
             selected: null,
         };
