@@ -58,6 +58,7 @@ class Reducer {
     static actions = [
         actions.RESIZE_TERRAIN,
         actions.SELECTION_END,
+        actions.TICK,
     ];
 
     static reduce(state, action) {
@@ -80,6 +81,30 @@ class Reducer {
             date: {year: -50, month: 0, day: 1},
             money: 10000,
         });
+    }
+
+    static [actions.TICK] (state, action) {
+        return this.tick({...state});
+    }
+
+    static tick(state) {
+        this.tickDate(state);
+
+        return state;
+    }
+
+    static tickDate(state) {
+        state.date = {...state.date, day: state.date.day + 1};
+        if (state.date.day >= 31) {
+            state.date.day = 1;
+            state.date.month += 1;
+            if (state.date.month >= 12) {
+                state.date.month = 0;
+                state.date.year += 1;
+            }
+        }
+
+        return state;
     }
 
     static [actions.RESIZE_TERRAIN] (state, action) {

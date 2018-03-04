@@ -26,6 +26,19 @@ export class UCRoot extends React.Component {
         }
     }
 
+    componentDidMount() {
+        this.interval = setInterval(this.tick, 2000);
+    }
+
+    componentWillUnmount() {
+        clearInterval(this.interval);
+        this.interval = null;
+    }
+
+    tick = () => {
+        this.props.tick();
+    }
+
     render() {
         return <div>
             <MapProperties />
