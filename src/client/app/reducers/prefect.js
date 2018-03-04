@@ -228,6 +228,13 @@ class Reducer {
 
         for (const [eX, eY] of this.getStructureTiles(structure)) {
             const key = `${eX}.${eY}`;
+            if (state.structures[key]) {
+                return state;
+            }
+        }
+
+        for (const [eX, eY] of this.getStructureTiles(structure)) {
+            const key = `${eX}.${eY}`;
             if (eX === tile.x && eY === tile.y) {
                 state.structures[key] = structure;
             } else {
