@@ -76,6 +76,9 @@ class Reducer {
             },
             terrain: {},
             structures: {},
+            population: 0,
+            date: {year: -50, month: 0, day: 1},
+            money: 10000,
         });
     }
 

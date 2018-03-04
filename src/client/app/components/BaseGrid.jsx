@@ -31,7 +31,7 @@ export class BaseGrid extends React.Component {
         const centerY = this.size * this.props.properties.height / 2;
         return <g transform={`
                 scale(1 0.8)
-                translate(${centerX * Math.sqrt(2) / 3} ${centerY * Math.sqrt(2) / 3})
+                translate(${centerX * Math.sqrt(2) / 3} ${centerY * Math.sqrt(2) / 3 + 30})
                 rotate(-45 ${centerX} ${centerY})
             `} style={this.mouseEvents ? {} : {pointerEvents: "none"}}>
             {this.props.tiles.map(tile => this.renderTile(tile))}

@@ -4,6 +4,7 @@ import { MapProperties } from '../components/MapProperties.jsx';
 import { Grid } from '../components/Grid.jsx';
 import { Terrain } from '../components/Terrain.jsx';
 import { Toolbox } from '../components/Toolbox.jsx';
+import { StatusBar } from '../components/StatusBar.jsx';
 import { Structures } from '../components/Structures.jsx';
 import { connect4, lattice } from '../utils.js'
 
@@ -29,7 +30,7 @@ export class UCRoot extends React.Component {
         return <div>
             <MapProperties />
             <br />
-            <svg width={900} height={600} style={{
+            <svg width={900} height={800} style={{
                 border: "1px solid black",
             }}>
                 <Terrain />
@@ -46,6 +47,7 @@ export class UCRoot extends React.Component {
                 <Toolbox
                     setSelectionType={this.setSelectionType}
                     setTool={this.setTool} />
+                <StatusBar />
             </svg>
             <FPSStats isActive={true} bottom="auto" left="auto" top="0" right="0" />
         </div>;
