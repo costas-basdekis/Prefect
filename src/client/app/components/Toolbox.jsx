@@ -4,11 +4,11 @@ import { TILE_TYPES, GROUND_TYPES } from '../reducers/prefect.js'
 
 class UCToolbox extends React.Component {
     TOOLS = [
-        {label: "Road", key: "ROAD", selectionType: "ROAD"},
+        {label: "Road", key: "ROAD", selectionType: "ROAD", data: {type: 'ROAD'}},
         {label: "Clear", key: "CLEAR", selectionType: "SQUARE"},
         {label: "Entry", key: "ENTRY", selectionType: "TILE", data: {type: 'ENTRY'}},
         {label: "Exit", key: "EXIT", selectionType: "TILE", data: {type: 'EXIT'}},
-        {label: "Housing", key: "HOUSE", selectionType: "SQUARE"},
+        {label: "Housing", key: "HOUSE", selectionType: "SQUARE", data: {type: 'HOUSE'}},
     ];
 
     static mapPropsToState(state, ownProps) {

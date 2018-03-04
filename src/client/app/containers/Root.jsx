@@ -4,7 +4,6 @@ import { MapProperties } from '../components/MapProperties.jsx';
 import { Grid } from '../components/Grid.jsx';
 import { Terrain } from '../components/Terrain.jsx';
 import { Toolbox } from '../components/Toolbox.jsx';
-import { Roads } from '../components/Roads.jsx';
 import { Structures } from '../components/Structures.jsx';
 import { connect4, lattice } from '../utils.js'
 
@@ -34,7 +33,6 @@ export class UCRoot extends React.Component {
                 border: "1px solid black",
             }}>
                 <Terrain />
-                <Roads />
                 <Structures />
                 <Grid
                     hovered={this.state.hovered}

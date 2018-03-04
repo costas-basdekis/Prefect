@@ -16,6 +16,7 @@ export const TILE_TYPES = toDict([
 export const STRUCTURE_TYPES = toDict([
     'ENTRY',
     'EXIT',
+    'ROAD',
     'HOUSE',
 ], key => key);
 
@@ -35,6 +36,13 @@ export const STRUCTURES = {
             fill: "blue",
         },
         unique: true,
+    },
+    [STRUCTURE_TYPES.ROAD]: {
+        size: {width: 1, height: 1},
+        renderOptions: {
+            stroke: "beige",
+            fill: "white",
+        },
     },
     [STRUCTURE_TYPES.HOUSE]: {
         size: {width: 1, height: 1},
@@ -67,7 +75,6 @@ class Reducer {
                 height: 25,
             },
             terrain: {},
-            roads: {},
             structures: {},
         });
     }
@@ -89,7 +96,7 @@ class Reducer {
 
     static resize(state) {
         this.resizeTerrain(state);
-        this.resizeRoads(state);
+        this.resizeStructures(state);
 
         return state;
     }
@@ -107,21 +114,6 @@ class Reducer {
                     ? GROUND_TYPES.GRASS // choice(Object.keys(GROUND_TYPES))
                     : undefined,
             }
-        }
-
-        return state;
-    }
-
-    static resizeRoads(state) {
-        const oldRoads = state.roads;
-        const {width, height} = state.properties;
-        state.roads = {};
-        for (const [x, y] of lattice(width, height)) {
-            const key = `${x}.${y}`;
-            if (!oldRoads[key]) {
-                continue;
-            }
-            state.roads[key] = oldRoads[key];
         }
 
         return state;
@@ -170,7 +162,7 @@ class Reducer {
         const {tool, selectedTiles} = action;
 
         if (tool.key === 'ROAD') {
-            return this.addRoads({...state}, selectedTiles);
+            return this.setStructures({...state}, tool, selectedTiles);
         } else if (tool.key === 'CLEAR') {
             return this.clearSpace({...state}, selectedTiles);
         } else if (tool.key === 'ENTRY') {
@@ -178,31 +170,14 @@ class Reducer {
         } else if (tool.key === 'EXIT') {
             return this.setStructure({...state}, tool, selectedTiles);
         } else if (tool.key === 'HOUSE') {
-            return this.setHouses({...state}, tool, selectedTiles);
-        }
-
-        return state;
-    }
-
-    static addRoads(state, selectedTiles) {
-        for (const {key} of selectedTiles) {
-            state.roads[key] = true;
+            return this.setStructures({...state}, tool, selectedTiles);
         }
 
         return state;
     }
 
     static clearSpace(state, selectedTiles) {
-        this.clearRoads(state, selectedTiles);
         this.clearStructures(state, selectedTiles);
-
-        return state;
-    }
-
-    static clearRoads(state, selectedTiles) {
-        for (const {key} of selectedTiles) {
-            delete state.roads[key];
-        }
 
         return state;
     }
@@ -219,6 +194,14 @@ class Reducer {
             for (const [x, y] of this.getStructureTiles(structure)) {
                 delete state.structures[`${x}.${y}`];
             }
+        }
+
+        return state;
+    }
+
+    static setStructures(state, tile, selectedTiles) {
+        for (const selectedTile of selectedTiles) {
+            this.setStructure(state, tile, [selectedTile]);
         }
 
         return state;
@@ -250,14 +233,6 @@ class Reducer {
             } else {
                 state.structures[key] = {main: structure[key], key};
             }
-        }
-
-        return state;
-    }
-
-    static setHouses(state, _, selectedTiles) {
-        for (const tile of selectedTiles) {
-            this.setStructure(state, {data: {type: STRUCTURE_TYPES.HOUSE}}, [tile]);
         }
 
         return state;
