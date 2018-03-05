@@ -17,6 +17,7 @@ export class UCRoot extends React.Component {
             type: null,
         },
         tool: {tool: null, data: null},
+        running: true,
     };
 
     static mapPropsToState(state, ownProps) {
@@ -27,12 +28,11 @@ export class UCRoot extends React.Component {
     }
 
     componentDidMount() {
-        this.interval = setInterval(this.tick, 2000);
+        this.tickStart();
     }
 
     componentWillUnmount() {
-        clearInterval(this.interval);
-        this.interval = null;
+        this.tickPause();
     }
 
     tick = () => {
@@ -60,10 +60,31 @@ export class UCRoot extends React.Component {
                 <Toolbox
                     setSelectionType={this.setSelectionType}
                     setTool={this.setTool} />
-                <StatusBar />
+                <StatusBar
+                    running={this.state.running}
+                    tickToggle={this.tickToggle}/>
             </svg>
             <FPSStats isActive={true} bottom="auto" left="auto" top="0" right="0" />
         </div>;
+    }
+
+    tickToggle = () => {
+        if (this.state.running) {
+            this.tickPause();
+        } else {
+            this.tickStart();
+        }
+    }
+
+    tickStart() {
+        this.interval = setInterval(() => this.tick(), 2000);
+        this.setState({running: true});
+    }
+
+    tickPause() {
+        clearInterval(this.interval);
+        this.interval = null;
+        this.setState({running: false});
     }
 
     isHovered = (x, y) => {
