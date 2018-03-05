@@ -51,8 +51,25 @@ export const STRUCTURES = {
             fill: "orange",
         },
         unique: false,
+        makeData: tile => ({
+            level: 0,
+            space: 1,
+            occupants: 0,
+            newcomers: [],
+        }),
+        getText: ({data: {level, occupants}}) => `${level}/${occupants}`,
     },
 };
+
+const HOUSE_STATS = [
+    {
+        space: 1,
+        canUpgrade: ({data}) => data.occupants > 0,
+    },
+    {
+        space: 3,
+    },
+];
 
 class Reducer {
     static actions = [
@@ -252,7 +269,9 @@ class Reducer {
             },
             key: `${tile.x}.${tile.y}`,
             renderOptions: structureType.renderOptions,
+            getText: structureType.getText,
         };
+        structure.data = (structureType.makeData || (() => null))(structure);
 
         for (const [eX, eY] of this.getStructureTiles(structure)) {
             const key = `${eX}.${eY}`;

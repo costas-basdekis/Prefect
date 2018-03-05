@@ -15,7 +15,10 @@ class UCStructures extends BaseGrid {
     }
 
     getTileOptions({tile}) {
-        return tile.renderOptions;
+        return {
+            ...tile.renderOptions,
+            text: (tile.getText ? tile.getText(tile) : null),
+        };
     }
 }
 

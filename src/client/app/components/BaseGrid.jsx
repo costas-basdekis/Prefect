@@ -2,8 +2,13 @@ import React from 'react';
 import { connect4, lattice } from '../utils.js'
 
 export class BaseGrid extends React.Component {
-    size = 20;
+    static size = 20;
     mouseEvents = false;
+
+    constructor(props) {
+        super(props);
+        this.size = this.constructor.size;
+    }
 
     static mapPropsToState(state, ownProps) {
         return {
@@ -18,6 +23,10 @@ export class BaseGrid extends React.Component {
                 })).filter(tile =>
                     (tile.tile !== null)
                     && (typeof tile.tile !== typeof undefined)),
+            center: {
+                x: this.size * state.properties.width / 2,
+                y: this.size * state.properties.height / 2,
+            },
             ...ownProps,
         };
     }
@@ -27,8 +36,7 @@ export class BaseGrid extends React.Component {
     }
 
     render() {
-        const centerX = this.size * this.props.properties.width / 2;
-        const centerY = this.size * this.props.properties.height / 2;
+        const {x: centerX, y: centerY} =  this.props.center;
         return <g transform={`
                 scale(1 0.8)
                 translate(${centerX * Math.sqrt(2) / 3} ${centerY * Math.sqrt(2) / 3 + 30})
@@ -51,10 +59,24 @@ export class BaseGrid extends React.Component {
     }
 
     baseRenderTile({x, y, key, stroke="transparent", fill="transparent",
-                    strokeWidth=1}) {
+                    strokeWidth=1, text=null}) {
+        const rectX = x * this.size, rectY = y * this.size;
+        const width = this.size, height = this.size;
+        const tileRect = this.tileRect({
+            x, y, rectX, rectY, width, height, key, stroke, fill, strokeWidth});
+        if (!text) {
+            return tileRect;
+        }
+        return <g key={key}>
+            {tileRect}
+            {this.tileText({x: rectX, y: rectY, width, height, text})}
+        </g>;
+    }
+
+    tileRect({x, y, rectX, rectY, width, height, key, stroke, fill, strokeWidth}) {
         return <rect
-            x={x * this.size} y={y * this.size}
-            width={this.size} height={this.size}
+            x={rectX} y={rectY}
+            width={width} height={height}
             stroke={stroke} strokeWidth={strokeWidth}
             fill={fill}
             key={key}
@@ -62,6 +84,18 @@ export class BaseGrid extends React.Component {
             onMouseEnter={this.onTileHover(x, y)}
             onMouseDown={this.onMouseDown(x, y)}
             onMouseUp={this.onMouseUp(x, y)} />
+    }
+
+    tileText({x, y, width, height, text}) {
+        const centerX = x + width / 2, centerY = y + height / 2;
+        return <text
+            x={centerX} y={centerY}
+            textAnchor="middle" dominantBaseline="middle"
+            style={{pointerEvents: "none"}}
+            /*transform={`rotate(45 ${centerX} ${centerY})`}*/
+            fontSize={12}>
+            {text}
+        </text>;
     }
 
     onTileHover = (x, y) => (e) => {
