@@ -4,7 +4,7 @@ import { createStore } from 'redux'
 import { Provider } from 'react-redux'
 
 import Root from './containers/Root.jsx';
-import { reducer, initialState } from './reducers/prefect.js'
+import { reducer, initialState } from './reducers/combined.js'
 
 const store = createStore(reducer, initialState());
 const appEl = document.getElementById('app');

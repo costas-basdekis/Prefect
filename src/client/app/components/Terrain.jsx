@@ -1,6 +1,6 @@
 import React from 'react';
 import { connect4, lattice } from '../utils.js'
-import { TILE_TYPES, GROUND_TYPES } from '../reducers/prefect.js'
+import { TILE_TYPES, GROUND_TYPES } from '../reducers/terrain.js'
 import { BaseGrid } from './BaseGrid.jsx'
 
 class UCTerrain extends BaseGrid {

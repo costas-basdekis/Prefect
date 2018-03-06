@@ -1,17 +1,6 @@
 import * as actions from '../actions/actions.js'
-import { lattice, choice, toDict } from '../utils.js'
-
-export const GROUND_TYPES = toDict([
-    'GRASS',
-    'DESERT',
-    'TREES',
-], key => key);
-
-export const TILE_TYPES = toDict([
-    'GROUND',
-    'WATER',
-    'ROCK',
-], key => key);
+import { Reducer } from './base.js'
+import { lattice, toDict } from '../utils.js'
 
 export const STRUCTURE_TYPES = toDict([
     'ENTRY',
@@ -61,7 +50,7 @@ export const STRUCTURES = {
     },
 };
 
-const HOUSE_STATS = [
+export const HOUSE_STATS = [
     {
         space: 1,
         canUpgrade: ({data}) => data.occupants > 0,
@@ -71,97 +60,14 @@ const HOUSE_STATS = [
     },
 ];
 
-class Reducer {
+export class StructuresReducer extends Reducer {
     static actions = [
         actions.RESIZE_TERRAIN,
         actions.SELECTION_END,
-        actions.TICK,
     ];
 
-    static reduce(state, action) {
-        if (this.actions.indexOf(action.type) < 0) {
-            return state;
-        }
-
-        return this[action.type](state, action);
-    }
-
-    static initialState() {
-        return this.resizeTerrain({
-            properties: {
-                width: 25,
-                height: 25,
-            },
-            terrain: {},
-            structures: {},
-            population: 0,
-            date: {year: -50, month: 0, day: 1},
-            money: 10000,
-        });
-    }
-
-    static [actions.TICK] (state, action) {
-        return this.tick({...state});
-    }
-
-    static tick(state) {
-        this.tickDate(state);
-
-        return state;
-    }
-
-    static tickDate(state) {
-        state.date = {...state.date, day: state.date.day + 1};
-        if (state.date.day >= 31) {
-            state.date.day = 1;
-            state.date.month += 1;
-            if (state.date.month >= 12) {
-                state.date.month = 0;
-                state.date.year += 1;
-            }
-        }
-
-        return state;
-    }
-
     static [actions.RESIZE_TERRAIN] (state, action) {
-        const newWidth = parseInt(action.width),
-            newHeight = parseInt(action.height);
-        const newState = this.resize({
-            ...state,
-            properties: {
-                ...state.properties,
-                width: newWidth,
-                height: newHeight,
-            },
-        });
-
-        return newState;
-    }
-
-    static resize(state) {
-        this.resizeTerrain(state);
-        this.resizeStructures(state);
-
-        return state;
-    }
-
-    static resizeTerrain(state) {
-        const oldTerrain = state.terrain;
-        const {width, height} = state.properties;
-        state.terrain = {};
-        for (const [x, y] of lattice(width, height)) {
-            const key = `${x}.${y}`;
-            const type = TILE_TYPES.GROUND; // choice(Object.keys(TILE_TYPES));
-            state.terrain[key] = oldTerrain[key] || {
-                type: type,
-                subType: type === TILE_TYPES.GROUND
-                    ? GROUND_TYPES.GRASS // choice(Object.keys(GROUND_TYPES))
-                    : undefined,
-            }
-        }
-
-        return state;
+        return this.resizeStructures({...state});
     }
 
     static resizeStructures(state) {
@@ -292,6 +198,3 @@ class Reducer {
         return state;
     }
 }
-
-export const reducer = Reducer.reduce.bind(Reducer);
-export const initialState = Reducer.initialState.bind(Reducer);

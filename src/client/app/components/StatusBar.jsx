@@ -1,6 +1,5 @@
 import React from 'react';
 import { connect4, lattice } from '../utils.js'
-import { TILE_TYPES, GROUND_TYPES } from '../reducers/prefect.js'
 
 class UCStatusBar extends React.Component {
     LABELS = [
