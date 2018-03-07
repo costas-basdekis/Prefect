@@ -45,6 +45,7 @@ export const STRUCTURES = {
             space: 1,
             occupants: 0,
             newcomers: [],
+            water: 0,
         }),
         getText: ({data: {level, occupants}}) => `${level}/${occupants}`,
     },
@@ -52,11 +53,18 @@ export const STRUCTURES = {
 
 export const HOUSE_STATS = [
     {
-        space: 1,
         canUpgrade: ({data}) => data.occupants > 0,
     },
     {
-        space: 3,
+        newData: {
+            space: 3,
+        },
+        canUpgrade: ({data}) => data.water > 0,
+    },
+    {
+        newData: {
+            space: 7,
+        },
     },
 ];
 
@@ -64,7 +72,41 @@ export class StructuresReducer extends Reducer {
     static actions = [
         actions.RESIZE_TERRAIN,
         actions.SELECTION_END,
+        actions.TICK,
     ];
+
+    static [ actions.TICK] (state, action) {
+        return this.upgradeHouses({...state});
+    }
+
+    static upgradeHouses(state) {
+        for (let structure of Object.values(state.structures)) {
+            if (structure.main) {
+                continue;
+            }
+            if (structure.type !== STRUCTURE_TYPES.HOUSE) {
+                continue;
+            }
+            const houseStats = HOUSE_STATS[structure.data.level];
+            if (!houseStats.canUpgrade) {
+                continue;
+            }
+            if (!houseStats.canUpgrade(structure)) {
+                continue;
+            }
+            const nextHouseStats = HOUSE_STATS[structure.data.level + 1];
+            structure = state.structures[structure.key] = {
+                ...structure,
+                data: {
+                    ...structure.data,
+                    ...nextHouseStats.newData,
+                    level: structure.data.level + 1,
+                },
+            };
+        }
+
+        return state;
+    }
 
     static [actions.RESIZE_TERRAIN] (state, action) {
         return this.resizeStructures({...state});
