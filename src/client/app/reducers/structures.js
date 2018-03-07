@@ -116,6 +116,7 @@ export class StructuresReducer extends Reducer {
         const oldStructures = state.structures;
         const {width, height} = state.properties;
         state.structures = {};
+        state.population = 0;
         for (const [x, y] of lattice(width, height)) {
             const key = `${x}.${y}`;
             const oldStructure = oldStructures[key];
@@ -127,6 +128,7 @@ export class StructuresReducer extends Reducer {
                 continue;
             }
             state.structures[key] = oldStructure;
+            state.population += oldStructure.occupants;
         }
         for (const [x, y] of lattice(width, height)) {
             const key = `${x}.${y}`;
@@ -186,6 +188,9 @@ export class StructuresReducer extends Reducer {
             }
             for (const [x, y] of this.getStructureTiles(structure)) {
                 delete state.structures[`${x}.${y}`];
+            }
+            if (structure.type === STRUCTURE_TYPES.HOUSE) {
+                state.population -= structure.data.occupants;
             }
             delete state.structuresKeysById[structure.id];
         }

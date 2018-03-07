@@ -97,6 +97,7 @@ export class PeopleReducer extends Reducer {
                 },
             };
             delete state.people[person.id];
+            state.population += person.count;
         }
     }
 
