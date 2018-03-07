@@ -212,6 +212,9 @@ export class StructuresReducer extends Reducer {
             console.error("Unknown structure type: ", type);
             return state
         }
+        if (structureType.unique && this.structureTypeExists(state, type)) {
+            return state;
+        }
         const tile = selectedTiles[0];
         const id = state.nextStructureId;
         state.nextStructureId += 1;
@@ -249,5 +252,15 @@ export class StructuresReducer extends Reducer {
         state.structuresKeysById[structure.id] = structure.key;
 
         return state;
+    }
+
+    static structureTypeExists(state, structureType) {
+        for (const structure of Object.values(state.structures)) {
+            if (structure.type === structureType) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
