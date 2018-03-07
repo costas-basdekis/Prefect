@@ -145,6 +145,7 @@ export class StructuresReducer extends Reducer {
             for (const [x, y] of this.getStructureTiles(structure)) {
                 delete state.structures[`${x}.${y}`];
             }
+            delete state.structuresKeysById[structure.id];
         }
 
         return state;
@@ -165,8 +166,11 @@ export class StructuresReducer extends Reducer {
             return state
         }
         const tile = selectedTiles[0];
+        const id = state.nextStructureId;
+        state.nextStructureId += 1;
 
         const structure = {
+            id,
             type,
             start: {x: tile.x, y: tile.y},
             end: {
@@ -191,9 +195,11 @@ export class StructuresReducer extends Reducer {
             if (eX === tile.x && eY === tile.y) {
                 state.structures[key] = structure;
             } else {
-                state.structures[key] = {main: structure[key], key};
+                state.structures[key] = {main: structure.key, key};
             }
         }
+
+        state.structuresKeysById[structure.id] = structure.key;
 
         return state;
     }

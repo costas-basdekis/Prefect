@@ -6,6 +6,7 @@ import { Terrain } from '../components/Terrain.jsx';
 import { Toolbox } from '../components/Toolbox.jsx';
 import { StatusBar } from '../components/StatusBar.jsx';
 import { Structures } from '../components/Structures.jsx';
+import { People } from '../components/People.jsx';
 import { connect4, lattice } from '../utils.js'
 
 export class UCRoot extends React.Component {
@@ -48,6 +49,7 @@ export class UCRoot extends React.Component {
             }}>
                 <Terrain />
                 <Structures />
+                <People />
                 <Grid
                     hovered={this.state.hovered}
                     isHovered={this.isHovered}

@@ -1,12 +1,14 @@
 import * as actions from '../actions/actions.js'
 import { TerrainReducer } from './terrain.js'
 import { StructuresReducer } from './structures.js'
+import { PeopleReducer } from './people.js'
 import { TickReducer } from './tick.js'
 
 class CombinedReducer {
     static reducers = [
         TerrainReducer,
         StructuresReducer,
+        PeopleReducer,
         TickReducer,
     ];
 
@@ -23,6 +25,10 @@ class CombinedReducer {
             },
             terrain: {},
             structures: {},
+            nextStructureId: 1,
+            structuresKeysById: {},
+            people: {},
+            nextPersonId: 1,
             population: 0,
             date: {year: -50, month: 0, day: 1},
             money: 10000,

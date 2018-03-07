@@ -80,3 +80,7 @@ export function dict(items) {
 export function toDict(array, valueFunc, keyFunc=key => key) {
     return dict(zip(array.map(keyFunc), array.map(valueFunc)))
 }
+
+export function sum(array) {
+    return array.reduce((total, current) => total + current, 0);
+}
