@@ -17,7 +17,7 @@ export class UCRoot extends React.Component {
             end: {x: null, y: null},
             type: null,
         },
-        tool: {tool: null, data: null},
+        tool: {toolType: null, data: null},
         running: true,
     };
 
@@ -106,8 +106,8 @@ export class UCRoot extends React.Component {
         this.setState({selection: {...this.state.selection, type}});
     }
 
-    setTool = (key, data) => {
-        this.setState({tool: {key, data}});
+    setTool = (toolType, data) => {
+        this.setState({tool: {toolType, data}});
     }
 
     getSelectedTiles = () => {

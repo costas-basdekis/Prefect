@@ -3,13 +3,13 @@ import { connect4 } from '../utils.js'
 
 class UCToolbox extends React.Component {
     TOOLS = [
-        {label: "Road", key: "ROAD", selectionType: "ROAD", data: {type: 'ROAD'}},
-        {label: "Clear", key: "CLEAR", selectionType: "SQUARE"},
-        {label: "Entry", key: "ENTRY", selectionType: "TILE", data: {type: 'ENTRY'}},
-        {label: "Exit", key: "EXIT", selectionType: "TILE", data: {type: 'EXIT'}},
-        {label: "Housing", key: "HOUSE", selectionType: "SQUARE", data: {type: 'HOUSE'}},
+        {label: "Road", key: "ROAD", selectionType: "ROAD", toolType: "RANGE_OF_STRUCTURES", data: {type: 'ROAD'}},
+        {label: "Clear", key: "CLEAR", toolType: "CLEAR", selectionType: "SQUARE"},
+        {label: "Entry", key: "ENTRY", toolType: "SINGLE_STRUCTURE", selectionType: "TILE", data: {type: 'ENTRY'}},
+        {label: "Exit", key: "EXIT", toolType: "SINGLE_STRUCTURE", selectionType: "TILE", data: {type: 'EXIT'}},
+        {label: "Housing", key: "HOUSE", toolType: "RANGE_OF_STRUCTURES", selectionType: "SQUARE", data: {type: 'HOUSE'}},
         {label: "Water", key: "WATER", children: [
-            {label: "Well", key: "WELL", selectionType: "SQUARE", data: {type: 'WELL'}},
+            {label: "Well", key: "WELL", toolType: "SINGLE_STRUCTURE", selectionType: "SQUARE", data: {type: 'WELL'}},
         ]},
     ];
 
@@ -74,7 +74,7 @@ class UCToolbox extends React.Component {
         return false;
     }
 
-    onToolClick = ({key, selectionType, data, children}) => e => {
+    onToolClick = ({key, toolType, selectionType, data, children}) => e => {
         if (this.state.selected === key) {
             this.setState({selected: null});
             this.setSelectionType(null);
@@ -83,7 +83,7 @@ class UCToolbox extends React.Component {
             this.setState({selected: key});
             if (!children) {
                 this.setSelectionType(selectionType);
-                this.setTool(key, data);
+                this.setTool(toolType, data);
             }
         }
     }
@@ -92,8 +92,8 @@ class UCToolbox extends React.Component {
         this.props.setSelectionType(type);
     }
 
-    setTool(key, data) {
-        this.props.setTool(key, data);
+    setTool(toolType, data) {
+        this.props.setTool(toolType, data);
     }
 }
 

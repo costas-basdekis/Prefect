@@ -164,18 +164,12 @@ export class StructuresReducer extends Reducer {
     static [actions.SELECTION_END] (state, action) {
         const {tool, selectedTiles} = action;
 
-        if (tool.key === 'ROAD') {
+        if (tool.toolType === 'SINGLE_STRUCTURE') {
+            return this.setStructure({...state}, tool, selectedTiles);
+        } else if (tool.toolType === 'RANGE_OF_STRUCTURES') {
             return this.setStructures({...state}, tool, selectedTiles);
-        } else if (tool.key === 'CLEAR') {
+        } else if (tool.toolType === 'CLEAR') {
             return this.clearSpace({...state}, selectedTiles);
-        } else if (tool.key === 'ENTRY') {
-            return this.setStructure({...state}, tool, selectedTiles);
-        } else if (tool.key === 'EXIT') {
-            return this.setStructure({...state}, tool, selectedTiles);
-        } else if (tool.key === 'HOUSE') {
-            return this.setStructures({...state}, tool, selectedTiles);
-        } else if (tool.key === 'WELL') {
-            return this.setStructure({...state}, tool, selectedTiles);
         }
 
         return state;
