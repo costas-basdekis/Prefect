@@ -25,6 +25,9 @@ class CombinedReducer {
             },
             terrain: {},
             structures: {},
+            layers: {
+                water: {},
+            },
             nextStructureId: 1,
             structuresKeysById: {},
             people: {},

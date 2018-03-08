@@ -56,6 +56,11 @@ export const STRUCTURES = {
             stroke: "cyan",
             fill: "cyan",
         },
+        makeData: tile => ({
+            level: 1,
+            waterSupplyLevelNeeded: 0,
+            range: 2,
+        }),
     },
 };
 
@@ -84,7 +89,12 @@ export class StructuresReducer extends Reducer {
     ];
 
     static [ actions.TICK] (state, action) {
-        return this.upgradeHouses({...state});
+        const newState = {...state};
+
+        this.upgradeHouses(newState);
+        this.updateLayers(newState);
+
+        return newState;
     }
 
     static upgradeHouses(state) {
@@ -114,6 +124,58 @@ export class StructuresReducer extends Reducer {
         }
 
         return state;
+    }
+
+    static updateLayers(state, reset=false) {
+        this.updateWater(state, reset);
+
+        return state;
+    }
+
+    static updateWater(state, reset=false) {
+        const waterStructures = Object.values(state.structures)
+            .filter(structure => structure.type === STRUCTURE_TYPES.WELL);
+        state.layers = {
+            ...state.layers,
+            water: {},
+        };
+        const waterLayer = state.layers.water;
+        for (const structure of waterStructures) {
+            const {x: centerX, y: centerY} = structure.start;
+            const {range, level} = structure.data;
+            const start = {
+                x: Math.max(0, centerX - range),
+                y: Math.max(0, centerY - range),
+            };
+            const end = {
+                x: Math.min(centerX + range + 1, state.properties.width) ,
+                y: Math.min(centerY + range + 1, state.properties.height),
+            };
+            for (const [x, y] of lattice([start.x, end.x], [start.y, end.y])) {
+                const key = `${x}.${y}`;
+                if (!waterLayer[key] || waterLayer[key] < level) {
+                    waterLayer[key] = level;
+                }
+            }
+        }
+
+        const houses = Object.values(state.structures)
+            .filter(structure => structure.type === STRUCTURE_TYPES.HOUSE);
+        state.structures = {...state.structures};
+        for (let house of houses) {
+            let waterLevel = 0;
+            for (const [x, y] of lattice([house.start.x, house.end.x + 1],
+                                         [house.start.y, house.end.y + 1])) {
+                const key = `${x}.${y}`;
+                waterLevel = Math.max(waterLevel, waterLayer[key] || 0);
+            }
+            state.structures[house.key] = house = {
+                ...house, data: {
+                    ...house.data,
+                    water: waterLevel,
+                },
+            };
+        }
     }
 
     static [actions.RESIZE_TERRAIN] (state, action) {
@@ -151,6 +213,18 @@ export class StructuresReducer extends Reducer {
                 state.structures[`${eX}.${eY}`] = {main: key};
             }
         }
+
+        return state;
+    }
+
+    static resizeLayers(state) {
+        const mapLattice = lattice(width, height);
+        state.layers = {...state.layers};
+        for (const layerName in state.layers) {
+            state.layers[layerName] = toDict(mapLattice, key => null);
+        }
+
+        this.updateLayers(state, true);
 
         return state;
     }
