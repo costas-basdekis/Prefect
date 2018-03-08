@@ -8,6 +8,9 @@ class UCToolbox extends React.Component {
         {label: "Entry", key: "ENTRY", selectionType: "TILE", data: {type: 'ENTRY'}},
         {label: "Exit", key: "EXIT", selectionType: "TILE", data: {type: 'EXIT'}},
         {label: "Housing", key: "HOUSE", selectionType: "SQUARE", data: {type: 'HOUSE'}},
+        {label: "Water", key: "WATER", children: [
+            {label: "Well", key: "WELL", selectionType: "SQUARE", data: {type: 'WELL'}},
+        ]},
     ];
 
     static mapPropsToState(state, ownProps) {
@@ -27,10 +30,15 @@ class UCToolbox extends React.Component {
         </g>
     }
 
-    renderTool(tool, index) {
-        const x = 800, y = index * 30;
+    renderTool(tool, index, xIndex=0) {
+        const x = 800 - 105 * xIndex, y = index * 30;
         const width = 100, height = 25;
-        const isSelected = tool.key === this.state.selected;
+        const isSelected = this.isToolSelected(tool);
+        let children = "";
+        if (isSelected && tool.children) {
+            children = tool.children.map((child, i) =>
+                this.renderTool(child, i + index, xIndex + 1));
+        }
         return <g key={tool.key}>
             <rect
                 x={x} y={y}
@@ -44,18 +52,39 @@ class UCToolbox extends React.Component {
                 style={{pointerEvents: "none"}}>
                 {tool.label}
             </text>
+            {children}
         </g>;
     }
 
-    onToolClick = ({key, selectionType, data}) => e => {
+    isToolSelected(tool) {
+        if (tool.key === this.state.selected) {
+            return true;
+        }
+
+        if (!tool.children) {
+            return false;
+        }
+
+        for (const child of tool.children) {
+            if (this.isToolSelected(child)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    onToolClick = ({key, selectionType, data, children}) => e => {
         if (this.state.selected === key) {
             this.setState({selected: null});
             this.setSelectionType(null);
             this.setTool(null, null);
         } else {
             this.setState({selected: key});
-            this.setSelectionType(selectionType);
-            this.setTool(key, data);
+            if (!children) {
+                this.setSelectionType(selectionType);
+                this.setTool(key, data);
+            }
         }
     }
 

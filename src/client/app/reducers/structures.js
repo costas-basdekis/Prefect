@@ -7,6 +7,7 @@ export const STRUCTURE_TYPES = toDict([
     'EXIT',
     'ROAD',
     'HOUSE',
+    'WELL',
 ], key => key);
 
 export const STRUCTURES = {
@@ -48,6 +49,13 @@ export const STRUCTURES = {
             water: 0,
         }),
         getText: ({data: {level, occupants}}) => `${level}/${occupants}`,
+    },
+    [STRUCTURE_TYPES.WELL]: {
+        size: {width: 1, height: 1},
+        renderOptions: {
+            stroke: "cyan",
+            fill: "cyan",
+        },
     },
 };
 
@@ -166,6 +174,8 @@ export class StructuresReducer extends Reducer {
             return this.setStructure({...state}, tool, selectedTiles);
         } else if (tool.key === 'HOUSE') {
             return this.setStructures({...state}, tool, selectedTiles);
+        } else if (tool.key === 'WELL') {
+            return this.setStructure({...state}, tool, selectedTiles);
         }
 
         return state;
