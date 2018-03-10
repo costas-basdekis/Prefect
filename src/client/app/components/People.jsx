@@ -1,7 +1,7 @@
 import React from 'react';
 import { connect4 } from '../utils.js'
 
-export class UCPeople extends React.Component {
+export class UCPeople extends React.PureComponent {
     static rectSize = 20;
     static size = 7.5;
 

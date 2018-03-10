@@ -1,37 +1,44 @@
 import React from 'react';
-import { connect4, lattice } from '../utils.js'
+import { createSelector } from 'reselect';
+import { connect4, select4, lattice } from '../utils.js'
 
-export class BaseGrid extends React.Component {
+export class BaseGrid extends React.PureComponent {
     static size = 20;
     mouseEvents = false;
+    static selectors = {
+        properties: (state, ownProps) => state.properties,
+    };
 
     constructor(props) {
         super(props);
         this.size = this.constructor.size;
     }
 
-    static mapStateToProps(state, ownProps) {
+    static mapStateToProps(options) {
         return {
-            properties: state.properties,
-            tiles: lattice(state.properties.width,
-                state.properties.height).map(([x, y]) => ({
-                    x, y,
-                    key: `${x}.${y}`,
-                })).map(tile => ({
-                    ...tile,
-                    tile: this.createTile(state, ownProps, tile),
-                })).filter(tile =>
-                    (tile.tile !== null)
-                    && (typeof tile.tile !== typeof undefined)),
+            properties: options.properties,
+            tiles: this.createTiles(options),
             center: {
-                x: this.size * state.properties.width / 2,
-                y: this.size * state.properties.height / 2,
+                x: this.size * options.properties.width / 2,
+                y: this.size * options.properties.height / 2,
             },
-            ...ownProps,
         };
     }
 
-    static createTile(state, ownProps, tile) {
+    static createTiles(options) {
+        return lattice(options.properties.width,
+            options.properties.height).map(([x, y]) => ({
+                x, y,
+                key: `${x}.${y}`,
+            })).map(tile => ({
+                ...tile,
+                tile: this.createTile(options, tile),
+            })).filter(tile =>
+                (tile.tile !== null)
+                && (typeof tile.tile !== typeof undefined));
+    }
+
+    static createTile(options, tile) {
         return null;
     }
 

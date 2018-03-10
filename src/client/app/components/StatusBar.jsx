@@ -1,7 +1,7 @@
 import React from 'react';
 import { connect4, lattice } from '../utils.js'
 
-class UCStatusBar extends React.Component {
+class UCStatusBar extends React.PureComponent {
     LABELS = [
         {key: 'date', getText: () => `
             ${this.props.running ? '\u25B6\uFE0F' : '\u23F8\uFE0F'}

@@ -161,7 +161,7 @@ export class StructuresReducer extends Reducer {
 
         const houses = Object.values(state.structures)
             .filter(structure => structure.type === STRUCTURE_TYPES.HOUSE);
-        state.structures = {...state.structures};
+        let oldStructures = state.structures;
         for (let house of houses) {
             let waterLevel = 0;
             for (const [x, y] of lattice([house.start.x, house.end.x + 1],
@@ -169,12 +169,17 @@ export class StructuresReducer extends Reducer {
                 const key = `${x}.${y}`;
                 waterLevel = Math.max(waterLevel, waterLayer[key] || 0);
             }
-            state.structures[house.key] = house = {
-                ...house, data: {
-                    ...house.data,
-                    water: waterLevel,
-                },
-            };
+            if (house.data.water !== waterLevel) {
+                if (oldStructures === state.structures) {
+                    state.structures = {...state.structures};
+                }
+                state.structures[house.key] = house = {
+                    ...house, data: {
+                        ...house.data,
+                        water: waterLevel,
+                    },
+                };
+            }
         }
     }
 
@@ -256,6 +261,7 @@ export class StructuresReducer extends Reducer {
     }
 
     static clearStructures(state, selectedTiles) {
+        const oldStructures = state.structures;
         for (const {key} of selectedTiles) {
             let structure = state.structures[key];
             if (!structure) {
@@ -263,6 +269,9 @@ export class StructuresReducer extends Reducer {
             }
             if (structure.main) {
                 structure = state.structures[structure.main];
+            }
+            if (oldStructures === state.structures) {
+                state.structures = {...state.structures};
             }
             for (const [x, y] of this.getStructureTiles(structure)) {
                 delete state.structures[`${x}.${y}`];
@@ -317,6 +326,9 @@ export class StructuresReducer extends Reducer {
                 return state;
             }
         }
+
+        state.structures = {...state.structures};
+        state.structuresKeysById = {...state.structuresKeysById};
 
         for (const [eX, eY] of this.getStructureTiles(structure)) {
             const key = `${eX}.${eY}`;

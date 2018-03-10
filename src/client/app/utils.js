@@ -1,8 +1,22 @@
 import { connect } from 'react-redux'
+import { createSelector } from 'reselect';
 import * as actions from './actions/actions.js'
 
 export function connect4(component) {
-    return connect((s, oP) => component.mapStateToProps(s, oP), actions)(component);
+    let mapStateToProps = component.mapStateToProps.bind(component);;
+    if (component.selectors) {
+        mapStateToProps = select4(component.selectors, mapStateToProps);
+    }
+    return connect(mapStateToProps, actions)(component);
+}
+
+export function select4(selectorsDict, method) {
+    const keys = Object.keys(selectorsDict).sort();
+    const selectors = keys.map(key => selectorsDict[key]);
+    return createSelector(selectors, (...values) => {
+        const valuesDict = toDict(values, value => value, (value, i) => keys[i]);
+        return method(valuesDict);
+    });
 }
 
 export function range(startOrEnd, end, step=1) {

@@ -24,11 +24,7 @@ export class PeopleReducer extends Reducer {
     ];
 
     static [actions.TICK] (state, action) {
-        const newState = {
-            ...state,
-            people: {...state.people},
-            structures: {...state.structures},
-        };
+        const newState = {...state};
 
         this.removeWithMissingTarget(newState);
         this.settleNewcomers(newState);
@@ -39,10 +35,7 @@ export class PeopleReducer extends Reducer {
 
     static [actions.ANIMATION_TICK] (state, action) {
         const {fraction} = action;
-        const newState = {
-            ...state,
-            people: {...state.people},
-        };
+        const newState = {...state};
 
         this.movePeople(newState, fraction);
 
@@ -59,6 +52,7 @@ export class PeopleReducer extends Reducer {
     }
 
     static movePeople(state, fraction) {
+        const oldPeople = state.people;
         for (let person of Object.values(state.people)) {
             if (!person.targetStructureId) {
                 continue;
@@ -81,6 +75,9 @@ export class PeopleReducer extends Reducer {
                 newY = targetY;
             }
             if (x !== targetX || y != targetY) {
+                if (oldPeople === state.people) {
+                    state.people = {...state.people};
+                }
                 person = state.people[person.id] = {
                     ...person,
                     position: {x: newX, y: newY},
@@ -90,6 +87,7 @@ export class PeopleReducer extends Reducer {
     }
 
     static settleNewcomers(state) {
+        const oldStructures = state.structures;
         for (let person of Object.values(state.people)) {
             if (!person.targetStructureId) {
                 continue;
@@ -100,6 +98,10 @@ export class PeopleReducer extends Reducer {
             const {x: targetX, y: targetY} = structure.start;
             if (x !== targetX || y !== targetY) {
                 continue;
+            }
+            if (oldStructures === state.structures) {
+                state.structures = {...state.structures};
+                state.people = {...state.people};
             }
             structure = state.structures[structure.key] = {
                 ...structure,
@@ -133,6 +135,7 @@ export class PeopleReducer extends Reducer {
     }
 
     static tickNewcomers(state) {
+        const oldStructures = state.structures;
         const houses = Object.values(state.structures)
             .filter(tile => tile.type === STRUCTURE_TYPES.HOUSE);
         for (const oldHouse of houses) {
@@ -140,6 +143,10 @@ export class PeopleReducer extends Reducer {
                 - sum(oldHouse.data.newcomers.map(newcomerId => state.people[newcomerId].count));
             if (spaceLeft <= 0) {
                 continue;
+            }
+            if (oldStructures === state.structures) {
+                state.structures = {...state.structures};
+                state.people = {...state.people};
             }
             const newcomer = this.createNewcomer(state, spaceLeft, oldHouse.id);
             const house = state.structures[oldHouse.key] = {...oldHouse, data: {...oldHouse.data}};

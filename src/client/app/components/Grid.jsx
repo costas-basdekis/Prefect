@@ -5,8 +5,19 @@ import { BaseGrid } from './BaseGrid.jsx'
 class UCGrid extends BaseGrid {
     mouseEvents = true;
 
-    static createTile(state, ownProps, tile) {
-        return true;
+    static selectors = {
+        ...BaseGrid.selectors,
+        hovered: (state, ownProps) => ownProps.hovered,
+        selection: (state, ownProps) => ownProps.selection,
+        isHovered: (state, ownProps) => ownProps.isHovered,
+        isSelected: (state, ownProps) => ownProps.isSelected,
+    };
+
+    static createTile(options, tile) {
+        const isHovered = options.isHovered(tile.x, tile.y);
+        const isSelected = options.isSelected(tile.x, tile.y);
+
+        return {isHovered, isSelected};
     }
 
     OPTIONS = {
@@ -29,10 +40,8 @@ class UCGrid extends BaseGrid {
     }
 
     getTileOptions(tile) {
-        const isHovered = this.isHovered(tile.x, tile.y);
-        const hoveredOptions = this.OPTIONS[isHovered] || {};
-        const isSelected = this.isSelected(tile.x, tile.y);
-        const options = hoveredOptions[isSelected] || {};
+        const hoveredOptions = this.OPTIONS[tile.tile.isHovered] || {};
+        const options = hoveredOptions[tile.tile.isSelected] || {};
         return options;
     }
 }

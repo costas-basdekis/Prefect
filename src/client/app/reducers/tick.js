@@ -7,7 +7,8 @@ export class TickReducer extends Reducer {
     ];
 
     static [actions.TICK] (state, action) {
-        return this.tick({...state});
+        // return this.tick({...state});
+        return state;
     }
 
     static tick(state) {

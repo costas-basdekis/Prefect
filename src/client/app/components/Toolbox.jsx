@@ -1,7 +1,7 @@
 import React from 'react';
 import { connect4 } from '../utils.js'
 
-class UCToolbox extends React.Component {
+class UCToolbox extends React.PureComponent {
     TOOLS = [
         {label: "Road", key: "ROAD", selectionType: "ROAD", toolType: "RANGE_OF_STRUCTURES", data: {type: 'ROAD'}},
         {label: "Clear", key: "CLEAR", toolType: "CLEAR", selectionType: "SQUARE"},

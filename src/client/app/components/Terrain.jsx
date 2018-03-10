@@ -1,11 +1,17 @@
 import React from 'react';
+import { createSelector } from 'reselect';
 import { connect4, lattice } from '../utils.js'
 import { TILE_TYPES, GROUND_TYPES } from '../reducers/terrain.js'
 import { BaseGrid } from './BaseGrid.jsx'
 
 class UCTerrain extends BaseGrid {
-    static createTile(state, ownProps, {x, y, key}) {
-        return state.terrain[`${x}.${y}`]
+    static selectors = {
+        ...BaseGrid.selectors,
+        terrain: (state, ownProps) => state.terrain,
+    };
+
+    static createTile({terrain}, {x, y, key}) {
+        return terrain[`${x}.${y}`]
     }
 
     TILE_TYPE_OPTIONS = {
