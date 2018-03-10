@@ -10,7 +10,7 @@ import { People } from '../components/People.jsx';
 import { connect4, lattice } from '../utils.js'
 
 const TICK_DURATION = 2000;
-const ANIMATION_TICK_DURATION = 500;
+const ANIMATION_TICK_DURATION = 50;
 const ANIMATION_FRACTION = ANIMATION_TICK_DURATION / TICK_DURATION;
 
 export class UCRoot extends React.Component {
