@@ -7,8 +7,7 @@ export class TickReducer extends Reducer {
     ];
 
     static [actions.TICK] (state, action) {
-        // return this.tick({...state});
-        return state;
+        return this.tick({...state});
     }
 
     static tick(state) {
@@ -18,7 +17,11 @@ export class TickReducer extends Reducer {
     }
 
     static tickDate(state) {
-        state.date = {...state.date, day: state.date.day + 1};
+        state.date = {
+            ...state.date,
+            day: state.date.day + 1,
+            ticks: state.date.ticks + 1,
+        };
         if (state.date.day >= 31) {
             state.date.day = 1;
             state.date.month += 1;

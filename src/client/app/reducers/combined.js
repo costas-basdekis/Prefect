@@ -33,7 +33,11 @@ class CombinedReducer {
             people: {},
             nextPersonId: 1,
             population: 0,
-            date: {year: -50, month: 0, day: 1},
+            date: {
+                year: -50, month: 0, day: 1,
+                ticks: 0,
+                start: {year: -50, month: 0, day: 1},
+            },
             money: 10000,
         };
     }
@@ -47,11 +51,13 @@ class CombinedReducer {
     }
 
     static reduce(state, action) {
+        const oldWorks = Object.values(state.structures).filter(s => s && s.data && s.data.workerSeekerId);
+        let newState = state;
         for (const reducer of this.reducers) {
-            state = reducer.reduce(state, action);
+            newState = reducer.reduce(newState, action);
         }
 
-        return state;
+        return newState;
     }
 }
 

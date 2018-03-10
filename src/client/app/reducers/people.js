@@ -1,10 +1,11 @@
 import * as actions from '../actions/actions.js'
 import { Reducer } from './base.js'
 import { STRUCTURE_TYPES } from './structures.js'
-import { toDict, sum } from '../utils.js'
+import { toDict, sum, lattice } from '../utils.js'
 
 const PEOPLE_TYPES = toDict([
     'NEWCOMER',
+    'WORKER_SEEKER',
 ], key => key);
 
 const PEOPLE = {
@@ -12,6 +13,13 @@ const PEOPLE = {
         renderOptions: {
             stroke: "yellow",
             fill: "orange",
+        },
+        speed: 1,
+    },
+    [PEOPLE_TYPES.WORKER_SEEKER]: {
+        renderOptions: {
+            stroke: "yellow",
+            fill: "grey",
         },
         speed: 1,
     },
@@ -26,9 +34,10 @@ export class PeopleReducer extends Reducer {
     static [actions.TICK] (state, action) {
         const newState = {...state};
 
-        this.removeWithMissingTarget(newState);
+        this.removePeople(newState);
         this.settleNewcomers(newState);
         this.tickNewcomers(newState);
+        this.tickSeekerWorkers(newState);
 
         return newState;
     }
@@ -42,13 +51,48 @@ export class PeopleReducer extends Reducer {
         return newState;
     }
 
-    static removeWithMissingTarget(state) {
+    static removePeople(state) {
+        const oldPeople = state.people;
         for (const person of Object.values(state.people)) {
             if (!this.shouldRemovePerson(state, person)) {
                 continue;
             }
-            delete state.people[person.id];
+            if (oldPeople === state.people) {
+                state.structures = {...state.structures};
+                state.people = {...state.people};
+            }
+            this.removePerson(state, person);
         }
+    }
+
+    static removePerson(state, person) {
+        delete state.people[person.id];
+        if (person.type === PEOPLE_TYPES.WORKER_SEEKER) {
+            this.removeWorkerSeeker(state, person);
+        }
+    }
+
+    static removeWorkerSeeker(state, person) {
+        const workKey = state.structuresKeysById[person.workId];
+        if (!workKey) {
+            return true;
+        }
+        const work = state.structures[workKey];
+        if (!work) {
+            return true;
+        }
+        if (work.id !== person.workId) {
+            return true;
+        }
+        state.structures[work.key] = {
+            ...work,
+            data: {
+                ...work.data,
+                workerSeekerId: null,
+                workerSeekerRemoveOn: null,
+                workerSeekerCreatedOn: null,
+            },
+        };
     }
 
     static movePeople(state, fraction) {
@@ -117,9 +161,16 @@ export class PeopleReducer extends Reducer {
     }
 
     static shouldRemovePerson(state, person) {
-        if (!person.targetStructureId) {
-            return false;
+        if (person.type === PEOPLE_TYPES.NEWCOMER) {
+            return this.shouldRemoveNewcomer(state, person);
+        } else if (person.type === PEOPLE_TYPES.WORKER_SEEKER) {
+            return this.shouldRemoveWorkerSeeker(state, person);
         }
+
+        return false;
+    }
+
+    static shouldRemoveNewcomer(state, person) {
         const structureKey = state.structuresKeysById[person.targetStructureId];
         if (!structureKey) {
             return true;
@@ -134,10 +185,35 @@ export class PeopleReducer extends Reducer {
         return false;
     }
 
+    static shouldRemoveWorkerSeeker(state, person) {
+        const workKey = state.structuresKeysById[person.workId];
+        if (!workKey) {
+            return true;
+        }
+        const work = state.structures[workKey];
+        if (!work) {
+            return true;
+        }
+        if (work.id !== person.workId) {
+            return true;
+        }
+        if (work.data.workerSeekerRemoveOn <= state.date.ticks) {
+            return true;
+        }
+        const key = `${person.position.x}.${person.position.y}`;
+        const road = state.structures[key];
+        if (!road) {
+            return true;
+        }
+        if (road.type !== STRUCTURE_TYPES.ROAD) {
+            return true;
+        }
+        return false;
+    }
+
     static tickNewcomers(state) {
         const oldStructures = state.structures;
-        const houses = Object.values(state.structures)
-            .filter(tile => tile.type === STRUCTURE_TYPES.HOUSE);
+        const houses = this.getStructuresOfType(state, STRUCTURE_TYPES.HOUSE);
         for (const oldHouse of houses) {
             const spaceLeft = oldHouse.data.space - oldHouse.data.occupants
                 - sum(oldHouse.data.newcomers.map(newcomerId => state.people[newcomerId].count));
@@ -156,21 +232,121 @@ export class PeopleReducer extends Reducer {
         return state;
     }
 
+    static tickSeekerWorkers(state) {
+        const oldStructures = state.structures;
+        const works = this.getStructuresWithDataProperty(
+            state, 'workerSeekerCreatedOn');
+        for (const oldWork of works) {
+            if (oldWork.data.workerSeekerId) {
+                continue;
+            }
+            if (oldWork.data.workerSeekerNextOn < state.date.tick) {
+                continue;
+            }
+            const adjacentBuildings = this.getAdjacentRoads(state, oldWork);
+            const directions = [
+                {dx: 1, dy: 0},
+                {dx: 0, dy: 1},
+                {dx: -1, dy: 0},
+                {dx: 0, dy: -1},
+            ];
+            const actualAdjacentBuildings = adjacentBuildings.filter(s => s);
+            if (!actualAdjacentBuildings.length) {
+                continue;
+            }
+            const startRoad = actualAdjacentBuildings[0];
+            const direction = directions[adjacentBuildings.indexOf(startRoad)];
+            if (oldStructures === state.structures) {
+                state.structures = {...state.structures};
+                state.people = {...state.people};
+            }
+            const workerSeeker = this.createWorkerSeeker(
+                state, oldWork.id, startRoad.start, direction);
+            const {workerSeekerLife, workerSeekerSpawnWait} = oldWork.data;
+            const work = state.structures[oldWork.key] = {
+                ...oldWork,
+                data: {
+                    ...oldWork.data,
+                    workerSeekerCreatedOn: state.date.ticks,
+                    workerSeekerRemoveOn: state.date.ticks + workerSeekerLife,
+                    workerSeekerNextOn: state.date.ticks
+                        + workerSeekerLife + workerSeekerSpawnWait,
+                    workerSeekerId: workerSeeker.id,
+                },
+            };
+        }
+
+        return state;
+    }
+
+    static getAdjacentRoads(state, structure) {
+        const adjacentBuildingsLattices = [
+            lattice(
+                [structure.start.x, structure.end.x + 1],
+                [structure.start.y - 1, structure.start.y],
+            ), lattice(
+                [structure.end.x + 1, structure.end.x + 2],
+                [structure.start.y, structure.end.y + 1],
+            ), lattice(
+                [structure.end.x, structure.start.x - 1, -1],
+                [structure.end.y + 1, structure.end.y + 2],
+            ), lattice(
+                [structure.start.x - 1, structure.start.x],
+                [structure.end.y, structure.end.y - 1, -1],
+            )
+        ];
+        const adjacentBuildings = adjacentBuildingsLattices
+            .map(adjacentBuildingsLattice => adjacentBuildingsLattice
+                .map(([x, y]) => `${x}.${y}`)
+                .map(key => state.structures[key])
+                .filter(structure => structure)
+                .filter(structure => structure.type = STRUCTURE_TYPES.ROAD)
+                [0]
+            );
+
+        return adjacentBuildings;
+    }
+
+    static getStructuresOfType(state, type) {
+        return Object.values(state.structures)
+            .filter(tile => tile.type === type);
+    }
+
+    static getStructuresWithDataProperty(state, property) {
+        return Object.values(state.structures)
+            .filter(tile => tile.data && (property in tile.data));
+    }
+
+    static createWorkerSeeker(state, workId, {x, y}, {dx, dy}) {
+        const workerSeeker = this.createPerson(state, {
+            type: PEOPLE_TYPES.WORKER_SEEKER,
+            position: {x, y},
+            direction: {dx, dy},
+            key: `${x}.${y}`,
+            workId,
+            pastKeys: [`${x}.${y}`],
+        });
+
+        return workerSeeker;
+    }
+
     static createNewcomer(state, count, targetStructureId) {
         const newcomer = this.createPerson(state, {
             type: PEOPLE_TYPES.NEWCOMER,
             position: this.getEntry(state),
             targetStructureId,
+            count,
         });
-        newcomer.count = count;
 
         return newcomer;
     }
 
-    static createPerson(state, {type, position={x: 0, y: 0}, targetStructureId=null}) {
+    static createPerson(state, args) {
+        const {type, position={x: 0, y: 0}, targetStructureId=null} = args;
         const peopleType = PEOPLE[type];
         const person = {
             ...peopleType,
+            ...args,
             id: state.nextPersonId,
             type,
             position,

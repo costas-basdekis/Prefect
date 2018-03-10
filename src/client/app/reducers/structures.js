@@ -8,6 +8,7 @@ export const STRUCTURE_TYPES = toDict([
     'ROAD',
     'HOUSE',
     'WELL',
+    'PREFECTURE',
 ], key => key);
 
 export const STRUCTURES = {
@@ -60,6 +61,23 @@ export const STRUCTURES = {
             level: 1,
             waterSupplyLevelNeeded: 0,
             range: 2,
+        }),
+    },
+    [STRUCTURE_TYPES.PREFECTURE]: {
+        size: {width: 1, height: 1},
+        renderOptions: {
+            stroke: "gold",
+            fill: "red",
+        },
+        makeData: tile => ({
+            workersNeeded: 5,
+            workersAllocated: 0,
+            workerSeekerId: null,
+            workerSeekerCreatedOn: null,
+            workerSeekerRemoveOn: null,
+            workerSeekerNextOn: 0,
+            workerSeekerLife: 20,
+            workerSeekerSpawnWait: 3,
         }),
     },
 };
