@@ -75,14 +75,14 @@ export class PeopleReducer extends Reducer {
     static removeWorkerSeeker(state, person) {
         const workKey = state.structuresKeysById[person.workId];
         if (!workKey) {
-            return true;
+            return;
         }
         const work = state.structures[workKey];
         if (!work) {
-            return true;
+            return;
         }
         if (work.id !== person.workId) {
-            return true;
+            return;
         }
         state.structures[work.key] = {
             ...work,
@@ -96,38 +96,126 @@ export class PeopleReducer extends Reducer {
     }
 
     static movePeople(state, fraction) {
+        this.moveNewcomers(state, fraction);
+        this.moveWorkerSeekers(state, fraction);
+
+        return state;
+    }
+
+    static moveWorkerSeekers(state, fraction) {
         const oldPeople = state.people;
-        for (let person of Object.values(state.people)) {
-            if (!person.targetStructureId) {
-                continue;
+        const allDirections = [
+            {dx: 1, dy: 0},
+            {dx: 0, dy: 1},
+            {dx: -1, dy: 0},
+            {dx: 0, dy: -1},
+        ];
+        for (let person of this.getPeopleOfType(state, PEOPLE_TYPES.WORKER_SEEKER)) {
+            const {x, y} = person.position;
+            if (!person.nextPosition || ((x === person.nextPosition.x) && (y === person.nextPosition.y))) {
+                const index = allDirections.indexOf(person.direction);
+                const directions =
+                    allDirections.slice(index).concat(
+                        allDirections.slice(0, index));
+                const {x, y} = person.position;
+                const positions = directions
+                    .map(({dx, dy}) => ({x: x + dx, y: y + dy}));
+                const roads = positions
+                    .map(({x, y}) => `${x}.${y}`)
+                    .map(key => state.structures[key])
+                    .filter(structure => structure)
+                    .filter(structure => structure.type === STRUCTURE_TYPES.ROAD);
+                if (!roads.length) {
+                    if (oldPeople === state.people) {
+                        state.people === {...state.people};
+                    }
+                    state.people[person.id] = {
+                        ...person,
+                        hasNoRoads: true,
+                    };
+                    continue;
+                }
+                let nextRoad;
+                const newRoad = roads
+                    .filter(road => person.pastKeys.indexOf(road.key) < 0)[0];
+                if (newRoad) {
+                    console.log("new road", newRoad.key, state);
+                    nextRoad = newRoad;
+                } else {
+                    const minIndex = Math.min(...roads
+                        .map(road => person.pastKeys.indexOf(road.key))
+                        .filter(index => index >= 0));
+                    const oldestRoad =
+                        state.structures[person.pastKeys[minIndex]];
+                    console.log("old road", oldestRoad.key, state);
+                    nextRoad = oldestRoad;
+                }
+                if (oldPeople === state.people) {
+                    state.people === {...state.people};
+                }
+                state.people[person.id] = person = {
+                    ...person,
+                    nextPosition: {...nextRoad.start},
+                    pastKeys: person.pastKeys
+                        .filter(key => key != nextRoad.key)
+                        .concat([nextRoad.key]),
+                };
             }
+
+            const {x: targetX, y: targetY} = person.nextPosition;
+            if (x !== targetX || y !== targetY) {
+                if (oldPeople === state.people) {
+                    state.people = {...state.people};
+                }
+                this.movePerson(state, person, {targetX, targetY}, fraction);
+            }
+        }
+
+        return state;
+    }
+
+    static moveNewcomers(state, fraction) {
+        const oldPeople = state.people;
+        for (let person of this.getPeopleOfType(state, PEOPLE_TYPES.NEWCOMER)) {
             const structureKey = state.structuresKeysById[person.targetStructureId];
             const structure = state.structures[structureKey];
             const {x, y} = person.position;
             const {x: targetX, y: targetY} = structure.start;
-            const dX = targetX - x, dY = targetY - y;
-            const delta = Math.sqrt(dX * dX + dY * dY);
-            let newX, newY;
-            const speed = person.speed * fraction;
-            if (delta > 0 && delta > speed) {
-                const moveX = dX * speed / delta;
-                const moveY = dY * speed / delta;
-                newX = x + moveX;
-                newY = y + moveY;
-            } else {
-                newX = targetX;
-                newY = targetY;
-            }
-            if (x !== targetX || y != targetY) {
+            if (x !== targetX || y !== targetY) {
                 if (oldPeople === state.people) {
                     state.people = {...state.people};
                 }
-                person = state.people[person.id] = {
-                    ...person,
-                    position: {x: newX, y: newY},
-                };
+                this.movePerson(state, person, {targetX, targetY}, fraction);
             }
         }
+
+        return state;
+    }
+
+    static movePerson(state, person, {targetX, targetY}, fraction) {
+        const {x, y} = person.position;
+        const dX = targetX - x, dY = targetY - y;
+        const delta = Math.sqrt(dX * dX + dY * dY);
+        let newX, newY;
+        const speed = person.speed * fraction;
+        if (delta > 0 && delta > speed) {
+            const moveX = dX * speed / delta;
+            const moveY = dY * speed / delta;
+            newX = x + moveX;
+            newY = y + moveY;
+        } else {
+            newX = targetX;
+            newY = targetY;
+        }
+        person = state.people[person.id] = {
+            ...person,
+            position: {x: newX, y: newY},
+        };
+    }
+
+    static getPeopleOfType(state, type) {
+        return Object.values(state.people)
+            .filter(person => person.type === type);
     }
 
     static settleNewcomers(state) {
@@ -200,12 +288,18 @@ export class PeopleReducer extends Reducer {
         if (work.data.workerSeekerRemoveOn <= state.date.ticks) {
             return true;
         }
-        const key = `${person.position.x}.${person.position.y}`;
+        if (!person.nextPosition) {
+            return false;
+        }
+        const key = `${person.nextPosition.x}.${person.nextPosition.y}`;
         const road = state.structures[key];
         if (!road) {
             return true;
         }
         if (road.type !== STRUCTURE_TYPES.ROAD) {
+            return true;
+        }
+        if (person.hasNoRoads) {
             return true;
         }
         return false;
@@ -240,7 +334,7 @@ export class PeopleReducer extends Reducer {
             if (oldWork.data.workerSeekerId) {
                 continue;
             }
-            if (oldWork.data.workerSeekerNextOn < state.date.tick) {
+            if (oldWork.data.workerSeekerNextOn >= state.date.ticks) {
                 continue;
             }
             const adjacentBuildings = this.getAdjacentRoads(state, oldWork);
@@ -300,7 +394,7 @@ export class PeopleReducer extends Reducer {
                 .map(([x, y]) => `${x}.${y}`)
                 .map(key => state.structures[key])
                 .filter(structure => structure)
-                .filter(structure => structure.type = STRUCTURE_TYPES.ROAD)
+                .filter(structure => structure.type === STRUCTURE_TYPES.ROAD)
                 [0]
             );
 
@@ -322,6 +416,8 @@ export class PeopleReducer extends Reducer {
             type: PEOPLE_TYPES.WORKER_SEEKER,
             position: {x, y},
             direction: {dx, dy},
+            nextPosition: null,
+            hasNoRoads: false,
             key: `${x}.${y}`,
             workId,
             pastKeys: [`${x}.${y}`],
