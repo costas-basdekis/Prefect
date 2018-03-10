@@ -113,15 +113,15 @@ export class PeopleReducer extends Reducer {
         for (let person of this.getPeopleOfType(state, PEOPLE_TYPES.WORKER_SEEKER)) {
             const {x, y} = person.position;
             if (!person.nextPosition || ((x === person.nextPosition.x) && (y === person.nextPosition.y))) {
-                const index = allDirections.indexOf(person.direction);
+                const index = allDirections.indexOf(allDirections.filter(({dx, dy}) => dx === person.direction.dx && dy === person.direction.dy)[0]);
                 const directions =
                     allDirections.slice(index).concat(
                         allDirections.slice(0, index));
                 const {x, y} = person.position;
-                const positions = directions
-                    .map(({dx, dy}) => ({x: x + dx, y: y + dy}));
-                const roads = positions
-                    .map(({x, y}) => `${x}.${y}`)
+                const keys = directions
+                    .map(({dx, dy}) => ({x: x + dx, y: y + dy}))
+                    .map(({x, y}) => `${x}.${y}`);
+                const roads = keys
                     .map(key => state.structures[key])
                     .filter(structure => structure)
                     .filter(structure => structure.type === STRUCTURE_TYPES.ROAD);
@@ -153,12 +153,14 @@ export class PeopleReducer extends Reducer {
                 if (oldPeople === state.people) {
                     state.people === {...state.people};
                 }
+                const direction = directions[keys.indexOf(nextRoad.key)];
                 state.people[person.id] = person = {
                     ...person,
                     nextPosition: {...nextRoad.start},
                     pastKeys: person.pastKeys
                         .filter(key => key != nextRoad.key)
                         .concat([nextRoad.key]),
+                    direction,
                 };
             }
 

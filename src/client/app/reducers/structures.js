@@ -76,8 +76,8 @@ export const STRUCTURES = {
             workerSeekerCreatedOn: null,
             workerSeekerRemoveOn: null,
             workerSeekerNextOn: 0,
-            workerSeekerLife: 20,
-            workerSeekerSpawnWait: 3,
+            workerSeekerLife: 40,
+            workerSeekerSpawnWait: 10,
         }),
     },
 };
