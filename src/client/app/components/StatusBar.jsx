@@ -29,7 +29,7 @@ class UCStatusBar extends React.Component {
         'December',
     ];
 
-    static mapPropsToState(state, ownProps) {
+    static mapStateToProps(state, ownProps) {
         return {
             date: state.date,
             population: state.population,

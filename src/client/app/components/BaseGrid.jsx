@@ -10,7 +10,7 @@ export class BaseGrid extends React.Component {
         this.size = this.constructor.size;
     }
 
-    static mapPropsToState(state, ownProps) {
+    static mapStateToProps(state, ownProps) {
         return {
             properties: state.properties,
             tiles: lattice(state.properties.width,

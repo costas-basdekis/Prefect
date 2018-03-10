@@ -13,7 +13,7 @@ class UCToolbox extends React.Component {
         ]},
     ];
 
-    static mapPropsToState(state, ownProps) {
+    static mapStateToProps(state, ownProps) {
         return ownProps;
     }
 

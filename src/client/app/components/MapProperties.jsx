@@ -3,7 +3,7 @@ import { connect4 } from '../utils.js'
 import { titleCase } from 'change-case'
 
 class UCMapProperties extends React.Component {
-    static mapPropsToState(state, ownProps) {
+    static mapStateToProps(state, ownProps) {
         return state.properties;
     }
 

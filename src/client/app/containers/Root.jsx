@@ -25,7 +25,7 @@ export class UCRoot extends React.Component {
         running: true,
     };
 
-    static mapPropsToState(state, ownProps) {
+    static mapStateToProps(state, ownProps) {
         return {
             properties: state.properties,
             ...ownProps,

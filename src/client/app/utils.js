@@ -2,7 +2,7 @@ import { connect } from 'react-redux'
 import * as actions from './actions/actions.js'
 
 export function connect4(component) {
-    return connect((s, oP) => component.mapPropsToState(s, oP), actions)(component);
+    return connect((s, oP) => component.mapStateToProps(s, oP), actions)(component);
 }
 
 export function range(startOrEnd, end, step=1) {

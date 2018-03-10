@@ -11,7 +11,7 @@ export class UCPeople extends React.Component {
         this.size = this.constructor.size;
     }
 
-    static mapPropsToState(state, ownProps) {
+    static mapStateToProps(state, ownProps) {
         return {
             properties: state.properties,
             people: state.people,
