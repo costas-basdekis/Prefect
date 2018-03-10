@@ -9,6 +9,10 @@ import { Structures } from '../components/Structures.jsx';
 import { People } from '../components/People.jsx';
 import { connect4, lattice } from '../utils.js'
 
+const TICK_DURATION = 2000;
+const ANIMATION_TICK_DURATION = 500;
+const ANIMATION_FRACTION = ANIMATION_TICK_DURATION / TICK_DURATION;
+
 export class UCRoot extends React.Component {
     state = {
         hovered: {x: null, y: null},
@@ -38,6 +42,10 @@ export class UCRoot extends React.Component {
 
     tick = () => {
         this.props.tick();
+    }
+
+    animationTick = () => {
+        this.props.animationTick(ANIMATION_FRACTION);
     }
 
     render() {
@@ -79,13 +87,16 @@ export class UCRoot extends React.Component {
     }
 
     tickStart() {
-        this.interval = setInterval(() => this.tick(), 2000);
+        this.interval = setInterval(() => this.tick(), TICK_DURATION);
+        this.animationInterval = setInterval(() => this.animationTick(), ANIMATION_TICK_DURATION);
         this.setState({running: true});
     }
 
     tickPause() {
         clearInterval(this.interval);
         this.interval = null;
+        clearInterval(this.animationInterval);
+        this.animationInterval = null;
         this.setState({running: false});
     }
 

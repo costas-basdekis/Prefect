@@ -1,6 +1,7 @@
 export const RESIZE_TERRAIN = 'RESIZE_TERRAIN';
 export const SELECTION_END = 'SELECTION_END';
 export const TICK = 'TICK';
+export const ANIMATION_TICK = 'ANIMATION_TICK';
 
 export const resizeTerrain = (width, height) => ({
     type: RESIZE_TERRAIN,
@@ -16,4 +17,9 @@ export const selectionEnd = (tool, selectedTiles) => ({
 
 export const tick = () => ({
     type: TICK,
+});
+
+export const animationTick = (fraction) => ({
+    type: ANIMATION_TICK,
+    fraction,
 });

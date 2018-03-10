@@ -20,6 +20,7 @@ const PEOPLE = {
 export class PeopleReducer extends Reducer {
     static actions = [
         actions.TICK,
+        actions.ANIMATION_TICK,
     ];
 
     static [actions.TICK] (state, action) {
@@ -30,9 +31,20 @@ export class PeopleReducer extends Reducer {
         };
 
         this.removeWithMissingTarget(newState);
-        this.movePeople(newState);
         this.settleNewcomers(newState);
         this.tickNewcomers(newState);
+
+        return newState;
+    }
+
+    static [actions.ANIMATION_TICK] (state, action) {
+        const {fraction} = action;
+        const newState = {
+            ...state,
+            people: {...state.people},
+        };
+
+        this.movePeople(newState, fraction);
 
         return newState;
     }
@@ -46,7 +58,7 @@ export class PeopleReducer extends Reducer {
         }
     }
 
-    static movePeople(state) {
+    static movePeople(state, fraction) {
         for (let person of Object.values(state.people)) {
             if (!person.targetStructureId) {
                 continue;
@@ -58,9 +70,10 @@ export class PeopleReducer extends Reducer {
             const dX = targetX - x, dY = targetY - y;
             const delta = Math.sqrt(dX * dX + dY * dY);
             let newX, newY;
-            if (delta > 0 && delta > person.speed) {
-                const moveX = dX * person.speed / delta;
-                const moveY = dY * person.speed / delta;
+            const speed = person.speed * fraction;
+            if (delta > 0 && delta > speed) {
+                const moveX = dX * speed / delta;
+                const moveY = dY * speed / delta;
                 newX = x + moveX;
                 newY = y + moveY;
             } else {
