@@ -575,7 +575,7 @@ export class PeopleReducer extends Reducer {
                 [structure.end.y + 1, structure.end.y + 2],
             ), lattice(
                 [structure.start.x - 1, structure.start.x],
-                [structure.end.y, structure.end.y - 1, -1],
+                [structure.end.y, structure.start.y - 1, -1],
             )
         ];
         const adjacentBuildings = adjacentBuildingsLattices

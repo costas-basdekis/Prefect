@@ -20,6 +20,9 @@ class UCToolbox extends React.PureComponent {
         {label: "Resources", key: "RESOURCES", children: [
             {label: "Wheat Farm", key: "WHEAT_FARM", toolType: "SINGLE_STRUCTURE", selectionType: "TILE", selectionSize: {width: 3, height: 3}, data: {type: 'WHEAT_FARM'}},
         ]},
+        {label: "Food", key: "FOOD", children: [
+            {label: "Granary", key: "GRANARY", toolType: "SINGLE_STRUCTURE", selectionType: "TILE", selectionSize: {width: 3, height: 3}, data: {type: 'GRANARY'}},
+        ]},
     ];
 
     static mapStateToProps(state, ownProps) {

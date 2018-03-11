@@ -11,6 +11,7 @@ export const STRUCTURE_TYPES = toDict([
     'PREFECTURE',
     'ENGINEERS_POST',
     'WHEAT_FARM',
+    'GRANARY',
 ], key => key);
 
 const makeWorkData = (needed) => ({
@@ -155,6 +156,32 @@ export const STRUCTURES = {
         getText: tile => `
             ${workerSeekerGetText(tile)}
             [${(tile.data.product.status).toFixed(1)}/1]
+        `,
+    },
+    [STRUCTURE_TYPES.GRANARY]: {
+        size: {width: 3, height: 3},
+        renderOptions: {
+            stroke: "brown",
+            fill: "brown",
+        },
+        makeData: tile => ({
+            ...makeWorkData(10),
+            workerSeeker: makeWandererData(),
+            storage: {
+                canAccept: {
+                    'wheat': true,
+                },
+                accepts: {
+                    'wheat': true,
+                },
+                has: {},
+            },
+        }),
+        getText: tile => `
+            ${workerSeekerGetText(tile)}
+            [${Object.values(tile.data.storage.has)
+                .map(key => `${key}: ${tile.data.storage.has[key] * 100}`)
+                .join(', ')}]
         `,
     },
 };
