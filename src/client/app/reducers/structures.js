@@ -146,8 +146,16 @@ export const STRUCTURES = {
         makeData: tile => ({
             ...makeWorkData(10),
             workerSeeker: makeWandererData(),
+            product: {
+                status: 0,
+                rate: 0.1,
+                max: 2,
+            },
         }),
-        getText: workerSeekerGetText,
+        getText: tile => `
+            ${workerSeekerGetText(tile)}
+            [${(tile.data.product.status).toFixed(1)}/1]
+        `,
     },
 };
 
@@ -180,6 +188,7 @@ export class StructuresReducer extends Reducer {
 
         this.upgradeHouses(newState);
         this.updateWorks(newState);
+        this.updateProduction(newState);
         this.updateLayers(newState);
 
         return newState;
@@ -247,6 +256,35 @@ export class StructuresReducer extends Reducer {
                     },
                 };
             }
+        }
+
+        return state;
+    }
+
+    static updateProduction(state) {
+        const oldStructures = state.structures;
+        const works = this.getStructuresWithDataAttribute(state, 'product')
+        for (const work of works) {
+            const {workers, product} = work.data;
+            if (product.status >= product.max) {
+                continue;
+            }
+            if (!workers.allocated) {
+                continue;
+            }
+            if (oldStructures === state.structures) {
+                state.structures = {...state.structures};
+            }
+            state.structures[work.key] = {
+                ...work,
+                data: {
+                    ...work.data,
+                    product: {
+                        ...product,
+                        status: Math.min(product.status + product.rate, product.max),
+                    },
+                },
+            };
         }
 
         return state;
