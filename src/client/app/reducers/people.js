@@ -263,10 +263,13 @@ export class PeopleReducer extends Reducer {
                 ...work,
                 data: {
                     ...work.data,
-                    workersAvailable: true,
-                    workersAvailableUntil:
-                        state.date.ticks
-                        + work.data.workersAvailableLength,
+                    workers: {
+                        ...work.data.workers,
+                        available: true,
+                        availableUntil:
+                            state.date.ticks
+                            + work.data.workers.availableLength,
+                    },
                 },
             };
         }
@@ -469,7 +472,7 @@ export class PeopleReducer extends Reducer {
     static tickPrefects(state) {
         this.tickWanderers(
             state, 'prefect',
-            (state, work) => work.data.workersAllocated > 0,
+            (state, work) => work.data.workers.allocated > 0,
             this.createPrefect.bind(this));
 
         return state;
@@ -478,7 +481,7 @@ export class PeopleReducer extends Reducer {
     static tickEngineers(state) {
         this.tickWanderers(
             state, 'engineer',
-            (state, work) => work.data.workersAllocated > 0,
+            (state, work) => work.data.workers.allocated > 0,
             this.createEngineer.bind(this));
 
         return state;

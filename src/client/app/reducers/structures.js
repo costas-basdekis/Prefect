@@ -13,12 +13,14 @@ export const STRUCTURE_TYPES = toDict([
     'WHEAT_FARM',
 ], key => key);
 
-const makeWorkData = (workersNeeded) => ({
-    workersNeeded,
-    workersAllocated: 0,
-    workersAvailable: false,
-    workersAvailableUntil: 0,
-    workersAvailableLength: 120,
+const makeWorkData = (needed) => ({
+    workers: {
+        needed,
+        allocated: 0,
+        available: false,
+        availableUntil: 0,
+        availableLength: 120,
+    },
 });
 
 const makeWandererData = () => ({
@@ -30,9 +32,9 @@ const makeWandererData = () => ({
     spawnWait: 10,
 });
 
-const workerSeekerGetText = ({data}) =>
-    data.workersAvailable
-        ? `${data.workersAllocated}/${data.workersNeeded}`
+const workerSeekerGetText = ({data: {workers}}) =>
+    workers.available
+        ? `${workers.allocated}/${workers.needed}`
         : "!";
 
 export const STRUCTURES = {
@@ -215,8 +217,8 @@ export class StructuresReducer extends Reducer {
     static updateWorks(state) {
         const oldStructures = state.structures;
         for (const work of this.getStructuresWithDataAttribute(
-                state, 'workersAvailableUntil')) {
-            if (work.data.workersAvailableUntil < state.date.ticks) {
+                state, 'workers')) {
+            if (work.data.workers.availableUntil < state.date.ticks) {
                 if (oldStructures === state.structures) {
                     state.structures = {...state.structures};
                 }
@@ -224,10 +226,13 @@ export class StructuresReducer extends Reducer {
                     ...work,
                     data: {
                         ...work.data,
-                        workersAvailable: false,
+                        workers: {
+                            ...work.data.workers,
+                            available: false,
+                        },
                     },
                 };
-            } else if (work.data.workersAvailable && !work.data.workersAllocated) {
+            } else if (work.data.workers.available && !work.data.workers.allocated) {
                 if (oldStructures === state.structures) {
                     state.structures = {...state.structures};
                 }
@@ -235,7 +240,10 @@ export class StructuresReducer extends Reducer {
                     ...work,
                     data: {
                         ...work.data,
-                        workersAllocated: work.data.workersNeeded,
+                        workers: {
+                            ...work.data.workers,
+                            allocated: work.data.workers.needed,
+                        },
                     },
                 };
             }
