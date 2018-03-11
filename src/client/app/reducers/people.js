@@ -500,6 +500,9 @@ export class PeopleReducer extends Reducer {
                 state.people = {...state.people};
             }
             const {startRoad, direction} = this.getFirstRoad(state, work);
+            if (!startRoad || !direction) {
+                continue;
+            }
             const workerSeeker = createWanderer(
                 state, work, startRoad.start, direction);
             this.addWanderer(state, work, wandererKey, workerSeeker);

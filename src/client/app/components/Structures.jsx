@@ -9,12 +9,12 @@ class UCStructures extends BaseGrid {
     };
 
     static createTile({structures}, {key}) {
-        let structure = structures[key];
+        const structure = structures[key];
         if (!structure) {
             return null;
         }
         if (structure.main) {
-            structure = structures[structure.main];
+            return null;
         }
         return structure;
     }
@@ -24,6 +24,8 @@ class UCStructures extends BaseGrid {
             ...tile.renderOptions,
             text: (tile.getText ? tile.getText(tile) : null),
             textOptions: tile.textRenderOptions || {},
+            structureWidth: tile.structureSize.width,
+            structureHeight: tile.structureSize.height,
         };
     }
 }

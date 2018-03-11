@@ -66,9 +66,11 @@ export class BaseGrid extends React.PureComponent {
     }
 
     baseRenderTile({x, y, key, stroke="transparent", fill="transparent",
+                    structureWidth=1, structureHeight=1,
                     strokeWidth=1, text=null, textOptions={}}) {
         const rectX = x * this.size, rectY = y * this.size;
-        const width = this.size, height = this.size;
+        const width = this.size * structureWidth;
+        const height = this.size * structureHeight;
         const tileRect = this.tileRect({
             x, y, rectX, rectY, width, height, key, stroke, fill, strokeWidth});
         if (!text) {

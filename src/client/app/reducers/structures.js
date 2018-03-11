@@ -9,11 +9,12 @@ export const STRUCTURE_TYPES = toDict([
     'HOUSE',
     'WELL',
     'PREFECTURE',
-    'ENGINEERS_POST'
+    'ENGINEERS_POST',
+    'WHEAT_FARM',
 ], key => key);
 
-const makeWorkData = () => ({
-    workersNeeded: 5,
+const makeWorkData = (workersNeeded) => ({
+    workersNeeded,
     workersAllocated: 0,
     workersAvailable: false,
     workersAvailableUntil: 0,
@@ -96,7 +97,7 @@ export const STRUCTURES = {
             fill: "white",
         },
         makeData: tile => ({
-            ...makeWorkData(),
+            ...makeWorkData(5),
             workerSeeker: makeWandererData(),
             prefect: makeWandererData(),
         }),
@@ -112,7 +113,7 @@ export const STRUCTURES = {
             fill: "white",
         },
         makeData: tile => ({
-            ...makeWorkData(),
+            ...makeWorkData(5),
             workerSeeker: makeWandererData(),
             prefect: makeWandererData(),
         }),
@@ -128,9 +129,21 @@ export const STRUCTURES = {
             fill: "white",
         },
         makeData: tile => ({
-            ...makeWorkData(),
+            ...makeWorkData(5),
             workerSeeker: makeWandererData(),
             engineer: makeWandererData(),
+        }),
+        getText: workerSeekerGetText,
+    },
+    [STRUCTURE_TYPES.WHEAT_FARM]: {
+        size: {width: 3, height: 3},
+        renderOptions: {
+            stroke: "brown",
+            fill: "wheat",
+        },
+        makeData: tile => ({
+            ...makeWorkData(10),
+            workerSeeker: makeWandererData(),
         }),
         getText: workerSeekerGetText,
     },
@@ -433,6 +446,7 @@ export class StructuresReducer extends Reducer {
             renderOptions: structureType.renderOptions,
             textRenderOptions: structureType.textRenderOptions,
             getText: structureType.getText,
+            structureSize: structureType.size,
         };
         structure.data = (structureType.makeData || (() => null))(structure);
 
