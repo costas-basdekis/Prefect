@@ -26,6 +26,16 @@ const PEOPLE = {
         },
         speed: 1,
     },
+    [PEOPLE_TYPES.PREFECT]: {
+        renderOptions: {
+            stroke: "gold",
+            fill: "red",
+        },
+        textRenderOptions: {
+            fill: "white",
+        },
+        speed: 1,
+    },
 };
 
 export class PeopleReducer extends Reducer {
@@ -41,6 +51,8 @@ export class PeopleReducer extends Reducer {
         this.settleNewcomers(newState);
         this.tickNewcomers(newState);
         this.tickSeekerWorkers(newState);
+        this.tickPrefects(newState);
+        this.findWorkers(newState);
 
         return newState;
     }
@@ -101,11 +113,20 @@ export class PeopleReducer extends Reducer {
     static movePeople(state, fraction) {
         this.moveNewcomers(state, fraction);
         this.moveWorkerSeekers(state, fraction);
+        this.movePrefects(state, fraction);
 
         return state;
     }
 
     static moveWorkerSeekers(state, fraction) {
+        this.moveWanderers(state, fraction, PEOPLE_TYPES.WORKER_SEEKER);
+    }
+
+    static movePrefects(state, fraction) {
+        this.moveWanderers(state, fraction, PEOPLE_TYPES.PREFECT);
+    }
+
+    static moveWanderers(state, fraction, type) {
         const oldPeople = state.people;
         const oldStructures = state.structures;
         const allDirections = [
@@ -114,10 +135,15 @@ export class PeopleReducer extends Reducer {
             {dx: -1, dy: 0},
             {dx: 0, dy: -1},
         ];
-        for (let person of this.getPeopleOfType(state, PEOPLE_TYPES.WORKER_SEEKER)) {
+        for (let person of this.getPeopleOfType(state, type)) {
             const {x, y} = person.position;
-            if (!person.nextPosition || ((x === person.nextPosition.x) && (y === person.nextPosition.y))) {
-                const index = allDirections.indexOf(allDirections.filter(({dx, dy}) => dx === person.direction.dx && dy === person.direction.dy)[0]);
+            if (!person.nextPosition ||
+                    ((x === person.nextPosition.x)
+                     && (y === person.nextPosition.y))) {
+                const index = allDirections.indexOf(
+                    allDirections.filter(({dx, dy}) =>
+                        dx === person.direction.dx
+                        && dy === person.direction.dy)[0]);
                 const directions =
                     allDirections.slice(index).concat(
                         allDirections.slice(0, index));
@@ -168,30 +194,44 @@ export class PeopleReducer extends Reducer {
             }
 
             const {x: targetX, y: targetY} = person.nextPosition;
-            if (x !== targetX || y !== targetY) {
-                if (oldPeople === state.people) {
-                    state.people = {...state.people};
-                }
-                person = this.movePerson(state, person, {targetX, targetY}, fraction);
-                if (person.position.x === targetX && person.position.y === targetY) {
-                    if (this.areThereWorkersAround(state, person.position)) {
-                        if (oldStructures === state.structure) {
-                            state.structures = {...state.structures};
-                        }
-                        const work = state.structures[state.structuresKeysById[person.workId]];
-                        state.structures[work.key] = {
-                            ...work,
-                            data: {
-                                ...work.data,
-                                workersAvailable: true,
-                                workersAvailableUntil:
-                                    state.date.ticks
-                                    + work.data.workersAvailableLength,
-                            },
-                        };
-                    }
-                }
+            if (x === targetX && y === targetY) {
+                continue;
             }
+
+            if (oldPeople === state.people) {
+                state.people = {...state.people};
+            }
+            this.movePerson(
+                state, person, {targetX, targetY}, fraction);
+        }
+
+        return state;
+    }
+
+    static findWorkers(state) {
+        const oldStructures = state.structures;
+        const workerSeekers = this.getPeopleOfType(
+            state, PEOPLE_TYPES.WORKER_SEEKER);
+        for (let person of workerSeekers) {
+            if (!this.areThereWorkersAround(state, person.position)) {
+                continue;
+            }
+
+            if (oldStructures === state.structure) {
+                state.structures = {...state.structures};
+            }
+            const work = state.structures[
+                state.structuresKeysById[person.workId]];
+            state.structures[work.key] = {
+                ...work,
+                data: {
+                    ...work.data,
+                    workersAvailable: true,
+                    workersAvailableUntil:
+                        state.date.ticks
+                        + work.data.workersAvailableLength,
+                },
+            };
         }
 
         return state;
@@ -365,50 +405,93 @@ export class PeopleReducer extends Reducer {
     }
 
     static tickSeekerWorkers(state) {
+        this.tickWanderers(
+            state, 'workerSeeker',
+            (state, work) => true,
+            this.createWorkerSeeker.bind(this));
+
+        return state;
+    }
+
+    static tickPrefects(state) {
+        this.tickWanderers(
+            state, 'prefect',
+            (state, work) => work.data.workersAllocated > 0,
+            this.createPrefect.bind(this));
+
+        return state;
+    }
+
+    static tickWanderers(state, wandererKey, canCreateWonderer, createWanderer) {
         const oldStructures = state.structures;
         const works = this.getStructuresWithDataProperty(
-            state, 'workerSeekerCreatedOn');
-        for (const oldWork of works) {
-            if (oldWork.data.workerSeekerId) {
+            state, wandererKey);
+        for (const work of works) {
+            if (!canCreateWonderer(state, work)) {
                 continue;
             }
-            if (oldWork.data.workerSeekerNextOn >= state.date.ticks) {
+            if (!this.shouldAddWanderer(state, work, wandererKey)) {
                 continue;
             }
-            const adjacentBuildings = this.getAdjacentRoads(state, oldWork);
-            const directions = [
-                {dx: 1, dy: 0},
-                {dx: 0, dy: 1},
-                {dx: -1, dy: 0},
-                {dx: 0, dy: -1},
-            ];
-            const actualAdjacentBuildings = adjacentBuildings.filter(s => s);
-            if (!actualAdjacentBuildings.length) {
-                continue;
-            }
-            const startRoad = actualAdjacentBuildings[0];
-            const direction = directions[adjacentBuildings.indexOf(startRoad)];
             if (oldStructures === state.structures) {
                 state.structures = {...state.structures};
                 state.people = {...state.people};
             }
-            const workerSeeker = this.createWorkerSeeker(
-                state, oldWork.id, startRoad.start, direction);
-            const {workerSeekerLife, workerSeekerSpawnWait} = oldWork.data;
-            const work = state.structures[oldWork.key] = {
-                ...oldWork,
-                data: {
-                    ...oldWork.data,
-                    workerSeekerCreatedOn: state.date.ticks,
-                    workerSeekerRemoveOn: state.date.ticks + workerSeekerLife,
-                    workerSeekerNextOn: state.date.ticks
-                        + workerSeekerLife + workerSeekerSpawnWait,
-                    workerSeekerId: workerSeeker.id,
-                },
-            };
+            const {startRoad, direction} = this.getFirstRoad(state, work);
+            const workerSeeker = createWanderer(
+                state, work, startRoad.start, direction);
+            this.addWanderer(state, work, wandererKey, workerSeeker);
         }
 
         return state;
+    }
+
+    static shouldAddWanderer(state, structure, wandererKey) {
+        const wandererData = structure.data[wandererKey];
+        if (wandererData.id) {
+            return false;
+        }
+        if (wandererData.nextOn >= state.date.ticks) {
+            return false;
+        }
+
+        return true;
+    }
+
+    static addWanderer(state, structure, wandererKey, wanderer) {
+        const wandererData = structure.data[wandererKey];
+        const {life, spawnWait} = wandererData;
+        state.structures[structure.key] = {
+            ...structure,
+            data: {
+                ...structure.data,
+                [wandererKey]: {
+                    ...wandererData,
+                    createdOn: state.date.ticks,
+                    removeOn: state.date.ticks + life,
+                    nextOn: state.date.ticks + life + spawnWait,
+                    id: wanderer.id,
+                },
+            },
+        };
+    }
+
+    static getFirstRoad(state, structure) {
+        const adjacentBuildings = this.getAdjacentRoads(state, structure);
+        const directions = [
+            {dx: 1, dy: 0},
+            {dx: 0, dy: 1},
+            {dx: -1, dy: 0},
+            {dx: 0, dy: -1},
+        ];
+        const actualAdjacentBuildings = adjacentBuildings.filter(s => s);
+        if (!actualAdjacentBuildings.length) {
+            return {};
+        }
+        const startRoad = actualAdjacentBuildings[0];
+        const direction = directions[adjacentBuildings.indexOf(startRoad)];
+
+        return {startRoad, direction};
     }
 
     static getAdjacentRoads(state, structure) {
@@ -449,20 +532,30 @@ export class PeopleReducer extends Reducer {
             .filter(tile => tile.data && (property in tile.data));
     }
 
-    static createWorkerSeeker(state, workId, {x, y}, {dx, dy}) {
-        const workerSeeker = this.createPerson(state, {
-            type: PEOPLE_TYPES.WORKER_SEEKER,
+    static createWorkerSeeker(state, work, position, direction) {
+        return this.createWanderer(
+            state, PEOPLE_TYPES.WORKER_SEEKER, work, position, direction)
+    }
+
+    static createPrefect(state, work, position, direction) {
+        return this.createWanderer(
+            state, PEOPLE_TYPES.PREFECT, work, position, direction)
+    }
+
+    static createWanderer(state, type, work, {x, y}, {dx, dy}) {
+        const wanderer = this.createPerson(state, {
+            type,
             position: {x, y},
             direction: {dx, dy},
             currentPosition: {x, y},
             nextPosition: null,
             hasNoRoads: false,
             key: `${x}.${y}`,
-            workId,
+            workId: work.id,
             pastKeys: [`${x}.${y}`],
         });
 
-        return workerSeeker;
+        return wanderer;
     }
 
     static createNewcomer(state, count, targetStructureId) {

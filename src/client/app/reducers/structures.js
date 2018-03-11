@@ -78,12 +78,22 @@ export const STRUCTURES = {
             workersAvailable: false,
             workersAvailableUntil: 0,
             workersAvailableLength: 120,
-            workerSeekerId: null,
-            workerSeekerCreatedOn: null,
-            workerSeekerRemoveOn: null,
-            workerSeekerNextOn: 0,
-            workerSeekerLife: 40,
-            workerSeekerSpawnWait: 10,
+            workerSeeker: {
+                id: null,
+                createdOn: null,
+                removeOn: null,
+                nextOn: 0,
+                life: 40,
+                spawnWait: 10,
+            },
+            prefect: {
+                id: null,
+                createdOn: null,
+                removeOn: null,
+                nextOn: 0,
+                life: 40,
+                spawnWait: 10,
+            },
         }),
         getText: ({data}) => data.workersAvailable ?
             `${data.workersAllocated}/${data.workersNeeded}`
