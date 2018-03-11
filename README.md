@@ -23,12 +23,16 @@ If you have any suggestions let me know.
 * [x] Add houses
 * [x] Implement newcomers, and house level and occupancy
 * [x] People that seek workers on the streets
+* [x] Find workers on the street
 
 # Working on
-* [ ] Find workers on the street
-* [ ] Allocate workers
+* [ ] Service workers
 
 # Next features
+* [ ] Determine worker percentage
+* [ ] Allocate workers via available workers
+* [ ] Allocate workers per industry
+* [ ] Proper demographics
 * [ ] Fire & damage
 * [ ] Reservoirs and fountains
 * [ ] Farms, granaries, markets

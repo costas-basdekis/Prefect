@@ -21,6 +21,9 @@ const PEOPLE = {
             stroke: "yellow",
             fill: "grey",
         },
+        textRenderOptions: {
+            fill: "white",
+        },
         speed: 1,
     },
 };
@@ -104,6 +107,7 @@ export class PeopleReducer extends Reducer {
 
     static moveWorkerSeekers(state, fraction) {
         const oldPeople = state.people;
+        const oldStructures = state.structures;
         const allDirections = [
             {dx: 1, dy: 0},
             {dx: 0, dy: 1},
@@ -139,7 +143,6 @@ export class PeopleReducer extends Reducer {
                 const newRoad = roads
                     .filter(road => person.pastKeys.indexOf(road.key) < 0)[0];
                 if (newRoad) {
-                    console.log("new road", newRoad.key, state);
                     nextRoad = newRoad;
                 } else {
                     const minIndex = Math.min(...roads
@@ -147,7 +150,6 @@ export class PeopleReducer extends Reducer {
                         .filter(index => index >= 0));
                     const oldestRoad =
                         state.structures[person.pastKeys[minIndex]];
-                    console.log("old road", oldestRoad.key, state);
                     nextRoad = oldestRoad;
                 }
                 if (oldPeople === state.people) {
@@ -156,6 +158,7 @@ export class PeopleReducer extends Reducer {
                 const direction = directions[keys.indexOf(nextRoad.key)];
                 state.people[person.id] = person = {
                     ...person,
+                    currentPosition: {...person.position},
                     nextPosition: {...nextRoad.start},
                     pastKeys: person.pastKeys
                         .filter(key => key != nextRoad.key)
@@ -169,11 +172,42 @@ export class PeopleReducer extends Reducer {
                 if (oldPeople === state.people) {
                     state.people = {...state.people};
                 }
-                this.movePerson(state, person, {targetX, targetY}, fraction);
+                person = this.movePerson(state, person, {targetX, targetY}, fraction);
+                if (person.position.x === targetX && person.position.y === targetY) {
+                    if (this.areThereWorkersAround(state, person.position)) {
+                        if (oldStructures === state.structure) {
+                            state.structures = {...state.structures};
+                        }
+                        const work = state.structures[state.structuresKeysById[person.workId]];
+                        state.structures[work.key] = {
+                            ...work,
+                            data: {
+                                ...work.data,
+                                workersAvailable: true,
+                                workersAvailableUntil:
+                                    state.date.ticks
+                                    + work.data.workersAvailableLength,
+                            },
+                        };
+                    }
+                }
             }
         }
 
         return state;
+    }
+
+    static areThereWorkersAround(state, {x, y}) {
+        const points = lattice([x - 2, x + 3], [y - 2, y + 3]);
+        const keys = points
+            .map(([x, y]) => `${x}.${y}`)
+            .map(key => state.structures[key]);
+        const houses = keys
+            .filter(structure => structure)
+            .filter(structure => structure.type === STRUCTURE_TYPES.HOUSE);
+        const housesWithWorkers = houses
+            .filter(structure => structure.data.occupants > 0);
+        return housesWithWorkers.length > 0;
     }
 
     static moveNewcomers(state, fraction) {
@@ -213,6 +247,8 @@ export class PeopleReducer extends Reducer {
             ...person,
             position: {x: newX, y: newY},
         };
+
+        return person;
     }
 
     static getPeopleOfType(state, type) {
@@ -418,6 +454,7 @@ export class PeopleReducer extends Reducer {
             type: PEOPLE_TYPES.WORKER_SEEKER,
             position: {x, y},
             direction: {dx, dy},
+            currentPosition: {x, y},
             nextPosition: null,
             hasNoRoads: false,
             key: `${x}.${y}`,

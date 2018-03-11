@@ -38,6 +38,7 @@ export class UCPeople extends React.PureComponent {
         return {
             ...person.renderOptions,
             text: (person.getText ? person.getText(person) : null),
+            textOptions: person.textRenderOptions || {},
         };
     }
 
@@ -50,13 +51,16 @@ export class UCPeople extends React.PureComponent {
     }
 
     baseRenderPerson({position: {x, y}, id, stroke="transparent", fill="transparent",
-                    strokeWidth=1}) {
+                    strokeWidth=1, textOptions={}}) {
         const radius = this.size;
         const circleX = (x + 0.5) * this.rectSize, circleY = (y + 0.5) * this.rectSize;
         const personCircle = this.personCircle({
             x, y, circleX, circleY, radius, id, stroke, fill, strokeWidth});
-        const personText = this.personText({
-            circleX, circleY, radius, text: `${id}`});
+        textOptions = {
+            ...textOptions,
+            circleX, circleY, radius, text: `${id}`,
+        };
+        const personText = this.personText(textOptions);
         return <g key={id}>
             {personCircle}
             {personText}
@@ -72,9 +76,10 @@ export class UCPeople extends React.PureComponent {
             key={id} />;
     }
 
-    personText({circleX, circleY, radius, text}) {
+    personText({circleX, circleY, radius, text, stroke="default", fill="default"}) {
         return <text
             x={circleX} y={circleY}
+            stroke={stroke} fill={fill}
             textAnchor="middle" dominantBaseline="middle"
             style={{pointerEvents: "none"}}
             fontSize={12}>

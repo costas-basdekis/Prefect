@@ -23,6 +23,7 @@ class UCStructures extends BaseGrid {
         return {
             ...tile.renderOptions,
             text: (tile.getText ? tile.getText(tile) : null),
+            textOptions: tile.textRenderOptions || {},
         };
     }
 }

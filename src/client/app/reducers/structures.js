@@ -69,9 +69,15 @@ export const STRUCTURES = {
             stroke: "gold",
             fill: "red",
         },
+        textRenderOptions: {
+            fill: "white",
+        },
         makeData: tile => ({
             workersNeeded: 5,
             workersAllocated: 0,
+            workersAvailable: false,
+            workersAvailableUntil: 0,
+            workersAvailableLength: 120,
             workerSeekerId: null,
             workerSeekerCreatedOn: null,
             workerSeekerRemoveOn: null,
@@ -79,6 +85,9 @@ export const STRUCTURES = {
             workerSeekerLife: 40,
             workerSeekerSpawnWait: 10,
         }),
+        getText: ({data}) => data.workersAvailable ?
+            `${data.workersAllocated}/${data.workersNeeded}`
+            : "!",
     },
 };
 
@@ -110,6 +119,7 @@ export class StructuresReducer extends Reducer {
         const newState = {...state};
 
         this.upgradeHouses(newState);
+        this.updateWorks(newState);
         this.updateLayers(newState);
 
         return newState;
@@ -144,6 +154,38 @@ export class StructuresReducer extends Reducer {
         return state;
     }
 
+    static updateWorks(state) {
+        const oldStructures = state.structures;
+        for (const work of this.getStructuresWithDataAttribute(
+                state, 'workersAvailableUntil')) {
+            if (work.data.workersAvailableUntil < state.date.ticks) {
+                if (oldStructures === state.structures) {
+                    state.structures = {...state.structures};
+                }
+                state.structures[work.key] = {
+                    ...work,
+                    data: {
+                        ...work.data,
+                        workersAvailable: false,
+                    },
+                };
+            } else if (work.data.workersAvailable && !work.data.workersAllocated) {
+                if (oldStructures === state.structures) {
+                    state.structures = {...state.structures};
+                }
+                state.structures[work.key] = {
+                    ...work,
+                    data: {
+                        ...work.data,
+                        workersAllocated: work.data.workersNeeded,
+                    },
+                };
+            }
+        }
+
+        return state;
+    }
+
     static updateLayers(state, reset=false) {
         this.updateWater(state, reset);
 
@@ -151,8 +193,8 @@ export class StructuresReducer extends Reducer {
     }
 
     static updateWater(state, reset=false) {
-        const waterStructures = Object.values(state.structures)
-            .filter(structure => structure.type === STRUCTURE_TYPES.WELL);
+        const waterStructures = this.getStructuresOfType(
+            state, STRUCTURE_TYPES.WELL);
         state.layers = {
             ...state.layers,
             water: {},
@@ -199,6 +241,16 @@ export class StructuresReducer extends Reducer {
                 };
             }
         }
+    }
+
+    static getStructuresOfType(state, type) {
+        return Object.values(state.structures)
+            .filter(structure => structure.type === type);
+    }
+
+    static getStructuresWithDataAttribute(state, attribute) {
+        return Object.values(state.structures)
+            .filter(structure => structure.data && attribute in structure.data);
     }
 
     static [actions.RESIZE_TERRAIN] (state, action) {
@@ -334,6 +386,7 @@ export class StructuresReducer extends Reducer {
             },
             key: `${tile.x}.${tile.y}`,
             renderOptions: structureType.renderOptions,
+            textRenderOptions: structureType.textRenderOptions,
             getText: structureType.getText,
         };
         structure.data = (structureType.makeData || (() => null))(structure);

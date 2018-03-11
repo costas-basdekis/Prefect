@@ -66,7 +66,7 @@ export class BaseGrid extends React.PureComponent {
     }
 
     baseRenderTile({x, y, key, stroke="transparent", fill="transparent",
-                    strokeWidth=1, text=null}) {
+                    strokeWidth=1, text=null, textOptions={}}) {
         const rectX = x * this.size, rectY = y * this.size;
         const width = this.size, height = this.size;
         const tileRect = this.tileRect({
@@ -74,9 +74,17 @@ export class BaseGrid extends React.PureComponent {
         if (!text) {
             return tileRect;
         }
+        textOptions = {
+            ...textOptions,
+            x: rectX,
+            y: rectY,
+            width,
+            height,
+            text,
+        };
         return <g key={key}>
             {tileRect}
-            {this.tileText({x: rectX, y: rectY, width, height, text})}
+            {this.tileText(textOptions)}
         </g>;
     }
 
@@ -93,10 +101,11 @@ export class BaseGrid extends React.PureComponent {
             onMouseUp={this.onMouseUp(x, y)} />
     }
 
-    tileText({x, y, width, height, text}) {
+    tileText({x, y, width, height, text, stroke="default", fill="default"}) {
         const centerX = x + width / 2, centerY = y + height / 2;
         return <text
             x={centerX} y={centerY}
+            stroke={stroke} fill={fill}
             textAnchor="middle" dominantBaseline="middle"
             style={{pointerEvents: "none"}}
             /*transform={`rotate(45 ${centerX} ${centerY})`}*/
