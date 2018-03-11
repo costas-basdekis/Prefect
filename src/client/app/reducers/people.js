@@ -6,6 +6,8 @@ import { toDict, sum, lattice } from '../utils.js'
 const PEOPLE_TYPES = toDict([
     'NEWCOMER',
     'WORKER_SEEKER',
+    'PREFECT',
+    'ENGINEER',
 ], key => key);
 
 const PEOPLE = {
@@ -36,6 +38,16 @@ const PEOPLE = {
         },
         speed: 1,
     },
+    [PEOPLE_TYPES.ENGINEER]: {
+        renderOptions: {
+            stroke: "gold",
+            fill: "blue",
+        },
+        textRenderOptions: {
+            fill: "white",
+        },
+        speed: 1,
+    },
 };
 
 export class PeopleReducer extends Reducer {
@@ -52,6 +64,7 @@ export class PeopleReducer extends Reducer {
         this.tickNewcomers(newState);
         this.tickSeekerWorkers(newState);
         this.tickPrefects(newState);
+        this.tickEngineers(newState);
         this.findWorkers(newState);
 
         return newState;
@@ -84,10 +97,26 @@ export class PeopleReducer extends Reducer {
         delete state.people[person.id];
         if (person.type === PEOPLE_TYPES.WORKER_SEEKER) {
             this.removeWorkerSeeker(state, person);
+        } else if (person.type === PEOPLE_TYPES.PREFECT) {
+            this.removePrefect(state, person);
+        } else if (person.type === PEOPLE_TYPES.ENGINEER) {
+            this.removeEngineer(state, person);
         }
     }
 
     static removeWorkerSeeker(state, person) {
+        this.removeWanderer(state, person, 'workerSeeker');
+    }
+
+    static removePrefect(state, person) {
+        this.removeWanderer(state, person, 'prefect');
+    }
+
+    static removeEngineer(state, person) {
+        this.removeWanderer(state, person, 'engineer');
+    }
+
+    static removeWanderer(state, person, wandererKey) {
         const workKey = state.structuresKeysById[person.workId];
         if (!workKey) {
             return;
@@ -103,9 +132,12 @@ export class PeopleReducer extends Reducer {
             ...work,
             data: {
                 ...work.data,
-                workerSeekerId: null,
-                workerSeekerRemoveOn: null,
-                workerSeekerCreatedOn: null,
+                [wandererKey]: {
+                    ...work.data[wandererKey],
+                    id: null,
+                    removeOn: null,
+                    createdOn: null,
+                },
             },
         };
     }
@@ -114,6 +146,7 @@ export class PeopleReducer extends Reducer {
         this.moveNewcomers(state, fraction);
         this.moveWorkerSeekers(state, fraction);
         this.movePrefects(state, fraction);
+        this.moveEngineers(state, fraction);
 
         return state;
     }
@@ -124,6 +157,10 @@ export class PeopleReducer extends Reducer {
 
     static movePrefects(state, fraction) {
         this.moveWanderers(state, fraction, PEOPLE_TYPES.PREFECT);
+    }
+
+    static moveEngineers(state, fraction) {
+        this.moveWanderers(state, fraction, PEOPLE_TYPES.ENGINEER);
     }
 
     static moveWanderers(state, fraction, type) {
@@ -331,6 +368,10 @@ export class PeopleReducer extends Reducer {
             return this.shouldRemoveNewcomer(state, person);
         } else if (person.type === PEOPLE_TYPES.WORKER_SEEKER) {
             return this.shouldRemoveWorkerSeeker(state, person);
+        } else if (person.type === PEOPLE_TYPES.PREFECT) {
+            return this.shouldRemovePrefect(state, person);
+        } else if (person.type === PEOPLE_TYPES.ENGINEER) {
+            return this.shouldRemoveEngineer(state, person);
         }
 
         return false;
@@ -352,6 +393,18 @@ export class PeopleReducer extends Reducer {
     }
 
     static shouldRemoveWorkerSeeker(state, person) {
+        return this.shouldRemoveWanderer(state, person, 'workerSeeker');
+    }
+
+    static shouldRemovePrefect(state, person) {
+        return this.shouldRemoveWanderer(state, person, 'prefect');
+    }
+
+    static shouldRemoveEngineer(state, person) {
+        return this.shouldRemoveWanderer(state, person, 'engineer');
+    }
+
+    static shouldRemoveWanderer(state, person, wandererKey) {
         const workKey = state.structuresKeysById[person.workId];
         if (!workKey) {
             return true;
@@ -363,7 +416,7 @@ export class PeopleReducer extends Reducer {
         if (work.id !== person.workId) {
             return true;
         }
-        if (work.data.workerSeekerRemoveOn <= state.date.ticks) {
+        if (work.data[wandererKey].removeOn <= state.date.ticks) {
             return true;
         }
         if (!person.nextPosition) {
@@ -418,6 +471,15 @@ export class PeopleReducer extends Reducer {
             state, 'prefect',
             (state, work) => work.data.workersAllocated > 0,
             this.createPrefect.bind(this));
+
+        return state;
+    }
+
+    static tickEngineers(state) {
+        this.tickWanderers(
+            state, 'engineer',
+            (state, work) => work.data.workersAllocated > 0,
+            this.createEngineer.bind(this));
 
         return state;
     }
@@ -540,6 +602,11 @@ export class PeopleReducer extends Reducer {
     static createPrefect(state, work, position, direction) {
         return this.createWanderer(
             state, PEOPLE_TYPES.PREFECT, work, position, direction)
+    }
+
+    static createEngineer(state, work, position, direction) {
+        return this.createWanderer(
+            state, PEOPLE_TYPES.ENGINEER, work, position, direction)
     }
 
     static createWanderer(state, type, work, {x, y}, {dx, dy}) {

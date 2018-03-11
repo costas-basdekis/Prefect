@@ -14,6 +14,9 @@ class UCToolbox extends React.PureComponent {
         {label: "Military", key: "MILITARY", children: [
             {label: "Prefecture", key: "PREFECTURE", toolType: "SINGLE_STRUCTURE", selectionType: "SQUARE", data: {type: 'PREFECTURE'}},
         ]},
+        {label: "Engineering", key: "ENGINEERING", children: [
+            {label: "Engineer's Post", key: "ENGINEERS_POST", toolType: "SINGLE_STRUCTURE", selectionType: "SQUARE", data: {type: 'ENGINEERS_POST'}},
+        ]},
     ];
 
     static mapStateToProps(state, ownProps) {

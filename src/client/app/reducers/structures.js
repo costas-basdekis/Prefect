@@ -9,7 +9,30 @@ export const STRUCTURE_TYPES = toDict([
     'HOUSE',
     'WELL',
     'PREFECTURE',
+    'ENGINEERS_POST'
 ], key => key);
+
+const makeWorkData = () => ({
+    workersNeeded: 5,
+    workersAllocated: 0,
+    workersAvailable: false,
+    workersAvailableUntil: 0,
+    workersAvailableLength: 120,
+});
+
+const makeWandererData = () => ({
+    id: null,
+    createdOn: null,
+    removeOn: null,
+    nextOn: 0,
+    life: 40,
+    spawnWait: 10,
+});
+
+const workerSeekerGetText = ({data}) =>
+    data.workersAvailable
+        ? `${data.workersAllocated}/${data.workersNeeded}`
+        : "!";
 
 export const STRUCTURES = {
     [STRUCTURE_TYPES.ENTRY]: {
@@ -73,31 +96,43 @@ export const STRUCTURES = {
             fill: "white",
         },
         makeData: tile => ({
-            workersNeeded: 5,
-            workersAllocated: 0,
-            workersAvailable: false,
-            workersAvailableUntil: 0,
-            workersAvailableLength: 120,
-            workerSeeker: {
-                id: null,
-                createdOn: null,
-                removeOn: null,
-                nextOn: 0,
-                life: 40,
-                spawnWait: 10,
-            },
-            prefect: {
-                id: null,
-                createdOn: null,
-                removeOn: null,
-                nextOn: 0,
-                life: 40,
-                spawnWait: 10,
-            },
+            ...makeWorkData(),
+            workerSeeker: makeWandererData(),
+            prefect: makeWandererData(),
         }),
-        getText: ({data}) => data.workersAvailable ?
-            `${data.workersAllocated}/${data.workersNeeded}`
-            : "!",
+        getText: workerSeekerGetText,
+    },
+    [STRUCTURE_TYPES.PREFECTURE]: {
+        size: {width: 1, height: 1},
+        renderOptions: {
+            stroke: "gold",
+            fill: "red",
+        },
+        textRenderOptions: {
+            fill: "white",
+        },
+        makeData: tile => ({
+            ...makeWorkData(),
+            workerSeeker: makeWandererData(),
+            prefect: makeWandererData(),
+        }),
+        getText: workerSeekerGetText,
+    },
+    [STRUCTURE_TYPES.ENGINEERS_POST]: {
+        size: {width: 1, height: 1},
+        renderOptions: {
+            stroke: "gold",
+            fill: "blue",
+        },
+        textRenderOptions: {
+            fill: "white",
+        },
+        makeData: tile => ({
+            ...makeWorkData(),
+            workerSeeker: makeWandererData(),
+            engineer: makeWandererData(),
+        }),
+        getText: workerSeekerGetText,
     },
 };
 
