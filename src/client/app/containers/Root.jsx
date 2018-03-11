@@ -20,6 +20,7 @@ export class UCRoot extends React.Component {
             start: {x: null, y: null},
             end: {x: null, y: null},
             type: null,
+            size: {width: 1, height: 1},
         },
         tool: {toolType: null, data: null},
         running: true,
@@ -69,6 +70,7 @@ export class UCRoot extends React.Component {
                     clearSelection={this.clearSelection}/>
                 <Toolbox
                     setSelectionType={this.setSelectionType}
+                    setSelectionSize={this.setSelectionSize}
                     setTool={this.setTool} />
                 <StatusBar
                     running={this.state.running}
@@ -100,25 +102,46 @@ export class UCRoot extends React.Component {
         this.setState({running: false});
     }
 
+    isHoveredExact = (x, y) => {
+        const {x: hoverX, y: hoverY} = this.state.hovered;
+        const isHoveredExact = x === hoverX && y === hoverY;
+
+        return isHoveredExact;
+    }
+
     isHovered = (x, y) => {
         const {x: hoverX, y: hoverY} = this.state.hovered;
-        const isHovered = x === hoverX && y === hoverY;
+        const {width, height} = this.state.selection.size;
+        const isHovered1 = (
+            (x !== null)
+            && (y !== null)
+            && (hoverX !== null)
+            && (hoverY !== null)
+            && (x >= hoverX)
+            && (x < (hoverX + width))
+            && (y >= hoverY)
+            && (y < (hoverY + height))
+        );
 
-        return isHovered;
+        return isHovered1;
     }
 
     setHovered = (x, y) => {
-        if (!this.isHovered(x, y)) {
-            this.setState({hovered: {x, y}});
+        if (!this.isHoveredExact(x, y)) {
+            this.setState(state => ({hovered: {x, y}}));
         }
     }
 
     setSelectionType = type => {
-        this.setState({selection: {...this.state.selection, type}});
+        this.setState(state => ({selection: {...state.selection, type}}));
+    }
+
+    setSelectionSize = (size={width: 1, height: 1}) => {
+        this.setState(state => ({selection: {...state.selection, size}}));
     }
 
     setTool = (toolType, data) => {
-        this.setState({tool: {toolType, data}});
+        this.setState(state => ({tool: {toolType, data}}));
     }
 
     getSelectedTiles = () => {
@@ -145,11 +168,16 @@ export class UCRoot extends React.Component {
     }
 
     isSelectedTile = (x, y) => {
-        const {start, end} = this.state.selection;
+        const {start, end, size: {width, height}} = this.state.selection;
         if (start.x === null) {
             return false;
         }
-        return (x === end.x) && (y === end.y);
+        return (
+            x >= end.x
+            && x < (end.x + width)
+            && y >= end.y
+            && y < (end.y + height)
+        );
     }
 
     isSelectedSquare = (x, y) => {
@@ -214,23 +242,23 @@ export class UCRoot extends React.Component {
     }
 
     setSelectionStart = (x, y) => {
-        this.setState({
+        this.setState(state => ({
             selection: {
-                ...this.state.selection,
+                ...state.selection,
                 start: {x, y},
                 end: {x, y},
             },
-        });
+        }));
     }
 
     setSelectionEnd = (x, y) => {
-        this.setState({
+        this.setState(state => ({
             selection: {
-                ...this.state.selection,
-                start: this.state.selection.start,
+                ...state.selection,
+                start: state.selection.start,
                 end: {x, y},
             },
-        });
+        }));
     }
 
     clearSelection = () => {
@@ -238,13 +266,13 @@ export class UCRoot extends React.Component {
             this.state.tool,
             this.getSelectedTiles(),
         );
-        this.setState({
+        this.setState(state => ({
             selection: {
-                ...this.state.selection,
+                ...state.selection,
                 start: {x: null, y: null},
                 end: {x: null, y: null},
             },
-        });
+        }));
     }
 }
 

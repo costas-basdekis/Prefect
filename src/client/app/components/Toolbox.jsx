@@ -9,16 +9,16 @@ class UCToolbox extends React.PureComponent {
         {label: "Exit", key: "EXIT", toolType: "SINGLE_STRUCTURE", selectionType: "TILE", data: {type: 'EXIT'}},
         {label: "Housing", key: "HOUSE", toolType: "RANGE_OF_STRUCTURES", selectionType: "SQUARE", data: {type: 'HOUSE'}},
         {label: "Water", key: "WATER", children: [
-            {label: "Well", key: "WELL", toolType: "SINGLE_STRUCTURE", selectionType: "SQUARE", data: {type: 'WELL'}},
+            {label: "Well", key: "WELL", toolType: "SINGLE_STRUCTURE", selectionType: "TILE", data: {type: 'WELL'}},
         ]},
         {label: "Military", key: "MILITARY", children: [
-            {label: "Prefecture", key: "PREFECTURE", toolType: "SINGLE_STRUCTURE", selectionType: "SQUARE", data: {type: 'PREFECTURE'}},
+            {label: "Prefecture", key: "PREFECTURE", toolType: "SINGLE_STRUCTURE", selectionType: "TILE", data: {type: 'PREFECTURE'}},
         ]},
         {label: "Engineering", key: "ENGINEERING", children: [
-            {label: "Engineer's Post", key: "ENGINEERS_POST", toolType: "SINGLE_STRUCTURE", selectionType: "SQUARE", data: {type: 'ENGINEERS_POST'}},
+            {label: "Engineer's Post", key: "ENGINEERS_POST", toolType: "SINGLE_STRUCTURE", selectionType: "TILE", data: {type: 'ENGINEERS_POST'}},
         ]},
         {label: "Resources", key: "RESOURCES", children: [
-            {label: "Wheat Farm", key: "WHEAT_FARM", toolType: "SINGLE_STRUCTURE", selectionType: "SQUARE", data: {type: 'WHEAT_FARM'}},
+            {label: "Wheat Farm", key: "WHEAT_FARM", toolType: "SINGLE_STRUCTURE", selectionType: "TILE", selectionSize: {width: 3, height: 3}, data: {type: 'WHEAT_FARM'}},
         ]},
     ];
 
@@ -83,15 +83,17 @@ class UCToolbox extends React.PureComponent {
         return false;
     }
 
-    onToolClick = ({key, toolType, selectionType, data, children}) => e => {
+    onToolClick = ({key, toolType, selectionType, selectionSize, data, children}) => e => {
         if (this.state.selected === key) {
             this.setState({selected: null});
             this.setSelectionType(null);
+            this.setSelectionSize({width: 1, height: 1});
             this.setTool(null, null);
         } else {
             this.setState({selected: key});
             if (!children) {
                 this.setSelectionType(selectionType);
+                this.setSelectionSize(selectionSize);
                 this.setTool(toolType, data);
             }
         }
@@ -99,6 +101,10 @@ class UCToolbox extends React.PureComponent {
 
     setSelectionType(type) {
         this.props.setSelectionType(type);
+    }
+
+    setSelectionSize(size) {
+        this.props.setSelectionSize(size);
     }
 
     setTool(toolType, data) {
