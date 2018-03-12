@@ -8,6 +8,7 @@ const PEOPLE_TYPES = toDict([
     'WORKER_SEEKER',
     'PREFECT',
     'ENGINEER',
+    'CART_PUSHER',
 ], key => key);
 
 const PEOPLE = {
@@ -48,6 +49,16 @@ const PEOPLE = {
         },
         speed: 1,
     },
+    [PEOPLE_TYPES.CART_PUSHER]: {
+        renderOptions: {
+            stroke: "brown",
+            fill: "brown",
+        },
+        textRenderOptions: {
+            fill: "white",
+        },
+        speed: 1,
+    },
 };
 
 export class PeopleReducer extends Reducer {
@@ -65,6 +76,7 @@ export class PeopleReducer extends Reducer {
         this.tickSeekerWorkers(newState);
         this.tickPrefects(newState);
         this.tickEngineers(newState);
+        this.tickCartPushers(newState);
         this.findWorkers(newState);
 
         return newState;
@@ -487,6 +499,95 @@ export class PeopleReducer extends Reducer {
         return state;
     }
 
+    static tickCartPushers(state) {
+        const oldStructures = state.structures;
+        const works = this.getStructuresWithDataProperty(state, 'cartPusher');
+        for (let work of works) {
+            if (work.data.product.status < 1) {
+                continue;
+            }
+            if (work.data.cartPusher.id) {
+                continue;
+            }
+            const {startRoad, direction} = this.getFirstRoad(state, work);
+            if (!startRoad || !direction) {
+                continue;
+            }
+            const {store, path} = this.findStoreFor(state, work.data.product.type, work);
+            if (!store || !path) {
+                continue;
+            }
+            if (oldStructures === state.structures) {
+                state.structures = {...state.structures};
+                state.people = {...state.people};
+            }
+            work = state.structures[work.key] = {
+                ...work,
+                data: {
+                    ...work.data,
+                    product: {
+                        ...work.data.product,
+                        status: work.data.product.status - 1,
+                    },
+                },
+            };
+            const cartPusher = this.createCartPusher(
+                state, work, store, path, work.data.product.type, 1);
+            this.addCartPusher(state, work, cartPusher);
+        }
+    }
+
+    static findStoreFor(state, type, source) {
+        const stores = this.getStructuresWithDataProperty(state, 'storage');
+        const storesForType = stores
+            .filter(store => store.data.storage.accepts[type]);
+        if (!storesForType.length) {
+            return {};
+        }
+        const paths = storesForType
+            .map(store => ({store, path: this.getShortestPath(state, source, store)}))
+            .filter(({store, path}) => path);
+        if (!paths) {
+            return {};
+        }
+        const {store, path} = paths
+            .sort((lhs, rhs) => lhs.path.length - rhs.path.length)
+            [0];
+
+        return {store, path};
+    }
+
+    static getShortestPath(state, source, target) {
+        const {startRoad} = this.getFirstRoad(state, source);
+        if (!startRoad) {
+            return null;
+        }
+        const {startRoad: endRoad} = this.getFirstRoad(state, target);
+        if (!endRoad) {
+            return null;
+        }
+        const visited = {[startRoad.key]: true};
+        const stack = [[startRoad, []]];
+        while (stack.length) {
+            const [road, path] = stack.shift();
+            if (road.key === endRoad.key) {
+                return path.map(road => ({...road.start}));
+            }
+            const nextPath = path.concat([road]);
+            const adjacentRoads = this.getAdjacentRoads(state, road)
+                .filter(road => road);
+            for (const adjacentRoad of adjacentRoads) {
+                if (visited[adjacentRoad.key]) {
+                    continue;
+                }
+                stack.push([adjacentRoad, nextPath]);
+                visited[adjacentRoad.key] = true;
+            }
+        }
+
+        return null;
+    }
+
     static tickWanderers(state, wandererKey, canCreateWonderer, createWanderer) {
         const oldStructures = state.structures;
         const works = this.getStructuresWithDataProperty(
@@ -539,6 +640,19 @@ export class PeopleReducer extends Reducer {
                     removeOn: state.date.ticks + life,
                     nextOn: state.date.ticks + life + spawnWait,
                     id: wanderer.id,
+                },
+            },
+        };
+    }
+
+    static addCartPusher(state, structure, cartPusher) {
+        state.structures[structure.key] = {
+            ...structure,
+            data: {
+                ...structure.data,
+                cartPusher: {
+                    ...structure.data.cartPusher,
+                    id: cartPusher.id,
                 },
             },
         };
@@ -613,6 +727,20 @@ export class PeopleReducer extends Reducer {
     static createEngineer(state, work, position, direction) {
         return this.createWanderer(
             state, PEOPLE_TYPES.ENGINEER, work, position, direction)
+    }
+
+    static createCartPusher(state, work, store, path, productType, quantity) {
+        const cartPusher = this.createPerson(state, {
+            type: PEOPLE_TYPES.CART_PUSHER,
+            position: path[0],
+            path: path.slice(1),
+            workId: work.id,
+            storeId: store.id,
+            productType,
+            quantity,
+        });
+
+        return cartPusher;
     }
 
     static createWanderer(state, type, work, {x, y}, {dx, dy}) {

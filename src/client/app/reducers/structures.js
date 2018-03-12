@@ -147,10 +147,14 @@ export const STRUCTURES = {
         makeData: tile => ({
             ...makeWorkData(10),
             workerSeeker: makeWandererData(),
+            cartPusher: {
+                id: null,
+            },
             product: {
                 status: 0,
                 rate: 0.1,
                 max: 2,
+                type: 'WHEAT',
             },
         }),
         getText: tile => `
@@ -164,15 +168,18 @@ export const STRUCTURES = {
             stroke: "brown",
             fill: "brown",
         },
+        textRenderOptions: {
+            fill: "white",
+        },
         makeData: tile => ({
             ...makeWorkData(10),
             workerSeeker: makeWandererData(),
             storage: {
                 canAccept: {
-                    'wheat': true,
+                    'WHEAT': true,
                 },
                 accepts: {
-                    'wheat': true,
+                    'WHEAT': true,
                 },
                 has: {},
             },
