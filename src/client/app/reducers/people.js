@@ -113,6 +113,8 @@ export class PeopleReducer extends Reducer {
             this.removePrefect(state, person);
         } else if (person.type === PEOPLE_TYPES.ENGINEER) {
             this.removeEngineer(state, person);
+        } else if (person.type === PEOPLE_TYPES.CART_PUSHER) {
+            this.removeCartPusher(state, person);
         }
     }
 
@@ -126,6 +128,23 @@ export class PeopleReducer extends Reducer {
 
     static removeEngineer(state, person) {
         this.removeWanderer(state, person, 'engineer');
+    }
+
+    static removeCartPusher(state, person) {
+        const work = state.structures[state.structuresKeysById[person.workId]];
+        if (!work) {
+            return;
+        }
+        state.structures[work.key] = {
+            ...work,
+            data: {
+                ...work.data,
+                cartPusher: {
+                    ...work.data.cartPusher,
+                    id: null,
+                },
+            },
+        };
     }
 
     static removeWanderer(state, person, wandererKey) {
@@ -159,6 +178,7 @@ export class PeopleReducer extends Reducer {
         this.moveWorkerSeekers(state, fraction);
         this.movePrefects(state, fraction);
         this.moveEngineers(state, fraction);
+        this.moveCartPushers(state, fraction);
 
         return state;
     }
@@ -239,6 +259,88 @@ export class PeopleReducer extends Reducer {
                         .filter(key => key != nextRoad.key)
                         .concat([nextRoad.key]),
                     direction,
+                };
+            }
+
+            const {x: targetX, y: targetY} = person.nextPosition;
+            if (x === targetX && y === targetY) {
+                continue;
+            }
+
+            if (oldPeople === state.people) {
+                state.people = {...state.people};
+            }
+            this.movePerson(
+                state, person, {targetX, targetY}, fraction);
+        }
+
+        return state;
+    }
+
+    static moveCartPushers(state, fraction) {
+        const oldPeople = state.people;
+        const oldStructures = state.structures;
+        for (let person of this.getPeopleOfType(state, PEOPLE_TYPES.CART_PUSHER)) {
+            const {x, y} = person.position;
+            if (!person.nextPosition ||
+                    ((x === person.nextPosition.x)
+                     && (y === person.nextPosition.y))) {
+                let nextPosition, nextPath;
+                if (person.path.length) {
+                    nextPosition = person.path[0];
+                    nextPath = person.path.slice(1);
+                } else {
+                    if (person.returning) {
+                        continue;
+                    } else {
+                        const store = state.structures[
+                            state.structuresKeysById[person.storeId]]
+                        if (!store) {
+                            continue;
+                        }
+                        if (oldStructures === state.structures) {
+                            state.structures = {...state.structures};
+                        }
+                        state.structures[store.key] = {
+                            ...store,
+                            data: {
+                                ...store.data,
+                                storage: {
+                                    ...store.data.storage,
+                                    has: {
+                                        ...store.data.storage.has,
+                                        [person.productType]:
+                                            (store.data.storage.has[person.productType] || 0)
+                                            + person.quantity,
+                                    },
+                                },
+                            },
+                        };
+                        const road = state.structures[
+                            `${person.position.x}.${person.position.y}`];
+                        if (!road) {
+                            continue;
+                        }
+                        const work = state.structures[
+                            state.structuresKeysById[person.workId]];
+                        if (!work) {
+                            continue;
+                        }
+                        nextPosition = road.start;
+                        nextPath = this.getShortestPath(
+                            state, road, this.getFirstRoad(state, work).startRoad);
+                        if (!nextPath) {
+                            continue;
+                        }
+                    }
+                }
+                if (oldPeople === state.people) {
+                    state.people === {...state.people};
+                }
+                state.people[person.id] = person = {
+                    ...person,
+                    nextPosition: {...nextPosition},
+                    path: nextPath,
                 };
             }
 
@@ -387,6 +489,8 @@ export class PeopleReducer extends Reducer {
             return this.shouldRemovePrefect(state, person);
         } else if (person.type === PEOPLE_TYPES.ENGINEER) {
             return this.shouldRemoveEngineer(state, person);
+        } else if (person.type === PEOPLE_TYPES.CART_PUSHER) {
+            return this.shouldRemoveCartPusher(state, person);
         }
 
         return false;
@@ -417,6 +521,35 @@ export class PeopleReducer extends Reducer {
 
     static shouldRemoveEngineer(state, person) {
         return this.shouldRemoveWanderer(state, person, 'engineer');
+    }
+
+    static shouldRemoveCartPusher(state, person) {
+        const work = state.structures[state.structuresKeysById[person.workId]];
+        if (!work) {
+            return true;
+        }
+        const store = state.structures[state.structuresKeysById[person.storeId]];
+        if (!store) {
+            return true;
+        }
+        if (!person.path.length) {
+            if (person.returning) {
+                return true;
+            } else {
+                const road = state.structures[
+                    `${person.position.x}.${person.position.y}`];
+                if (!road) {
+                    return true;
+                }
+                const path = this.getShortestPath(
+                    state, road, this.getFirstRoad(state, store).startRoad);
+                if (!path) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     static shouldRemoveWanderer(state, person, wandererKey) {
@@ -545,7 +678,11 @@ export class PeopleReducer extends Reducer {
             return {};
         }
         const paths = storesForType
-            .map(store => ({store, path: this.getShortestPath(state, source, store)}))
+            .map(store => ({store, path: this.getShortestPath(
+                state,
+                this.getFirstRoad(state, source).startRoad,
+                this.getFirstRoad(state, store).startRoad,
+            )}))
             .filter(({store, path}) => path);
         if (!paths) {
             return {};
@@ -557,12 +694,10 @@ export class PeopleReducer extends Reducer {
         return {store, path};
     }
 
-    static getShortestPath(state, source, target) {
-        const {startRoad} = this.getFirstRoad(state, source);
+    static getShortestPath(state, startRoad, endRoad) {
         if (!startRoad) {
             return null;
         }
-        const {startRoad: endRoad} = this.getFirstRoad(state, target);
         if (!endRoad) {
             return null;
         }
@@ -570,10 +705,10 @@ export class PeopleReducer extends Reducer {
         const stack = [[startRoad, []]];
         while (stack.length) {
             const [road, path] = stack.shift();
-            if (road.key === endRoad.key) {
-                return path.map(road => ({...road.start}));
-            }
             const nextPath = path.concat([road]);
+            if (road.key === endRoad.key) {
+                return nextPath.map(road => ({...road.start}));
+            }
             const adjacentRoads = this.getAdjacentRoads(state, road)
                 .filter(road => road);
             for (const adjacentRoad of adjacentRoads) {
@@ -763,6 +898,8 @@ export class PeopleReducer extends Reducer {
         const newcomer = this.createPerson(state, {
             type: PEOPLE_TYPES.NEWCOMER,
             position: this.getEntry(state),
+            nextPosition: null,
+            returning: false,
             targetStructureId,
             count,
         });

@@ -186,7 +186,7 @@ export const STRUCTURES = {
         }),
         getText: tile => `
             ${workerSeekerGetText(tile)}
-            [${Object.values(tile.data.storage.has)
+            [${Object.keys(tile.data.storage.has)
                 .map(key => `${key}: ${tile.data.storage.has[key] * 100}`)
                 .join(', ')}]
         `,
