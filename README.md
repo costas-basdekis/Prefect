@@ -24,9 +24,12 @@ If you have any suggestions let me know.
 * [x] Implement newcomers, and house level and occupancy
 * [x] People that seek workers on the streets
 * [x] Find workers on the street
+* [x] Service workers
+* [x] Farms, granaries
 
 # Working on
-* [ ] Service workers
+* [ ] Push finished goods
+* [ ] Markets
 
 # Next features
 * [ ] Determine worker percentage
@@ -35,7 +38,6 @@ If you have any suggestions let me know.
 * [ ] Proper demographics
 * [ ] Fire & damage
 * [ ] Reservoirs and fountains
-* [ ] Farms, granaries, markets
 * [ ] Service workers
 * [ ] Goods deliverers and seekers
 * [ ] Map editor
