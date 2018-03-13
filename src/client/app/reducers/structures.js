@@ -182,6 +182,7 @@ export const STRUCTURES = {
                     'WHEAT': true,
                 },
                 has: {},
+                capacity: 32,
             },
         }),
         getText: tile => `
