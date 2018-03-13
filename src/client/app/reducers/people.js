@@ -285,10 +285,11 @@ export class PeopleReducer extends Reducer {
             if (!person.nextPosition ||
                     ((x === person.nextPosition.x)
                      && (y === person.nextPosition.y))) {
-                let nextPosition, nextPath;
+                let nextPosition, nextPath, returning;
                 if (person.path.length) {
                     nextPosition = person.path[0];
                     nextPath = person.path.slice(1);
+                    returning = false;
                 } else {
                     if (person.returning) {
                         continue;
@@ -332,6 +333,8 @@ export class PeopleReducer extends Reducer {
                         if (!nextPath) {
                             continue;
                         }
+                        nextPath = nextPath.slice(1);
+                        returning = true;
                     }
                 }
                 if (oldPeople === state.people) {
@@ -341,6 +344,7 @@ export class PeopleReducer extends Reducer {
                     ...person,
                     nextPosition: {...nextPosition},
                     path: nextPath,
+                    returning,
                 };
             }
 
@@ -873,6 +877,7 @@ export class PeopleReducer extends Reducer {
             storeId: store.id,
             productType,
             quantity,
+            returning: false,
         });
 
         return cartPusher;
@@ -899,7 +904,6 @@ export class PeopleReducer extends Reducer {
             type: PEOPLE_TYPES.NEWCOMER,
             position: this.getEntry(state),
             nextPosition: null,
-            returning: false,
             targetStructureId,
             count,
         });
