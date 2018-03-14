@@ -77,6 +77,7 @@ export class PeopleReducer extends Reducer {
         this.tickPrefects(newState);
         this.tickEngineers(newState);
         this.tickCartPushers(newState);
+        this.rerouteCartPushers(newState);
         this.findWorkers(newState);
 
         return newState;
@@ -282,98 +283,6 @@ export class PeopleReducer extends Reducer {
         const oldStructures = state.structures;
         for (let person of this.getPeopleOfType(state, PEOPLE_TYPES.CART_PUSHER)) {
             const {x, y} = person.position;
-            if (!person.nextPosition ||
-                    ((x === person.nextPosition.x)
-                     && (y === person.nextPosition.y))) {
-                let nextPosition, nextPath, returning;
-                if (person.path.length) {
-                    nextPosition = person.path[0];
-                    nextPath = person.path.slice(1);
-                    returning = false;
-                } else {
-                    if (person.returning) {
-                        continue;
-                    } else {
-                        let store = state.structures[
-                            state.structuresKeysById[person.storeId]]
-                        if (!store) {
-                            continue;
-                        }
-                        if (sum(Object.values(store.data.storage.has))
-                            + person.quantity <= store.data.storage.capacity) {
-                            if (oldStructures === state.structures) {
-                                state.structures = {...state.structures};
-                            }
-                            state.structures[store.key] = {
-                                ...store,
-                                data: {
-                                    ...store.data,
-                                    storage: {
-                                        ...store.data.storage,
-                                        has: {
-                                            ...store.data.storage.has,
-                                            [person.productType]:
-                                                (store.data.storage.has[person.productType] || 0)
-                                                + person.quantity,
-                                        },
-                                    },
-                                },
-                            };
-                            const road = state.structures[
-                                `${person.position.x}.${person.position.y}`];
-                            if (!road) {
-                                continue;
-                            }
-                            const work = state.structures[
-                                state.structuresKeysById[person.workId]];
-                            if (!work) {
-                                continue;
-                            }
-                            nextPosition = road.start;
-                            nextPath = this.getShortestPath(
-                                state, road, this.getFirstRoad(state, work).startRoad);
-                            if (!nextPath) {
-                                continue;
-                            }
-                            nextPath = nextPath.slice(1);
-                            returning = true;
-                        } else {
-                            const currentRoad = state.structures[
-                                `${person.position.x}.${person.position.y}`];
-                            const {store: newStore, path} = this.findStoreFor(
-                                state, person.productType, 1,  currentRoad);
-                            store = newStore;
-                            if (!store || !path) {
-                                continue;
-                            }
-                            if (oldPeople === state.people) {
-                                state.people = {...state.people};
-                            }
-                            // TODO: This needs to happen on a big tick
-                            // Otherwise they dissapear, since their position is
-                            // not on the grid
-                            // Or, use animation attributes instead
-                            person = state.people[person.id] = {
-                                ...person,
-                                storeId: store.id,
-                            };
-                            nextPosition = path[0];
-                            nextPath = path.slice(1);
-                            returning = false;
-                        }
-                    }
-                }
-                if (oldPeople === state.people) {
-                    state.people === {...state.people};
-                }
-                state.people[person.id] = person = {
-                    ...person,
-                    nextPosition: {...nextPosition},
-                    path: nextPath,
-                    returning,
-                };
-            }
-
             const {x: targetX, y: targetY} = person.nextPosition;
             if (x === targetX && y === targetY) {
                 continue;
@@ -699,6 +608,108 @@ export class PeopleReducer extends Reducer {
                 state, work, store, path, work.data.product.type, 1);
             this.addCartPusher(state, work, cartPusher);
         }
+    }
+
+    static rerouteCartPushers(state) {
+        const oldPeople = state.people;
+        const oldStructures = state.structures;
+        for (let person of this.getPeopleOfType(state, PEOPLE_TYPES.CART_PUSHER)) {
+            const {x, y} = person.position;
+            if (person.nextPosition &&
+                ((x !== person.nextPosition.x)
+                 || (y !== person.nextPosition.y))) {
+                continue;
+            }
+            let nextPosition, nextPath, returning;
+            if (person.path.length) {
+                nextPosition = person.path[0];
+                nextPath = person.path.slice(1);
+                returning = false;
+            } else {
+                if (person.returning) {
+                    continue;
+                } else {
+                    let store = state.structures[
+                        state.structuresKeysById[person.storeId]]
+                    if (!store) {
+                        continue;
+                    }
+                    if (sum(Object.values(store.data.storage.has))
+                        + person.quantity <= store.data.storage.capacity) {
+                        if (oldStructures === state.structures) {
+                            state.structures = {...state.structures};
+                        }
+                        state.structures[store.key] = {
+                            ...store,
+                            data: {
+                                ...store.data,
+                                storage: {
+                                    ...store.data.storage,
+                                    has: {
+                                        ...store.data.storage.has,
+                                        [person.productType]:
+                                            (store.data.storage.has[person.productType] || 0)
+                                            + person.quantity,
+                                    },
+                                },
+                            },
+                        };
+                        const road = state.structures[
+                            `${person.position.x}.${person.position.y}`];
+                        if (!road) {
+                            continue;
+                        }
+                        const work = state.structures[
+                            state.structuresKeysById[person.workId]];
+                        if (!work) {
+                            continue;
+                        }
+                        nextPosition = road.start;
+                        nextPath = this.getShortestPath(
+                            state, road, this.getFirstRoad(state, work).startRoad);
+                        if (!nextPath) {
+                            continue;
+                        }
+                        nextPath = nextPath.slice(1);
+                        returning = true;
+                    } else {
+                        const currentRoad = state.structures[
+                            `${person.position.x}.${person.position.y}`];
+                        const {store: newStore, path} = this.findStoreFor(
+                            state, person.productType, 1,  currentRoad);
+                        store = newStore;
+                        if (!store || !path) {
+                            continue;
+                        }
+                        if (oldPeople === state.people) {
+                            state.people = {...state.people};
+                        }
+                        // TODO: This needs to happen on a big tick
+                        // Otherwise they dissapear, since their position is
+                        // not on the grid
+                        // Or, use animation attributes instead
+                        person = state.people[person.id] = {
+                            ...person,
+                            storeId: store.id,
+                        };
+                        nextPosition = path[0];
+                        nextPath = path.slice(1);
+                        returning = false;
+                    }
+                }
+            }
+            if (oldPeople === state.people) {
+                state.people === {...state.people};
+            }
+            state.people[person.id] = person = {
+                ...person,
+                nextPosition: {...nextPosition},
+                path: nextPath,
+                returning,
+            };
+        }
+
+        return state;
     }
 
     static findStoreFor(state, type, quantity, source) {
