@@ -471,21 +471,34 @@ export class PeopleReducer extends Reducer {
         if (!store) {
             return true;
         }
-        if (!person.path.length) {
-            if (person.returning) {
-                return true;
-            } else {
-                const road = state.structures[
-                    `${person.position.x}.${person.position.y}`];
-                if (!road) {
-                    return true;
-                }
-                const path = this.getShortestPath(
-                    state, road, this.getFirstRoad(state, store).startRoad);
-                if (!path) {
-                    return true;
-                }
-            }
+        if (!person.path) {
+            return true;
+        }
+        if (!person.position) {
+            return true;
+        }
+        if (!person.nextPosition) {
+            return true;
+        }
+
+        if (person.path.length) {
+            return false;
+        }
+
+        if (person.returning) {
+            return true;
+        }
+
+        const road = state.structures[
+            `${person.position.x}.${person.position.y}`];
+        if (!road) {
+            return true;
+        }
+
+        const path = this.getShortestPath(
+            state, road, this.getFirstRoad(state, store).startRoad);
+        if (!path) {
+            return true;
         }
 
         return false;
@@ -614,17 +627,14 @@ export class PeopleReducer extends Reducer {
         const oldPeople = state.people;
         const oldStructures = state.structures;
         for (let person of this.getPeopleOfType(state, PEOPLE_TYPES.CART_PUSHER)) {
-            const {x, y} = person.position;
-            if (person.nextPosition &&
-                ((x !== person.nextPosition.x)
-                 || (y !== person.nextPosition.y))) {
+            let nextPosition, nextPath, returning;
+            if (!person.path) {
                 continue;
             }
-            let nextPosition, nextPath, returning;
             if (person.path.length) {
                 nextPosition = person.path[0];
                 nextPath = person.path.slice(1);
-                returning = false;
+                returning = person.returning;
             } else {
                 if (person.returning) {
                     continue;
@@ -664,22 +674,25 @@ export class PeopleReducer extends Reducer {
                         if (!work) {
                             continue;
                         }
-                        nextPosition = road.start;
                         nextPath = this.getShortestPath(
                             state, road, this.getFirstRoad(state, work).startRoad);
-                        if (!nextPath) {
-                            continue;
+                        if (nextPath) {
+                            nextPosition = nextPath[0];
+                            nextPath = nextPath.slice(1);
+                        } else {
+                            nextPosition = null;
+                            nextPath = null;
                         }
-                        nextPath = nextPath.slice(1);
                         returning = true;
                     } else {
                         const currentRoad = state.structures[
                             `${person.position.x}.${person.position.y}`];
-                        const {store: newStore, path} = this.findStoreFor(
+                        let {store: newStore, path} = this.findStoreFor(
                             state, person.productType, 1,  currentRoad);
                         store = newStore;
                         if (!store || !path) {
-                            continue;
+                            store = {id: null};
+                            path = [null];
                         }
                         if (oldPeople === state.people) {
                             state.people = {...state.people};
@@ -694,7 +707,7 @@ export class PeopleReducer extends Reducer {
                         };
                         nextPosition = path[0];
                         nextPath = path.slice(1);
-                        returning = false;
+                        returning = person.returning;
                     }
                 }
             }
