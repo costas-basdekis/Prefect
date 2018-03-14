@@ -294,7 +294,7 @@ export class PeopleReducer extends Reducer {
                     if (person.returning) {
                         continue;
                     } else {
-                        const store = state.structures[
+                        let store = state.structures[
                             state.structuresKeysById[person.storeId]]
                         if (!store) {
                             continue;
@@ -342,6 +342,7 @@ export class PeopleReducer extends Reducer {
                                 `${person.position.x}.${person.position.y}`];
                             const {store: newStore, path} = this.findStoreFor(
                                 state, person.productType, 1,  currentRoad);
+                            store = newStore;
                             if (!store || !path) {
                                 continue;
                             }
