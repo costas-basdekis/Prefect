@@ -1,27 +1,50 @@
 import React from 'react';
 import { connect4 } from '../utils.js'
 
+function Building(key, label=null, size=null){
+    if (label === null) {
+        label = key
+            .replace(/_/g, ' ')
+            .toLowerCase()
+            .replace(/^./, match => match.toUpperCase());
+    }
+    const tool = {
+        label,
+        key,
+        toolType: "SINGLE_STRUCTURE",
+        selectionType: "TILE",
+        data: {type: key},
+    };
+
+    if (size) {
+        tool.selectionSize = size;
+    }
+
+    return tool;
+}
+
 class UCToolbox extends React.PureComponent {
     TOOLS = [
         {label: "Road", key: "ROAD", selectionType: "ROAD", toolType: "RANGE_OF_STRUCTURES", data: {type: 'ROAD'}},
         {label: "Clear", key: "CLEAR", toolType: "CLEAR", selectionType: "SQUARE"},
-        {label: "Entry", key: "ENTRY", toolType: "SINGLE_STRUCTURE", selectionType: "TILE", data: {type: 'ENTRY'}},
-        {label: "Exit", key: "EXIT", toolType: "SINGLE_STRUCTURE", selectionType: "TILE", data: {type: 'EXIT'}},
+        Building("ENTRY"),
+        Building("EXIT"),
         {label: "Housing", key: "HOUSE", toolType: "RANGE_OF_STRUCTURES", selectionType: "SQUARE", data: {type: 'HOUSE'}},
         {label: "Water", key: "WATER", children: [
-            {label: "Well", key: "WELL", toolType: "SINGLE_STRUCTURE", selectionType: "TILE", data: {type: 'WELL'}},
+            Building("WELL"),
         ]},
         {label: "Military", key: "MILITARY", children: [
-            {label: "Prefecture", key: "PREFECTURE", toolType: "SINGLE_STRUCTURE", selectionType: "TILE", data: {type: 'PREFECTURE'}},
+            Building("PREFECTURE"),
         ]},
         {label: "Engineering", key: "ENGINEERING", children: [
-            {label: "Engineer's Post", key: "ENGINEERS_POST", toolType: "SINGLE_STRUCTURE", selectionType: "TILE", data: {type: 'ENGINEERS_POST'}},
+            Building("ENGINEERS_POST", "Engineer's Post"),
         ]},
         {label: "Resources", key: "RESOURCES", children: [
-            {label: "Wheat Farm", key: "WHEAT_FARM", toolType: "SINGLE_STRUCTURE", selectionType: "TILE", selectionSize: {width: 3, height: 3}, data: {type: 'WHEAT_FARM'}},
+            Building("WHEAT_FARM", null, {width: 3, height: 3}),
         ]},
         {label: "Food", key: "FOOD", children: [
-            {label: "Granary", key: "GRANARY", toolType: "SINGLE_STRUCTURE", selectionType: "TILE", selectionSize: {width: 3, height: 3}, data: {type: 'GRANARY'}},
+            Building("GRANARY", null, {width: 3, height: 3}),
+            Building("MARKET", null, {width: 2, height: 2}),
         ]},
     ];
 

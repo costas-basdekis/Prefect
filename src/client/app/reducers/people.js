@@ -9,6 +9,7 @@ const PEOPLE_TYPES = toDict([
     'PREFECT',
     'ENGINEER',
     'CART_PUSHER',
+    'MARKET_SELLER',
 ], key => key);
 
 const PEOPLE = {
@@ -59,6 +60,16 @@ const PEOPLE = {
         },
         speed: 1,
     },
+    [PEOPLE_TYPES.MARKET_SELLER]: {
+        renderOptions: {
+            stroke: "brown",
+            fill: "green",
+        },
+        textRenderOptions: {
+            fill: "yellow",
+        },
+        speed: 1,
+    },
 };
 
 export class PeopleReducer extends Reducer {
@@ -74,6 +85,7 @@ export class PeopleReducer extends Reducer {
         this.settleNewcomers(newState);
         this.tickNewcomers(newState);
         this.tickSeekerWorkers(newState);
+        this.tickMarketSellers(newState);
         this.tickPrefects(newState);
         this.tickEngineers(newState);
         this.tickCartPushers(newState);
@@ -177,6 +189,7 @@ export class PeopleReducer extends Reducer {
     static movePeople(state, fraction) {
         this.moveNewcomers(state, fraction);
         this.moveWorkerSeekers(state, fraction);
+        this.moveMarketSellers(state, fraction);
         this.movePrefects(state, fraction);
         this.moveEngineers(state, fraction);
         this.moveCartPushers(state, fraction);
@@ -186,6 +199,10 @@ export class PeopleReducer extends Reducer {
 
     static moveWorkerSeekers(state, fraction) {
         this.moveWanderers(state, fraction, PEOPLE_TYPES.WORKER_SEEKER);
+    }
+
+    static moveMarketSellers(state, fraction) {
+        this.moveWanderers(state, fraction, PEOPLE_TYPES.MARKET_SELLER);
     }
 
     static movePrefects(state, fraction) {
@@ -430,6 +447,8 @@ export class PeopleReducer extends Reducer {
             return this.shouldRemoveEngineer(state, person);
         } else if (person.type === PEOPLE_TYPES.CART_PUSHER) {
             return this.shouldRemoveCartPusher(state, person);
+        } else if (person.type === PEOPLE_TYPES.MARKET_SELLER) {
+            return this.shouldRemoveMarketSeller(state, person);
         }
 
         return false;
@@ -452,6 +471,10 @@ export class PeopleReducer extends Reducer {
 
     static shouldRemoveWorkerSeeker(state, person) {
         return this.shouldRemoveWanderer(state, person, 'workerSeeker');
+    }
+
+    static shouldRemoveMarketSeller(state, person) {
+        return this.shouldRemoveWanderer(state, person, 'marketSeller');
     }
 
     static shouldRemovePrefect(state, person) {
@@ -562,6 +585,15 @@ export class PeopleReducer extends Reducer {
             state, 'workerSeeker',
             (state, work) => true,
             this.createWorkerSeeker.bind(this));
+
+        return state;
+    }
+
+    static tickMarketSellers(state) {
+        this.tickWanderers(
+            state, 'marketSeller',
+            (state, work) => work.data.workers.allocated > 0,
+            this.createMarketSeller.bind(this));
 
         return state;
     }
@@ -800,9 +832,9 @@ export class PeopleReducer extends Reducer {
             if (!startRoad || !direction) {
                 continue;
             }
-            const workerSeeker = createWanderer(
+            const wanderer = createWanderer(
                 state, work, startRoad.start, direction);
-            this.addWanderer(state, work, wandererKey, workerSeeker);
+            this.addWanderer(state, work, wandererKey, wanderer);
         }
 
         return state;
@@ -913,6 +945,11 @@ export class PeopleReducer extends Reducer {
     static createWorkerSeeker(state, work, position, direction) {
         return this.createWanderer(
             state, PEOPLE_TYPES.WORKER_SEEKER, work, position, direction)
+    }
+
+    static createMarketSeller(state, work, position, direction) {
+        return this.createWanderer(
+            state, PEOPLE_TYPES.MARKET_SELLER, work, position, direction);
     }
 
     static createPrefect(state, work, position, direction) {

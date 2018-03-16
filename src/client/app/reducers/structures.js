@@ -12,6 +12,7 @@ export const STRUCTURE_TYPES = toDict([
     'ENGINEERS_POST',
     'WHEAT_FARM',
     'GRANARY',
+    'MARKET',
 ], key => key);
 
 const makeWorkData = (needed) => ({
@@ -189,6 +190,36 @@ export const STRUCTURES = {
             ${workerSeekerGetText(tile)}
             [${Object.keys(tile.data.storage.has)
                 .map(key => `${key}: ${tile.data.storage.has[key] * 100}`)
+                .join(', ')}]
+        `,
+    },
+    [STRUCTURE_TYPES.MARKET]: {
+        size: {width: 2, height: 2},
+        renderOptions: {
+            stroke: "brown",
+            fill: "green",
+        },
+        textRenderOptions: {
+            fill: "yellow",
+        },
+        makeData: tile => ({
+            ...makeWorkData(5),
+            workerSeeker: makeWandererData(),
+            marketSeller: makeWandererData(),
+            cartPuller: {
+                id: null,
+            },
+            reserves: {
+                needs: {
+                    'WHEAT': 8,
+                },
+                has: {},
+            },
+        }),
+        getText: tile => `
+            ${workerSeekerGetText(tile)}
+            [${Object.keys(tile.data.reserves.has)
+                .map(key => `${key}: ${tile.data.reserves.has[key] * 100}`)
                 .join(', ')}]
         `,
     },
