@@ -1,7 +1,7 @@
 import * as actions from '../actions/actions.js'
 import { Reducer } from './base.js'
 import { STRUCTURE_TYPES } from './structures.js'
-import { toDict, sum, lattice } from '../utils.js'
+import { toDict, sum, lattice, withKey } from '../utils.js'
 
 const PEOPLE_TYPES = toDict([
     'NEWCOMER',
@@ -10,6 +10,7 @@ const PEOPLE_TYPES = toDict([
     'ENGINEER',
     'CART_PUSHER',
     'MARKET_SELLER',
+    'MARKET_BUYER',
 ], key => key);
 
 const PEOPLE = {
@@ -70,6 +71,16 @@ const PEOPLE = {
         },
         speed: 1,
     },
+    [PEOPLE_TYPES.MARKET_BUYER]: {
+        renderOptions: {
+            stroke: "brown",
+            fill: "green",
+        },
+        textRenderOptions: {
+            fill: "red",
+        },
+        speed: 1,
+    },
 };
 
 export class PeopleReducer extends Reducer {
@@ -86,10 +97,12 @@ export class PeopleReducer extends Reducer {
         this.tickNewcomers(newState);
         this.tickSeekerWorkers(newState);
         this.tickMarketSellers(newState);
+        this.tickMarketBuyers(newState);
         this.tickPrefects(newState);
         this.tickEngineers(newState);
         this.tickCartPushers(newState);
         this.rerouteCartPushers(newState);
+        this.rerouteMarketBuyers(newState);
         this.findWorkers(newState);
 
         return newState;
@@ -128,6 +141,8 @@ export class PeopleReducer extends Reducer {
             this.removeEngineer(state, person);
         } else if (person.type === PEOPLE_TYPES.CART_PUSHER) {
             this.removeCartPusher(state, person);
+        } else if (person.type === PEOPLE_TYPES.MARKET_BUYER) {
+            this.removeMarketBuyer(state, person);
         }
     }
 
@@ -155,6 +170,40 @@ export class PeopleReducer extends Reducer {
                 cartPusher: {
                     ...work.data.cartPusher,
                     id: null,
+                },
+            },
+        };
+    }
+
+    static removeMarketBuyer(state, person) {
+        const work = state.structures[state.structuresKeysById[person.workId]];
+        if (!work) {
+            return;
+        }
+        state.structures[work.key] = {
+            ...work,
+            data: {
+                ...work.data,
+                marketBuyer: {
+                    ...work.data.marketBuyer,
+                    id: null,
+                },
+                reserves: {
+                    ...work.data.reserves,
+                    has: {
+                        ...work.data.reserves.has,
+                        [person.productType]:
+                            (work.data.reserves.has[person.productType] || 0)
+                            + person.quantity,
+                    },
+                    needs: {
+                        ...work.data.reserves.needs,
+                        [person.productType]: Math.max(
+                            (work.data.reserves.needs[person.productType] || 0)
+                            - person.quantity,
+                            0,
+                        ),
+                    },
                 },
             },
         };
@@ -193,6 +242,7 @@ export class PeopleReducer extends Reducer {
         this.movePrefects(state, fraction);
         this.moveEngineers(state, fraction);
         this.moveCartPushers(state, fraction);
+        this.moveMarketBuyers(state, fraction);
 
         return state;
     }
@@ -299,6 +349,26 @@ export class PeopleReducer extends Reducer {
         const oldPeople = state.people;
         const oldStructures = state.structures;
         for (let person of this.getPeopleOfType(state, PEOPLE_TYPES.CART_PUSHER)) {
+            const {x, y} = person.position;
+            const {x: targetX, y: targetY} = person.nextPosition;
+            if (x === targetX && y === targetY) {
+                continue;
+            }
+
+            if (oldPeople === state.people) {
+                state.people = {...state.people};
+            }
+            this.movePerson(
+                state, person, {targetX, targetY}, fraction);
+        }
+
+        return state;
+    }
+
+    static moveMarketBuyers(state, fraction) {
+        const oldPeople = state.people;
+        const oldStructures = state.structures;
+        for (let person of this.getPeopleOfType(state, PEOPLE_TYPES.MARKET_BUYER)) {
             const {x, y} = person.position;
             const {x: targetX, y: targetY} = person.nextPosition;
             if (x === targetX && y === targetY) {
@@ -449,6 +519,8 @@ export class PeopleReducer extends Reducer {
             return this.shouldRemoveCartPusher(state, person);
         } else if (person.type === PEOPLE_TYPES.MARKET_SELLER) {
             return this.shouldRemoveMarketSeller(state, person);
+        } else if (person.type === PEOPLE_TYPES.MARKET_BUYER) {
+            return this.shouldRemoveMarketBuyer(state, person);
         }
 
         return false;
@@ -486,6 +558,48 @@ export class PeopleReducer extends Reducer {
     }
 
     static shouldRemoveCartPusher(state, person) {
+        const work = state.structures[state.structuresKeysById[person.workId]];
+        if (!work) {
+            return true;
+        }
+        const store = state.structures[state.structuresKeysById[person.storeId]];
+        if (!store) {
+            return true;
+        }
+        if (!person.path) {
+            return true;
+        }
+        if (!person.position) {
+            return true;
+        }
+        if (!person.nextPosition) {
+            return true;
+        }
+
+        if (person.path.length) {
+            return false;
+        }
+
+        if (person.returning) {
+            return true;
+        }
+
+        const road = state.structures[
+            `${person.position.x}.${person.position.y}`];
+        if (!road) {
+            return true;
+        }
+
+        const path = this.getShortestPath(
+            state, road, this.getFirstRoad(state, store).startRoad);
+        if (!path) {
+            return true;
+        }
+
+        return false;
+    }
+
+    static shouldRemoveMarketBuyer(state, person) {
         const work = state.structures[state.structuresKeysById[person.workId]];
         if (!work) {
             return true;
@@ -655,6 +769,43 @@ export class PeopleReducer extends Reducer {
         }
     }
 
+    static tickMarketBuyers(state) {
+        const oldPeople = state.people;
+        const works = this.getStructuresWithDataProperty(state, 'marketBuyer');
+        for (let work of works) {
+            if (work.data.marketBuyer.id) {
+                continue;
+            }
+            const biggestNeedAmount = Object.values(work.data.reserves.needs)
+                .sort()
+                .reverse()
+                [0];
+            if (!biggestNeedAmount) {
+                continue;
+            }
+            const biggestNeed = Object.keys(work.data.reserves.needs)
+                .filter(key => work.data.reserves.needs[key] === biggestNeedAmount)
+                .sort()
+                [0];
+            const {startRoad, direction} = this.getFirstRoad(state, work);
+            if (!startRoad || !direction) {
+                continue;
+            }
+            const {store, path} = this.findStoreWith(
+                state, biggestNeed, biggestNeedAmount, work);
+            if (!store || !path) {
+                continue;
+            }
+            if (oldPeople === state.people) {
+                state.structures = {...state.structures};
+                state.people = {...state.people};
+            }
+            const marketBuyer = this.createMarketBuyer(
+                state, work, store, path, biggestNeed, biggestNeedAmount);
+            this.addMarketBuyer(state, work, marketBuyer);
+        }
+    }
+
     static rerouteCartPushers(state) {
         const oldPeople = state.people;
         const oldStructures = state.structures;
@@ -729,10 +880,151 @@ export class PeopleReducer extends Reducer {
                         if (oldPeople === state.people) {
                             state.people = {...state.people};
                         }
-                        // TODO: This needs to happen on a big tick
-                        // Otherwise they dissapear, since their position is
-                        // not on the grid
-                        // Or, use animation attributes instead
+                        person = state.people[person.id] = {
+                            ...person,
+                            storeId: store.id,
+                        };
+                        nextPosition = path[0];
+                        nextPath = path.slice(1);
+                        returning = person.returning;
+                    }
+                }
+            }
+            if (oldPeople === state.people) {
+                state.people === {...state.people};
+            }
+            state.people[person.id] = person = {
+                ...person,
+                nextPosition: {...nextPosition},
+                path: nextPath,
+                returning,
+            };
+        }
+
+        return state;
+    }
+
+    static rerouteMarketBuyers(state) {
+        const oldPeople = state.people;
+        const oldStructures = state.structures;
+        for (let person of this.getPeopleOfType(state, PEOPLE_TYPES.MARKET_BUYER)) {
+            let nextPosition, nextPath, returning;
+            if (!person.path) {
+                continue;
+            }
+            if (person.path.length) {
+                nextPosition = person.path[0];
+                nextPath = person.path.slice(1);
+                returning = person.returning;
+            } else {
+                if (person.returning) {
+                    let work = state.structures[person.workId];
+                    if (!work) {
+                        continue;
+                    }
+                    if (oldStructures === state.structures) {
+                        state.structures = {...state.structures};
+                    }
+                    work = state.structures[work.key] = {
+                        ...work,
+                        data: {
+                            ...work.data,
+                            reserves: {
+                                ...work.data.reserves,
+                                has: {
+                                    ...work.data.reserves.has,
+                                    [person.productType]:
+                                        work.data.reserves.has[person.productType]
+                                        + person.quantity,
+                                },
+                                needs: {
+                                    ...work.data.reserves.needs,
+                                    [person.productType]: Math.max(
+                                        (work.data.reserves.needs[person.productType] || 0)
+                                        - person.quantity,
+                                        0,
+                                    ),
+                                },
+                            },
+                        },
+                    };
+                    if (oldPeople === state.people) {
+                        state.people = {...state.people};
+                        person = state.people[people.id] = {
+                            ...person,
+                            quantity: 0,
+                        };
+                    }
+                    continue;
+                } else {
+                    let store = state.structures[
+                        state.structuresKeysById[person.storeId]]
+                    if (!store) {
+                        continue;
+                    }
+                    if (store.data.storage.has[person.productType]
+                        && store.data.storage.has[person.productType] > 0) {
+                        const taken = Math.min(
+                            store.data.storage.has[person.productType],
+                            person.quantity);
+                        if (oldStructures === state.structures) {
+                            state.structures = {...state.structures};
+                        }
+                        state.structures[store.key] = {
+                            ...store,
+                            data: {
+                                ...store.data,
+                                storage: {
+                                    ...store.data.storage,
+                                    has: {
+                                        ...store.data.storage.has,
+                                        [person.productType]:
+                                            store.data.storage.has[person.productType]
+                                            - taken,
+                                    },
+                                },
+                            },
+                        };
+                        if (oldPeople === state.people) {
+                            state.people = {...state.people};
+                        }
+                        person = state.people[person.id] = {
+                            ...person,
+                            quantity: taken,
+                        };
+                        const road = state.structures[
+                            `${person.position.x}.${person.position.y}`];
+                        if (!road) {
+                            continue;
+                        }
+                        const work = state.structures[
+                            state.structuresKeysById[person.workId]];
+                        if (!work) {
+                            continue;
+                        }
+                        nextPath = this.getShortestPath(
+                            state, road, this.getFirstRoad(state, work).startRoad);
+                        if (nextPath) {
+                            nextPosition = nextPath[0];
+                            nextPath = nextPath.slice(1);
+                        } else {
+                            nextPosition = null;
+                            nextPath = null;
+                        }
+                        returning = true;
+                    } else {
+                        const currentRoad = state.structures[
+                            `${person.position.x}.${person.position.y}`];
+                        let {store: newStore, path} = this.findStoreWith(
+                            state, person.productType, person.quantity,  currentRoad);
+                        store = newStore;
+                        if (!store || !path) {
+                            store = {id: null};
+                            path = [null];
+                        }
+                        if (oldPeople === state.people) {
+                            state.people = {...state.people};
+                        }
                         person = state.people[person.id] = {
                             ...person,
                             storeId: store.id,
@@ -771,6 +1063,32 @@ export class PeopleReducer extends Reducer {
             .map(store => ({store, path: this.getShortestPath(
                 state,
                 this.getFirstRoad(state, source).startRoad,
+                this.getFirstRoad(state, store).startRoad,
+            )}))
+            .filter(({store, path}) => path);
+        if (!paths.length) {
+            return {};
+        }
+        const {store, path} = paths
+            .sort((lhs, rhs) => lhs.path.length - rhs.path.length)
+            [0];
+
+        return {store, path};
+    }
+
+    static findStoreWith(state, type, quantity, target) {
+        const stores = this.getStructuresWithDataProperty(state, 'storage');
+        const storesWithType = stores
+            .filter(store => store.data.storage.has[type])
+            .sort(withKey(store => Object.values(store.data.storage.has[type])))
+            .reverse();
+        if (!storesWithType.length) {
+            return {};
+        }
+        const paths = storesWithType
+            .map(store => ({store, path: this.getShortestPath(
+                state,
+                this.getFirstRoad(state, target).startRoad,
                 this.getFirstRoad(state, store).startRoad,
             )}))
             .filter(({store, path}) => path);
@@ -883,6 +1201,19 @@ export class PeopleReducer extends Reducer {
         };
     }
 
+    static addMarketBuyer(state, structure, marketBuyer) {
+        state.structures[structure.key] = {
+            ...structure,
+            data: {
+                ...structure.data,
+                marketBuyer: {
+                    ...structure.data.marketBuyer,
+                    id: marketBuyer.id,
+                },
+            },
+        };
+    }
+
     static getFirstRoad(state, structure) {
         const directions = [
             {dx: 1, dy: 0},
@@ -965,6 +1296,21 @@ export class PeopleReducer extends Reducer {
     static createCartPusher(state, work, store, path, productType, quantity) {
         const cartPusher = this.createPerson(state, {
             type: PEOPLE_TYPES.CART_PUSHER,
+            position: path[0],
+            path: path.slice(1),
+            workId: work.id,
+            storeId: store.id,
+            productType,
+            quantity,
+            returning: false,
+        });
+
+        return cartPusher;
+    }
+
+    static createMarketBuyer(state, work, store, path, productType, quantity) {
+        const cartPusher = this.createPerson(state, {
+            type: PEOPLE_TYPES.MARKET_BUYER,
             position: path[0],
             path: path.slice(1),
             workId: work.id,

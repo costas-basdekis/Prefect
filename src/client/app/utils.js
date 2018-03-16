@@ -98,3 +98,17 @@ export function toDict(array, valueFunc, keyFunc=key => key) {
 export function sum(array, initial=0) {
     return array.reduce((total, current) => total + current, initial);
 }
+
+export function withKey(keyFunc) {
+    return (lhs, rhs) => {
+        const lKey = keyFunc(lhs);
+        const rKey = keyFunc(rhs);
+        if (lKey < rKey) {
+            return - 1;
+        } else if (lKey === rKey) {
+            return 0;
+        } else {
+            return 1;
+        }
+    };
+}

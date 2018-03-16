@@ -206,7 +206,7 @@ export const STRUCTURES = {
             ...makeWorkData(5),
             workerSeeker: makeWandererData(),
             marketSeller: makeWandererData(),
-            cartPuller: {
+            marketBuyer: {
                 id: null,
             },
             reserves: {
@@ -218,8 +218,12 @@ export const STRUCTURES = {
         }),
         getText: tile => `
             ${workerSeekerGetText(tile)}
+            [${Object.keys(tile.data.reserves.needs)
+                .map(key => `${key}: ${(tile.data.reserves.has[key] || 0) * 100}/${tile.data.reserves.needs[key] * 100}`)
+                .join(', ')}]
             [${Object.keys(tile.data.reserves.has)
-                .map(key => `${key}: ${tile.data.reserves.has[key] * 100}`)
+                .filter(key => !(key in tile.data.reserves.needs))
+                .map(key => `${key}: ${(tile.data.reserves.has[key] || 0) * 100}`)
                 .join(', ')}]
         `,
     },
