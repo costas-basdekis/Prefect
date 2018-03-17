@@ -226,11 +226,11 @@ export const STRUCTURES = {
         getText: tile => `
             ${workerSeekerGetText(tile)}
             [${Object.keys(tile.data.reserves.needs)
-                .map(key => `${key}: ${(tile.data.reserves.has[key] || 0) * 100}/${tile.data.reserves.needs[key] * 100}`)
+                .map(key => `${key}: ${((tile.data.reserves.has[key] || 0) * 100).toFixed(0)}/${(tile.data.reserves.needs[key] * 100).toFixed(0)}`)
                 .join(', ')}]
             [${Object.keys(tile.data.reserves.has)
                 .filter(key => !(key in tile.data.reserves.needs))
-                .map(key => `${key}: ${(tile.data.reserves.has[key] || 0) * 100}`)
+                .map(key => `${key}: ${((tile.data.reserves.has[key] || 0) * 100).toFixed(0)}`)
                 .join(', ')}]
         `,
     },
