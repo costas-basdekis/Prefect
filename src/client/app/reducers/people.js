@@ -11,6 +11,7 @@ export const PEOPLE_TYPES = toDict([
     'CART_PUSHER',
     'MARKET_SELLER',
     'MARKET_BUYER',
+    'PRIEST',
 ], key => key);
 
 export const PEOPLE = {
@@ -81,6 +82,16 @@ export const PEOPLE = {
         },
         speed: 1,
     },
+    [PEOPLE_TYPES.PRIEST]: {
+        renderOptions: {
+            stroke: "gold",
+            fill: "white",
+        },
+        textRenderOptions: {
+            fill: "gold",
+        },
+        speed: 1,
+    },
 };
 
 export class PeopleReducer extends Reducer {
@@ -100,6 +111,7 @@ export class PeopleReducer extends Reducer {
         this.tickMarketBuyers(newState);
         this.tickPrefects(newState);
         this.tickEngineers(newState);
+        this.tickPriests(newState);
         this.tickCartPushers(newState);
         this.rerouteCartPushers(newState);
         this.rerouteMarketBuyers(newState);
@@ -140,6 +152,8 @@ export class PeopleReducer extends Reducer {
             this.removePrefect(state, person);
         } else if (person.type === PEOPLE_TYPES.ENGINEER) {
             this.removeEngineer(state, person);
+        } else if (person.type === PEOPLE_TYPES.PRIEST) {
+            this.removePriest(state, person);
         } else if (person.type === PEOPLE_TYPES.CART_PUSHER) {
             this.removeCartPusher(state, person);
         } else if (person.type === PEOPLE_TYPES.MARKET_BUYER) {
@@ -159,6 +173,10 @@ export class PeopleReducer extends Reducer {
 
     static removeEngineer(state, person) {
         this.removeWanderer(state, person, 'engineer');
+    }
+
+    static removePriest(state, person) {
+        this.removeWanderer(state, person, 'priest');
     }
 
     static removeCartPusher(state, person) {
@@ -261,6 +279,7 @@ export class PeopleReducer extends Reducer {
         this.moveMarketSellers(state, fraction);
         this.movePrefects(state, fraction);
         this.moveEngineers(state, fraction);
+        this.movePriests(state, fraction);
         this.moveCartPushers(state, fraction);
         this.moveMarketBuyers(state, fraction);
 
@@ -281,6 +300,10 @@ export class PeopleReducer extends Reducer {
 
     static moveEngineers(state, fraction) {
         this.moveWanderers(state, fraction, PEOPLE_TYPES.ENGINEER);
+    }
+
+    static movePriests(state, fraction) {
+        this.moveWanderers(state, fraction, PEOPLE_TYPES.PRIEST);
     }
 
     static moveWanderers(state, fraction, type) {
@@ -608,6 +631,8 @@ export class PeopleReducer extends Reducer {
             return this.shouldRemovePrefect(state, person);
         } else if (person.type === PEOPLE_TYPES.ENGINEER) {
             return this.shouldRemoveEngineer(state, person);
+        } else if (person.type === PEOPLE_TYPES.PRIEST) {
+            return this.shouldRemovePriest(state, person);
         } else if (person.type === PEOPLE_TYPES.CART_PUSHER) {
             return this.shouldRemoveCartPusher(state, person);
         } else if (person.type === PEOPLE_TYPES.MARKET_SELLER) {
@@ -648,6 +673,10 @@ export class PeopleReducer extends Reducer {
 
     static shouldRemoveEngineer(state, person) {
         return this.shouldRemoveWanderer(state, person, 'engineer');
+    }
+
+    static shouldRemovePriest(state, person) {
+        return this.shouldRemoveWanderer(state, person, 'priest');
     }
 
     static shouldRemoveCartPusher(state, person) {
@@ -819,6 +848,15 @@ export class PeopleReducer extends Reducer {
             state, 'engineer',
             (state, work) => work.data.workers.allocated > 0,
             this.createEngineer.bind(this));
+
+        return state;
+    }
+
+    static tickPriests(state) {
+        this.tickWanderers(
+            state, 'priest',
+            (state, work) => work.data.workers.allocated > 0,
+            this.createPriest.bind(this));
 
         return state;
     }
@@ -1368,7 +1406,7 @@ export class PeopleReducer extends Reducer {
 
     static createWorkerSeeker(state, work, position, direction) {
         return this.createWanderer(
-            state, PEOPLE_TYPES.WORKER_SEEKER, work, position, direction)
+            state, PEOPLE_TYPES.WORKER_SEEKER, work, position, direction);
     }
 
     static createMarketSeller(state, work, position, direction) {
@@ -1378,12 +1416,21 @@ export class PeopleReducer extends Reducer {
 
     static createPrefect(state, work, position, direction) {
         return this.createWanderer(
-            state, PEOPLE_TYPES.PREFECT, work, position, direction)
+            state, PEOPLE_TYPES.PREFECT, work, position, direction);
     }
 
     static createEngineer(state, work, position, direction) {
         return this.createWanderer(
-            state, PEOPLE_TYPES.ENGINEER, work, position, direction)
+            state, PEOPLE_TYPES.ENGINEER, work, position, direction);
+    }
+
+    static createPriest(state, work, position, direction) {
+        const wanderer = this.createWanderer(
+            state, PEOPLE_TYPES.PRIEST, work, position, direction);
+
+        wanderer.dedicatedTo = work.data.dedicatedTo;
+
+        return wanderer;
     }
 
     static createCartPusher(state, work, store, path, productType, quantity) {
