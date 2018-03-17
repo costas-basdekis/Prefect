@@ -1,6 +1,18 @@
 import React from 'react';
 import { connect4 } from '../utils.js'
 
+function Menu(label, children, key=null, extra={}) {
+    if (key === null) {
+        key = label.toUpperCase().replace(/\s+/g, '_');
+    }
+    return {
+        ...extra,
+        label,
+        key,
+        children,
+    };
+}
+
 function Building(key, label=null, size=null){
     if (label === null) {
         label = key
@@ -30,22 +42,22 @@ class UCToolbox extends React.PureComponent {
         Building("ENTRY"),
         Building("EXIT"),
         {label: "Housing", key: "HOUSE", toolType: "RANGE_OF_STRUCTURES", selectionType: "SQUARE", data: {type: 'HOUSE'}},
-        {label: "Water", key: "WATER", children: [
+        Menu("Water", [
             Building("WELL"),
-        ]},
-        {label: "Military", key: "MILITARY", children: [
+        ]),
+        Menu("Military", [
             Building("PREFECTURE"),
-        ]},
-        {label: "Engineering", key: "ENGINEERING", children: [
+        ]),
+        Menu("Engineering", [
             Building("ENGINEERS_POST", "Engineer's Post"),
-        ]},
-        {label: "Resources", key: "RESOURCES", children: [
+        ]),
+        Menu("Resources", [
             Building("WHEAT_FARM", null, {width: 3, height: 3}),
-        ]},
-        {label: "Food", key: "FOOD", children: [
+        ]),
+        Menu("Food", [
             Building("GRANARY", null, {width: 3, height: 3}),
             Building("MARKET", null, {width: 2, height: 2}),
-        ]},
+        ]),
     ];
 
     static mapStateToProps(state, ownProps) {
