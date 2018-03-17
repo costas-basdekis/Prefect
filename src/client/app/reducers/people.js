@@ -91,6 +91,7 @@ export const PEOPLE = {
             fill: "gold",
         },
         speed: 1,
+        accessDuration: 30,
     },
 };
 
@@ -117,6 +118,7 @@ export class PeopleReducer extends Reducer {
         this.rerouteMarketBuyers(newState);
         this.findWorkers(newState);
         this.giveFoodToHouses(newState);
+        this.giveAccessToReligion(newState);
 
         return newState;
     }
@@ -540,6 +542,38 @@ export class PeopleReducer extends Reducer {
                     },
                 };
                 ({needs, has} = house.data.reserves);
+            }
+        }
+
+        return state;
+    }
+    static giveAccessToReligion(state) {
+        const oldStructures = state.structures;
+        for (const priest of this.getPeopleOfType(state, PEOPLE_TYPES.PRIEST)) {
+            const houses = this.getNearbyHousesWithPeople(state, priest.position);
+            if (!houses.length) {
+                continue;
+            }
+            const {dedicatedTo, accessDuration} = priest;
+            const until = state.date.ticks + accessDuration;
+            for (let house of houses) {
+                const {religiousAccess} = house.data;
+                if ((religiousAccess[dedicatedTo] || 0) >= until) {
+                    continue;
+                }
+                if (oldStructures === state.structures) {
+                    state.structures = {...state.structures};
+                }
+                house = state.structures[house.key] = {
+                    ...house,
+                    data: {
+                        ...house.data,
+                        religiousAccess: {
+                            ...house.data.religiousAccess,
+                            [dedicatedTo]: until,
+                        },
+                    },
+                };
             }
         }
 

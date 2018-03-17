@@ -100,6 +100,7 @@ export const STRUCTURES = {
                     WHEAT: 0.005,
                 },
             },
+            religiousAccess: {},
         }),
         getText: ({data: {level, occupants}}) => `${level}/${occupants}`,
     },
