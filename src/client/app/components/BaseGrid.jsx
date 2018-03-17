@@ -105,14 +105,19 @@ export class BaseGrid extends React.PureComponent {
 
     tileText({x, y, width, height, text, stroke="default", fill="default"}) {
         const centerX = x + width / 2, centerY = y + height / 2;
+        const lines = text.split("\n");
         return <text
-            x={centerX} y={centerY}
+            x={centerX} y={lines.length > 1 ? y : centerY}
             stroke={stroke} fill={fill}
             textAnchor="middle" dominantBaseline="middle"
             style={{pointerEvents: "none"}}
-            /*transform={`rotate(45 ${centerX} ${centerY})`}*/
+            /*transform={`rotate(-45 ${centerX} ${centerY})`}*/
             fontSize={12}>
-            {text}
+            {lines.map((line, i) =>
+                <tspan x={centerX} dy={i ? "1.2em" : 0} key={i}>
+                    {line.trim()}
+                </tspan>
+            )}
         </text>;
     }
 
