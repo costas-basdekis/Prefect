@@ -1,7 +1,7 @@
 import * as actions from '../actions/actions.js'
 import { Reducer } from './base.js'
 import { STRUCTURE_TYPES } from './structures.js'
-import { toDict, sum, lattice, withKey } from '../utils.js'
+import { toDict, dict, sum, lattice, withKey } from '../utils.js'
 
 const PEOPLE_TYPES = toDict([
     'NEWCOMER',
@@ -104,6 +104,7 @@ export class PeopleReducer extends Reducer {
         this.rerouteCartPushers(newState);
         this.rerouteMarketBuyers(newState);
         this.findWorkers(newState);
+        this.giveFoodToHouses(newState);
 
         return newState;
     }
@@ -143,6 +144,8 @@ export class PeopleReducer extends Reducer {
             this.removeCartPusher(state, person);
         } else if (person.type === PEOPLE_TYPES.MARKET_BUYER) {
             this.removeMarketBuyer(state, person);
+        } else if (person.type === PEOPLE_TYPES.MARKET_SELLER) {
+            this.removeMarketSeller(state, person);
         }
     }
 
@@ -204,6 +207,23 @@ export class PeopleReducer extends Reducer {
                             0,
                         ),
                     },
+                },
+            },
+        };
+    }
+
+    static removeMarketSeller(state, person) {
+        const work = state.structures[state.structuresKeysById[person.workId]];
+        if (!work) {
+            return;
+        }
+        state.structures[work.key] = {
+            ...work,
+            data: {
+                ...work.data,
+                marketSeller: {
+                    ...work.data.marketSeller,
+                    id: null,
                 },
             },
         };
@@ -418,6 +438,11 @@ export class PeopleReducer extends Reducer {
     }
 
     static areThereWorkersAround(state, {x, y}) {
+        const housesWithWorkers = this.getNearbyHousesWithPeople(state, {x, y});
+        return housesWithWorkers.length > 0;
+    }
+
+    static getNearbyHousesWithPeople(state, {x, y}) {
         const points = lattice([x - 2, x + 3], [y - 2, y + 3]);
         const keys = points
             .map(([x, y]) => `${x}.${y}`)
@@ -425,9 +450,77 @@ export class PeopleReducer extends Reducer {
         const houses = keys
             .filter(structure => structure)
             .filter(structure => structure.type === STRUCTURE_TYPES.HOUSE);
-        const housesWithWorkers = houses
+        const housesWithPeople = houses
             .filter(structure => structure.data.occupants > 0);
-        return housesWithWorkers.length > 0;
+        return housesWithPeople;
+    }
+
+    static giveFoodToHouses(state) {
+        const oldStructures = state.structures;
+        for (const seller of this.getPeopleOfType(state, PEOPLE_TYPES.MARKET_SELLER)) {
+            const houses = this.getNearbyHousesWithPeople(state, seller.position);
+            if (!houses.length) {
+                continue;
+            }
+            let work = state.structures[state.structuresKeysById[seller.workId]];
+            let {has: sellerHas, needs: sellerNeeds} = work.data.reserves;
+            for (let house of houses) {
+                let {needs, has} = house.data.reserves;
+                const willGet = dict(Object.keys(needs)
+                    .filter(key => needs[key] > (has[key] || 0))
+                    .filter(key => (sellerHas[key] || 0) > 0)
+                    .map(key => [key, Math.min(needs[key] - (has[key] || 0), sellerHas[key])])
+                );
+                if (!Object.keys(willGet).length) {
+                    continue;
+                }
+                if (oldStructures === state.structures) {
+                    state.structures = {...state.structures};
+                }
+                work = state.structures[work.key] = {
+                    ...work,
+                    data: {
+                        ...work.data,
+                        reserves: {
+                            ...work.data.reserves,
+                            has: {
+                                ...work.data.reserves.has,
+                                ...dict(Object.keys(willGet)
+                                    .map(key => [key, sellerHas[key] - willGet[key]])),
+                            },
+                            needs: {
+                                ...work.data.reserves.needs,
+                                ...dict(Object.keys(willGet)
+                                    .map(key => [key, sellerNeeds[key] + willGet[key]])),
+                            },
+                        },
+                    },
+                };
+                ({has: sellerHas, needs: sellerNeeds} = work.data.reserves);
+                house = state.structures[house.key] = {
+                    ...house,
+                    data: {
+                        ...house.data,
+                        reserves: {
+                            ...house.data.reserves,
+                            has: {
+                                ...work.data.reserves.has,
+                                ...dict(Object.keys(willGet)
+                                    .map(key => [key, (has[key] || 0) + willGet[key]])),
+                            },
+                            needs: {
+                                ...work.data.reserves.needs,
+                                ...dict(Object.keys(willGet)
+                                    .map(key => [key, needs[key] - willGet[key]])),
+                            },
+                        },
+                    },
+                };
+                ({needs, has} = house.data.reserves);
+            }
+        }
+
+        return state;
     }
 
     static moveNewcomers(state, fraction) {

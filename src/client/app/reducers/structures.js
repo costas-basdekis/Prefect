@@ -1,6 +1,6 @@
 import * as actions from '../actions/actions.js'
 import { Reducer } from './base.js'
-import { lattice, toDict } from '../utils.js'
+import { lattice, toDict, dict } from '../utils.js'
 
 export const STRUCTURE_TYPES = toDict([
     'ENTRY',
@@ -76,6 +76,13 @@ export const STRUCTURES = {
             occupants: 0,
             newcomers: [],
             water: 0,
+            reserves: {
+                needsPerOccupant: {
+                    WHEAT: 0.08,
+                },
+                needs: {},
+                has: {},
+            },
         }),
         getText: ({data: {level, occupants}}) => `${level}/${occupants}`,
     },
@@ -243,6 +250,12 @@ export const HOUSE_STATS = [
         newData: {
             space: 7,
         },
+        canUpgrade: ({data: {reserves: {has}}}) => has.WHEAT > 0,
+    },
+    {
+        newData: {
+            space: 10,
+        },
     },
 ];
 
@@ -260,6 +273,7 @@ export class StructuresReducer extends Reducer {
         this.updateWorks(newState);
         this.updateProduction(newState);
         this.updateLayers(newState);
+        this.updateHousesNeeds(newState);
 
         return newState;
     }
@@ -286,6 +300,39 @@ export class StructuresReducer extends Reducer {
                     ...structure.data,
                     ...nextHouseStats.newData,
                     level: structure.data.level + 1,
+                },
+            };
+        }
+
+        return state;
+    }
+
+    static updateHousesNeeds(state) {
+        const oldStructures = state.structures;
+        for (let house of this.getStructuresOfType(state, STRUCTURE_TYPES.HOUSE)) {
+            const occupants = house.data.occupants;
+            const {needsPerOccupant, needs} = house.data.reserves;
+            const newNeeds =
+                Object.entries(needsPerOccupant)
+                .map(([key, value]) => [key, value * occupants])
+                .filter(([key, newNeed]) => newNeed != needs[key]);
+            if (!newNeeds.length) {
+                continue;
+            }
+            if (oldStructures === state.structures) {
+                state.structures = {...state.structures};
+            }
+            house = state.structures[house.key] = {
+                ...house,
+                data: {
+                    ...house.data,
+                    reserves: {
+                        ...house.data.reserves,
+                        needs: {
+                            ...house.data.reserves.needs,
+                            ...dict(newNeeds),
+                        },
+                    },
                 },
             };
         }
