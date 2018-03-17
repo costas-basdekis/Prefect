@@ -26,19 +26,20 @@ If you have any suggestions let me know.
 * [x] Find workers on the street
 * [x] Service workers
 * [x] Farms, granaries
+* [x] Push finished goods
+* [x] Markets
+* [x] Goods deliverers and seekers
+* [x] Service workers
+* [x] Temples & priests
 
 # Working on
-* [ ] Push finished goods
-* [ ] Markets
-
-# Next features
 * [ ] Determine worker percentage
 * [ ] Allocate workers via available workers
+
+# Next features
 * [ ] Allocate workers per industry
 * [ ] Proper demographics
 * [ ] Fire & damage
 * [ ] Reservoirs and fountains
-* [ ] Service workers
-* [ ] Goods deliverers and seekers
 * [ ] Map editor
 * [ ] Procedural random map generation
