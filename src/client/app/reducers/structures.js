@@ -13,6 +13,7 @@ export const STRUCTURE_TYPES = toDict([
     'WHEAT_FARM',
     'GRANARY',
     'MARKET',
+    'SMALL_TEMPLE',
 ], key => key);
 
 const makeWorkData = (needed) => ({
@@ -241,6 +242,26 @@ export const STRUCTURES = {
             ${workerSeekerGetText(tile)}
             [${needHasGetText(tile.data.reserves)}]
             [${needsNotHasGetText(tile.data.reserves)}]
+        `,
+    },
+    [STRUCTURE_TYPES.SMALL_TEMPLE]: {
+        size: {width: 2, height: 2},
+        renderOptions: {
+            stroke: "gold",
+            fill: "white",
+        },
+        textRenderOptions: {
+            fill: "gold",
+        },
+        makeData: (tile, extraData) => ({
+            ...makeWorkData(2),
+            workerSeeker: makeWandererData(),
+            priest: makeWandererData(),
+            dedicatedTo: extraData.dedicatedTo,
+        }),
+        getText: tile => `
+            ${workerSeekerGetText(tile)}
+            ${tile.data.dedicatedTo}
         `,
     },
 };
@@ -632,7 +653,7 @@ export class StructuresReducer extends Reducer {
         return state;
     }
 
-    static setStructure(state, {data: {type}}, selectedTiles) {
+    static setStructure(state, {data: {type, ...extraData}}, selectedTiles) {
         const structureType = STRUCTURES[type];
         if (!structureType) {
             console.error("Unknown structure type: ", type);
@@ -659,7 +680,8 @@ export class StructuresReducer extends Reducer {
             getText: structureType.getText,
             structureSize: structureType.size,
         };
-        structure.data = (structureType.makeData || (() => null))(structure);
+        structure.data = (structureType.makeData || (() => null))(
+            structure, extraData);
 
         for (const [eX, eY] of this.getStructureTiles(structure)) {
             const key = `${eX}.${eY}`;

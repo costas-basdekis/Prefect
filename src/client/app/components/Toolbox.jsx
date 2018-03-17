@@ -13,7 +13,7 @@ function Menu(label, children, key=null, extra={}) {
     };
 }
 
-function Building(key, label=null, size=null){
+function Building(key, label=null, size=null, extraData: {}){
     if (label === null) {
         label = key
             .replace(/_/g, ' ')
@@ -25,7 +25,10 @@ function Building(key, label=null, size=null){
         key,
         toolType: "SINGLE_STRUCTURE",
         selectionType: "TILE",
-        data: {type: key},
+        data: {
+            type: key,
+            ...extraData,
+        },
     };
 
     if (size) {
@@ -57,6 +60,15 @@ class UCToolbox extends React.PureComponent {
         Menu("Food", [
             Building("GRANARY", null, {width: 3, height: 3}),
             Building("MARKET", null, {width: 2, height: 2}),
+        ]),
+        Menu("Religion", [
+            Menu("Small Temple", [
+                Building("SMALL_TEMPLE_CERES", "Ceres", {width: 2, height: 2}, {type: "SMALL_TEMPLE", dedicatedTo: "CERES"}),
+                Building("SMALL_TEMPLE_NEPTUNE", "Neptune", {width: 2, height: 2}, {type: "SMALL_TEMPLE", dedicatedTo: "NEPTUNE"}),
+                Building("SMALL_TEMPLE_MERCURY", "Mercury", {width: 2, height: 2}, {type: "SMALL_TEMPLE", dedicatedTo: "MERCURY"}),
+                Building("SMALL_TEMPLE_MARS", "Mars", {width: 2, height: 2}, {type: "SMALL_TEMPLE", dedicatedTo: "MARS"}),
+                Building("SMALL_TEMPLE_VENUS", "Venus", {width: 2, height: 2}, {type: "SMALL_TEMPLE", dedicatedTo: "VENUS"}),
+            ]),
         ]),
     ];
 
