@@ -287,6 +287,14 @@ export const HOUSE_STATS = [
         newData: {
             space: 10,
         },
+        canUpgrade: ({data: {religiousAccess}}, state) =>
+            Object.values(religiousAccess).filter(
+                until => until >= state.date.ticks).length > 0,
+    },
+    {
+        newData: {
+            space: 13,
+        },
     },
 ];
 
@@ -322,7 +330,7 @@ export class StructuresReducer extends Reducer {
             if (!houseStats.canUpgrade) {
                 continue;
             }
-            if (!houseStats.canUpgrade(structure)) {
+            if (!houseStats.canUpgrade(structure, state)) {
                 continue;
             }
             const nextHouseStats = HOUSE_STATS[structure.data.level + 1];
