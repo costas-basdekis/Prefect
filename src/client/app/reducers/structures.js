@@ -95,6 +95,9 @@ export const STRUCTURES = {
                 },
                 needs: {},
                 has: {},
+                consumesPerOccupant: {
+                    WHEAT: 0.005,
+                },
             },
         }),
         getText: ({data: {level, occupants}}) => `${level}/${occupants}`,
@@ -279,6 +282,7 @@ export class StructuresReducer extends Reducer {
         this.updateWorks(newState);
         this.updateProduction(newState);
         this.updateLayers(newState);
+        this.consumeFood(newState);
         this.updateHousesNeeds(newState);
 
         return newState;
@@ -341,6 +345,44 @@ export class StructuresReducer extends Reducer {
                     },
                 },
             };
+        }
+
+        return state;
+    }
+
+    static consumeFood(state) {
+        const oldStructures = state.structures;
+        for (let house of this.getStructuresOfType(state, STRUCTURE_TYPES.HOUSE)) {
+            const occupants = house.data.occupants;
+            if (!occupants) {
+                continue;
+            }
+            let {consumesPerOccupant, has} = house.data.reserves;
+            const willConsume = Object.entries(consumesPerOccupant)
+                .map(([key, consumes]) =>
+                    [key, Math.min(occupants * consumes, (has[key] || 0))])
+                .filter(([key, consume]) => consume > 0);
+            if (!willConsume.length) {
+                continue;
+            }
+            if (oldStructures === state.structures) {
+                state.structures = {...state.structures};
+            }
+            house = state.structures[house.key] = {
+                ...house,
+                data: {
+                    ...house.data,
+                    reserves: {
+                        ...house.data.reserves,
+                        has: {
+                            ...has,
+                            ...dict(willConsume
+                                .map(([key, consume]) => [key, has[key] - consume])),
+                        },
+                    },
+                },
+            };
+            ({consumesPerOccupant, has} = house.data.reserves);
         }
 
         return state;
