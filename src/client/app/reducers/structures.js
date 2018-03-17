@@ -39,6 +39,19 @@ const workerSeekerGetText = ({data: {workers}}) =>
         ? `${workers.allocated}/${workers.needed}`
         : "!";
 
+const needHasGetText = ({needs, has}) => Object.keys(needs)
+    .map(key => `${key}: ${((has[key] || 0) * 100).toFixed(0)}/${(needs[key] * 100).toFixed(0)}`)
+    .join(', ');
+
+const needsNotHasGetText = ({needs, has}) => Object.keys(has)
+    .filter(key => !(key in needs))
+    .map(key => `${key}: ${((has[key] || 0) * 100).toFixed(0)}`)
+    .join(', ');
+
+const hasGetText = ({has}) => Object.keys(has)
+    .map(key => `${key}: ${(has[key] * 100).toFixed(0)}`)
+    .join(', ');
+
 export const STRUCTURES = {
     [STRUCTURE_TYPES.ENTRY]: {
         size: {width: 1, height: 1},
@@ -195,9 +208,7 @@ export const STRUCTURES = {
         }),
         getText: tile => `
             ${workerSeekerGetText(tile)}
-            [${Object.keys(tile.data.storage.has)
-                .map(key => `${key}: ${tile.data.storage.has[key] * 100}`)
-                .join(', ')}]
+            [${hasGetText(tile.data.storage)}]
         `,
     },
     [STRUCTURE_TYPES.MARKET]: {
@@ -225,13 +236,8 @@ export const STRUCTURES = {
         }),
         getText: tile => `
             ${workerSeekerGetText(tile)}
-            [${Object.keys(tile.data.reserves.needs)
-                .map(key => `${key}: ${((tile.data.reserves.has[key] || 0) * 100).toFixed(0)}/${(tile.data.reserves.needs[key] * 100).toFixed(0)}`)
-                .join(', ')}]
-            [${Object.keys(tile.data.reserves.has)
-                .filter(key => !(key in tile.data.reserves.needs))
-                .map(key => `${key}: ${((tile.data.reserves.has[key] || 0) * 100).toFixed(0)}`)
-                .join(', ')}]
+            [${needHasGetText(tile.data.reserves)}]
+            [${needsNotHasGetText(tile.data.reserves)}]
         `,
     },
 };
