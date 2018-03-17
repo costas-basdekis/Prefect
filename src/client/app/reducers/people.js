@@ -3,7 +3,7 @@ import { Reducer } from './base.js'
 import { STRUCTURE_TYPES } from './structures.js'
 import { toDict, dict, sum, lattice, withKey } from '../utils.js'
 
-const PEOPLE_TYPES = toDict([
+export const PEOPLE_TYPES = toDict([
     'NEWCOMER',
     'WORKER_SEEKER',
     'PREFECT',
@@ -13,7 +13,7 @@ const PEOPLE_TYPES = toDict([
     'MARKET_BUYER',
 ], key => key);
 
-const PEOPLE = {
+export const PEOPLE = {
     [PEOPLE_TYPES.NEWCOMER]: {
         renderOptions: {
             stroke: "yellow",

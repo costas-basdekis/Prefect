@@ -3,6 +3,8 @@ import { connect4, lattice } from '../utils.js'
 
 class UCStatusBar extends React.PureComponent {
     LABELS = [
+        {key: 'save', getText: () => "Save", onClick: () => this.props.save(), width: 100},
+        {key: 'load', getText: () => "Load", onClick: () => this.props.load(), width: 100},
         {key: 'date', getText: () => `
             ${this.props.running ? '\u25B6\uFE0F' : '\u23F8\uFE0F'}
             ${this.props.date.day}
@@ -10,8 +12,8 @@ class UCStatusBar extends React.PureComponent {
             ${Math.abs(this.props.date.year)}
             ${this.props.date.year < 0 ? 'BC' : 'AD'}
         `, onClick: () => this.props.tickToggle()},
-        {key: 'population', getText: () => `${this.props.population} people`},
-        {key: 'money', getText: () => `${this.props.money} denarii`},
+        {key: 'population', getText: () => `${this.props.population} people`, width: 150},
+        {key: 'money', getText: () => `${this.props.money} denarii`, width: 150},
     ];
 
     MONTHS = [
@@ -39,10 +41,16 @@ class UCStatusBar extends React.PureComponent {
     }
 
     render() {
-        const x0 = 0, y0 = 0, width = 200, height = 25;
+        const x0 = 0, y0 = 0, height = 25;
+        let nextX = 0;
+        function addX(width) {
+            const x = nextX;
+            nextX += width;
+            return x;
+        }
         return <g>
-            {this.LABELS.map(({key, getText, onClick}, i) => this.renderLabel({
-                x: x0 + (width + 5) * i, y: y0,
+            {this.LABELS.map(({key, getText, onClick, width=200}, i) => this.renderLabel({
+                x: addX(width + 5), y: y0,
                 width, height, key, text: getText(),
                 onClick,
             }))}
