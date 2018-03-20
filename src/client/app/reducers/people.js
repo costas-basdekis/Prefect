@@ -898,7 +898,7 @@ export class PeopleReducer extends Reducer {
     static tickSeekerWorkers(state) {
         this.tickWanderers(
             state, 'workerSeeker',
-            (state, work) => true,
+            this.shouldAddWorkerSeeker.bind(this),
             this.createWorkerSeeker.bind(this));
 
         return state;
@@ -907,7 +907,7 @@ export class PeopleReducer extends Reducer {
     static tickMarketSellers(state) {
         this.tickWanderers(
             state, 'marketSeller',
-            (state, work) => work.data.workers.allocated > 0,
+            this.shouldAddWorker.bind(this),
             this.createMarketSeller.bind(this));
 
         return state;
@@ -916,7 +916,7 @@ export class PeopleReducer extends Reducer {
     static tickPrefects(state) {
         this.tickWanderers(
             state, 'prefect',
-            (state, work) => work.data.workers.allocated > 0,
+            this.shouldAddWorker.bind(this),
             this.createPrefect.bind(this));
 
         return state;
@@ -925,7 +925,7 @@ export class PeopleReducer extends Reducer {
     static tickEngineers(state) {
         this.tickWanderers(
             state, 'engineer',
-            (state, work) => work.data.workers.allocated > 0,
+            this.shouldAddWorker.bind(this),
             this.createEngineer.bind(this));
 
         return state;
@@ -934,7 +934,7 @@ export class PeopleReducer extends Reducer {
     static tickPriests(state) {
         this.tickWanderers(
             state, 'priest',
-            (state, work) => work.data.workers.allocated > 0,
+            this.shouldAddWorker.bind(this),
             this.createPriest.bind(this));
 
         return state;
@@ -948,6 +948,9 @@ export class PeopleReducer extends Reducer {
                 continue;
             }
             if (work.data.cartPusher.id) {
+                continue;
+            }
+            if (!work.data.workers.allocated) {
                 continue;
             }
             const {startRoad, direction} = this.getFirstRoad(state, work);
@@ -1341,15 +1344,47 @@ export class PeopleReducer extends Reducer {
         return null;
     }
 
-    static tickWanderers(state, wandererKey, canCreateWonderer, createWanderer) {
+    static shouldAddWorkerSeeker(state, structure, wandererKey) {
+        const {date: {ticks}} = state;
+        const {data: {[wandererKey]: {id, nextOn}}} = structure;
+        if (id) {
+            return false;
+        }
+        if (nextOn >= ticks) {
+            return false;
+        }
+
+        return true;
+    }
+
+    static shouldAddWorker(state, structure, wandererKey) {
+        const {date: {ticks}} = state;
+        const {
+            data: {
+                [wandererKey]: {id, nextOn, spawnWait},
+                workers: {allocated, needed},
+            },
+        } = structure;
+        if (id) {
+            return false;
+        }
+        if (!allocated) {
+            return false;
+        }
+        const actualNextOn = nextOn - spawnWait + spawnWait * needed / allocated;
+        if (actualNextOn >= ticks) {
+            return false;
+        }
+
+        return true;
+    }
+
+    static tickWanderers(state, wandererKey, shouldAddWanderer, createWanderer) {
         const oldStructures = state.structures;
         const works = this.getStructuresWithDataProperty(
             state, wandererKey);
         for (const work of works) {
-            if (!canCreateWonderer(state, work)) {
-                continue;
-            }
-            if (!this.shouldAddWanderer(state, work, wandererKey)) {
+            if (!shouldAddWanderer(state, work, wandererKey)) {
                 continue;
             }
             if (oldStructures === state.structures) {
@@ -1366,18 +1401,6 @@ export class PeopleReducer extends Reducer {
         }
 
         return state;
-    }
-
-    static shouldAddWanderer(state, structure, wandererKey) {
-        const wandererData = structure.data[wandererKey];
-        if (wandererData.id) {
-            return false;
-        }
-        if (wandererData.nextOn >= state.date.ticks) {
-            return false;
-        }
-
-        return true;
     }
 
     static addWanderer(state, structure, wandererKey, wanderer) {

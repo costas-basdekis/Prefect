@@ -446,11 +446,12 @@ export class StructuresReducer extends Reducer {
         const oldStructures = state.structures;
         const works = this.getStructuresWithDataAttribute(state, 'product')
         for (let work of works) {
-            const {workers, product} = work.data;
-            if (product.status >= product.max) {
+            const {workers: {allocated, needed}, product: {status, rate, max}} =
+                work.data;
+            if (status >= max) {
                 continue;
             }
-            if (!workers.allocated) {
+            if (!allocated) {
                 continue;
             }
             if (oldStructures === state.structures) {
@@ -461,8 +462,8 @@ export class StructuresReducer extends Reducer {
                 data: {
                     ...work.data,
                     product: {
-                        ...product,
-                        status: Math.min(product.status + product.rate, product.max),
+                        ...work.data.product,
+                        status: Math.min(status + rate * allocated / needed, max),
                     },
                 },
             };
