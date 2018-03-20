@@ -106,6 +106,7 @@ export class PeopleReducer extends Reducer {
 
         this.removePeople(newState);
         this.settleNewcomers(newState);
+        this.calculateWorkers(newState);
         this.tickNewcomers(newState);
         this.tickSeekerWorkers(newState);
         this.tickMarketSellers(newState);
@@ -654,6 +655,12 @@ export class PeopleReducer extends Reducer {
             delete state.people[person.id];
             state.population += person.count;
         }
+    }
+
+    static calculateWorkers(state) {
+        state.workers = parseInt(state.population * state.workerRatio);
+
+        return state;
     }
 
     static shouldRemovePerson(state, person) {

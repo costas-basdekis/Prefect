@@ -3,8 +3,8 @@ import { connect4, lattice } from '../utils.js'
 
 class UCStatusBar extends React.PureComponent {
     LABELS = [
-        {key: 'save', getText: () => "Save", onClick: () => this.props.save(), width: 100},
-        {key: 'load', getText: () => "Load", onClick: () => this.props.load(), width: 100},
+        {key: 'save', getText: () => "Save", onClick: () => this.props.save(), width: 75},
+        {key: 'load', getText: () => "Load", onClick: () => this.props.load(), width: 75},
         {key: 'date', getText: () => `
             ${this.props.running ? '\u25B6\uFE0F' : '\u23F8\uFE0F'}
             ${this.props.date.day}
@@ -12,8 +12,9 @@ class UCStatusBar extends React.PureComponent {
             ${Math.abs(this.props.date.year)}
             ${this.props.date.year < 0 ? 'BC' : 'AD'}
         `, onClick: () => this.props.tickToggle()},
-        {key: 'population', getText: () => `${this.props.population} people`, width: 150},
-        {key: 'money', getText: () => `${this.props.money} denarii`, width: 150},
+        {key: 'population', getText: () => `${this.props.population} people`, width: 100},
+        {key: 'workers', getText: () => `${this.props.workers} workers`, width: 100},
+        {key: 'money', getText: () => `${this.props.money} denarii`, width: 100},
     ];
 
     MONTHS = [
@@ -31,13 +32,15 @@ class UCStatusBar extends React.PureComponent {
         'December',
     ];
 
-    static mapStateToProps(state, ownProps) {
-        return {
-            date: state.date,
-            population: state.population,
-            money: state.money,
-            ...ownProps,
-        };
+    static selectors = {
+        date: (state, ownProps) => state.date,
+        population: (state, ownProps) => state.population,
+        money: (state, ownProps) => state.money,
+        workers: (state, ownProps) => state.workers,
+    };
+
+    static mapStateToProps(selected) {
+        return selected;
     }
 
     render() {
