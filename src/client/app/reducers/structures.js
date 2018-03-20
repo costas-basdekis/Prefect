@@ -422,7 +422,7 @@ export class StructuresReducer extends Reducer {
         const oldStructures = state.structures;
         for (const work of this.getStructuresWithDataAttribute(
                 state, 'workers')) {
-            if (work.data.workers.availableUntil < state.date.ticks) {
+            if (work.data.workers.available && (work.data.workers.availableUntil < state.date.ticks)) {
                 if (oldStructures === state.structures) {
                     state.structures = {...state.structures};
                 }
@@ -436,20 +436,6 @@ export class StructuresReducer extends Reducer {
                         },
                     },
                 };
-            } else if (work.data.workers.available && !work.data.workers.allocated) {
-                if (oldStructures === state.structures) {
-                    state.structures = {...state.structures};
-                }
-                state.structures[work.key] = {
-                    ...work,
-                    data: {
-                        ...work.data,
-                        workers: {
-                            ...work.data.workers,
-                            allocated: work.data.workers.needed,
-                        },
-                    },
-                };
             }
         }
 
@@ -459,7 +445,7 @@ export class StructuresReducer extends Reducer {
     static updateProduction(state) {
         const oldStructures = state.structures;
         const works = this.getStructuresWithDataAttribute(state, 'product')
-        for (const work of works) {
+        for (let work of works) {
             const {workers, product} = work.data;
             if (product.status >= product.max) {
                 continue;
@@ -470,7 +456,7 @@ export class StructuresReducer extends Reducer {
             if (oldStructures === state.structures) {
                 state.structures = {...state.structures};
             }
-            state.structures[work.key] = {
+            work = state.structures[work.key] = {
                 ...work,
                 data: {
                     ...work.data,

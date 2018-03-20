@@ -13,7 +13,13 @@ class UCStatusBar extends React.PureComponent {
             ${this.props.date.year < 0 ? 'BC' : 'AD'}
         `, onClick: () => this.props.tickToggle()},
         {key: 'population', getText: () => `${this.props.population} people`, width: 100},
-        {key: 'workers', getText: () => `${this.props.workers} workers`, width: 100},
+        {key: 'workers', getText: () => (
+            this.props.workers === 0
+            ? `${this.props.allocatedWorkers}a/${this.props.workers}w`
+            : this.props.neededWorkers <= this.props.workers
+                ? `${this.props.allocatedWorkers}a/${this.props.workers}w [+${this.props.workers - this.props.allocatedWorkers}/+${(100 - 100 * this.props.allocatedWorkers / this.props.workers).toFixed()}%]`
+                : `${this.props.allocatedWorkers}a/${this.props.workers}w/${this.props.neededWorkers}n [-${this.props.neededWorkers - this.props.workers}/-${(100 * this.props.neededWorkers / this.props.workers - 100).toFixed()}%]`
+        ), width: 200},
         {key: 'money', getText: () => `${this.props.money} denarii`, width: 100},
     ];
 
@@ -37,6 +43,8 @@ class UCStatusBar extends React.PureComponent {
         population: (state, ownProps) => state.population,
         money: (state, ownProps) => state.money,
         workers: (state, ownProps) => state.workers,
+        allocatedWorkers: (state, ownProps) => state.allocatedWorkers,
+        neededWorkers: (state, ownProps) => state.neededWorkers,
     };
 
     static mapStateToProps(selected) {

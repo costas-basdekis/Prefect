@@ -107,6 +107,7 @@ export class PeopleReducer extends Reducer {
         this.removePeople(newState);
         this.settleNewcomers(newState);
         this.calculateWorkers(newState);
+        this.assignWorkers(newState);
         this.tickNewcomers(newState);
         this.tickSeekerWorkers(newState);
         this.tickMarketSellers(newState);
@@ -659,6 +660,43 @@ export class PeopleReducer extends Reducer {
 
     static calculateWorkers(state) {
         state.workers = parseInt(state.population * state.workerRatio);
+
+        return state;
+    }
+
+    static assignWorkers(state) {
+        const oldStructures = state.structures;
+        const works = this.getStructuresWithDataProperty(state, 'workers')
+            .sort(withKey(work => work.key));
+        let availableWorkers = state.workers;
+        let allocatedWorkers = 0;
+        let neededWorkers = 0;
+        for (let work of works) {
+            const allocatedWorkersToWork = Math.min(
+                availableWorkers, work.data.workers.needed);
+            availableWorkers -= allocatedWorkersToWork;
+            allocatedWorkers += allocatedWorkersToWork;
+            neededWorkers += work.data.workers.needed;
+            if (work.data.workers.allocated === allocatedWorkersToWork) {
+                continue;
+            }
+            if (oldStructures === state.structures) {
+                state.structures = {...state.structures};
+            }
+            work = state.structures[work.key] = {
+                ...work,
+                data: {
+                    ...work.data,
+                    workers: {
+                        ...work.data.workers,
+                        allocated: allocatedWorkersToWork
+                    },
+                },
+            };
+        }
+
+        state.allocatedWorkers = allocatedWorkers;
+        state.neededWorkers = neededWorkers;
 
         return state;
     }

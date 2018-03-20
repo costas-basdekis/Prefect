@@ -21,6 +21,8 @@ export class StateReducer extends Reducer {
             nextPersonId: 1,
             population: 0,
             workers: 0,
+            allocatedWorkers: 0,
+            neededWorkers: 0,
             workerRatio: 0.33,
             date: {
                 year: -50, month: 0, day: 1,
@@ -28,7 +30,7 @@ export class StateReducer extends Reducer {
                 start: {year: -50, month: 0, day: 1},
             },
             money: 10000,
-            version: 1,
+            version: 2,
         };
     }
 
@@ -36,8 +38,9 @@ export class StateReducer extends Reducer {
         {version: 1, migrate: state => {
             state.workerRatio = 0.33;
             state.workers = parseInt(state.population * state.workerRatio);
-
-            return state;
+        }}, {version: 2, migrate: state => {
+            state.allocatedWorkers = 0;
+            state.neededWorkers = 0;
         }},
     ];
 
@@ -49,7 +52,7 @@ export class StateReducer extends Reducer {
                 console.log(`Skipped migration at v${migration.version}`);
                 continue;
             }
-            state = migration.migrate(state);
+            state = migration.migrate(state) || state;
             state.version = migration.version;
             console.log(`Migrated from v${version} to v${migration.version}`)
         }
