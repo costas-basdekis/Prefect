@@ -1,0 +1,429 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+<title>Show File Data</title>
+<style type='text/css'>
+body {
+    font-family: sans-serif;
+}
+</style>
+<script type="text/javascript" src="https://code.jquery.com/jquery-3.3.1.js"></script>
+<script type='text/javascript'>
+
+    function loadFile() {
+        var input, file, fr;
+
+        if (typeof window.FileReader !== 'function') {
+            $("body").append($("<p>").text("The file API isn't supported on this browser yet."));
+            return;
+        }
+
+        input = document.getElementById('fileinput');
+        if (!input) {
+            $("body").append($("<p>").text("Um, couldn't find the fileinput element."));
+        }
+        else if (!input.files) {
+            $("body").append($("<p>").text("This browser doesn't seem to support the `files` property of file inputs."));
+        }
+        else if (!input.files[0]) {
+            $("body").append($("<p>").text("Please select a file before clicking 'Load'"));
+        }
+        else {
+            file = input.files[0];
+            fr = new FileReader();
+            fr.onload = () => showResult(fr, file.name);;
+            fr.readAsBinaryString(file);
+        }
+    }
+
+    function showResult(fr, filename) {
+        asBinary(fr, filename);
+        asSG2(fr, filename);
+    }
+
+    function asBinary(fr, filename) {
+        var markup, result, n, aByte, byteStr;
+
+        markup = [];
+        result = fr.result;
+        for (n = 0; n < Math.min(result.length, 32); ++n) {
+            aByte = result.charCodeAt(n);
+            byteStr = aByte.toString(16);
+            if (byteStr.length < 2) {
+                byteStr = "0" + byteStr;
+            }
+            markup.push(byteStr);
+        }
+        $("body").append($("<p>").text(`Binary '${filename}' (${result.length}):`));
+        $("body").append($("<pre>").text(markup.join(" ")));
+    }
+
+    function asSG2(fr, filename) {
+        const sg2Reader = new SG2Reader(fr, filename);
+        const {header, bitmaps, images} = sg2Reader.read();
+        $("body")
+            .append($("<h2>").text("Header"))
+            .append($("<table>")
+                .append($("<tr>")
+                    .append($("<th>").text("Property"))
+                    .append($("<th>").text("Value"))
+                )
+                .append(Object.entries(header).map(([key, value]) => $("<tr>")
+                    .append($("<td>").text(key))
+                    .append($("<td>").text(value))
+                ))
+            );
+        $("body")
+            .append($("<h2>").text(`Bitmaps (${bitmaps.length})`))
+            .append(bitmaps.length ? $("<table>")
+                .append($("<tr>")
+                    .append(Object.entries(bitmaps[0]).map(([key, value]) =>
+                        $("<th>")
+                            .text(key)
+                            .attr("colspan", (value !== null && value.constructor === Object) ?
+                                Object.keys(value).length
+                                : 1)
+                            .attr("rowspan", (value !== null && value.constructor === Object) ?
+                                1
+                                : "2"))
+                    )
+                )
+                .append($("<tr>")
+                    .append(Object.entries(bitmaps[0])
+
+                        .filter(([key, value]) => (value !== null && value.constructor === Object))
+                        .map(([key, value]) => Object.entries(value))
+                        .reduce((total, item) => total.concat(item))
+                        .map(([key, value]) =>
+                        $("<th>")
+                            .text(key))
+                    )
+                )
+                .append(bitmaps.map(bitmap => $("<tr>")
+                    .append(Object.entries(bitmap).map(([key, value]) =>
+                        (value !== null && value.constructor === Object)
+                        ? Object.entries(value).map(([subKey, subValue]) =>
+                            $("<td>").text(subValue))
+                        : (value !== null && value.constructor === Array)
+                        ? [$("<td>").text(value.length)]
+                        : [$("<td>").text(value)]
+                    ).reduce((total, list) => total.concat(list), []))
+                ))
+                : ""
+            );
+        $("body")
+            .append($("<h2>").text(`Images (${images.length})`))
+            .append(images.length ? $("<table>")
+                .append($("<tr>")
+                    .append(Object.entries(images[0]).map(([key, value]) =>
+                        $("<th>").text(key))
+                    )
+                )
+                .append(images.map(bitmap => $("<tr>")
+                    .append(Object.entries(bitmap).map(([key, value]) =>
+                        (value !== null && value.constructor === Array)
+                        ? $("<td>").text(value.length)
+                        : key === "record"
+                        ? $("<td>").text(JSON.stringify(value, 4))
+                        : $("<td>").text(value)
+                    )
+                )))
+                : ""
+            );
+    }
+
+    const SG_HEADER_SIZE = 680;
+    const SG_BITMAP_RECORD_SIZE = 200;
+
+    const ISOMETRIC_TILE_WIDTH = 58;
+    const ISOMETRIC_TILE_HEIGHT = 30;
+    const ISOMETRIC_TILE_BYTES = 1800;
+    const ISOMETRIC_LARGE_TILE_WIDTH = 78;
+    const ISOMETRIC_LARGE_TILE_HEIGHT = 40;
+    const ISOMETRIC_LARGE_TILE_BYTES = 3200;
+    class SG2Reader {
+
+        constructor(fr, filename) {
+            this.stream = new Stream(fr.result, filename);
+        }
+
+        read() {
+            const header = this.readHeader();
+            const bitmaps = this.readBitmaps(header);
+            this.stream.index = SG_HEADER_SIZE
+                + this.maxBitmapRecords(header) * SG_BITMAP_RECORD_SIZE;
+            const images =  this.readImages(header, bitmaps, header.version >= 0xd6);
+
+            return {
+                header,
+                bitmaps,
+                images,
+            };
+        }
+
+        readHeader() {
+            const header = this.stream.readDict([
+                ["sg_filesize", "readUInt32LE"],
+                ["version", "readUInt32LE"],
+                ["unknown1", "readUInt32LE"],
+                ["max_image_records", "readInt32LE"],
+                ["num_image_records", "readInt32LE"],
+                ["num_bitmap_records", "readInt32LE"],
+                ["num_bitmap_records_without_system", "readInt32LE"],
+                ["total_filesize", "readUInt32LE"],
+                ["filesize_555", "readUInt32LE"],
+                ["filesize_external", "readUInt32LE"],
+                [undefined, "skip", [640]],
+            ]);
+
+            try {
+                this.checkVersion(header);
+            } catch (e) {
+                header.error = e.toString();
+            }
+
+            return header;
+        }
+
+        readBitmaps(header) {
+            const bitmaps = [];
+
+            for (let index = 0 ; index < header.num_bitmap_records ; index++) {
+                bitmaps.push(this.readBitmap(index));
+            }
+
+            return bitmaps;
+        }
+
+        readBitmap(index) {
+            return {
+                images: [],
+                images_n: 0,
+                images_c: 0,
+                record: this.stream.readDict([
+                    ["filename", "readString", [65]],
+                    ["comment", "readString", [51]],
+                    ["width", "readUInt32LE"],
+                    ["height", "readUInt32LE"],
+                    ["num_images", "readUInt32LE"],
+                    ["start_index", "readUInt32LE"],
+                    ["end_index", "readUInt32LE"],
+                    ["index", "readUInt32LE"],
+                    ["unknown1", "readUInt32LE"],
+                    ["unknown2", "readUInt32LE"],
+                    ["unknown3", "readUInt32LE"],
+                    ["unknown4", "readUInt32LE"],
+                    ["real_width", "readUInt32LE"],
+                    ["real_height", "readUInt32LE"],
+                    ["internal1", "readUInt32LE"],
+                    ["internal2", "readUInt32LE"],
+                    ["internal3", "readUInt32LE"],
+                    [undefined, "skip", [24]],
+                ]),
+                filename: this.stream.filename,
+                bitmapId: index,
+            };
+        }
+
+        readImages(header, bitmaps, includeAlpha) {
+            // The first one is a dummy/null record
+            this.readImage(0, includeAlpha);
+
+            const images = [];
+            for (let index = 0 ; index < header.num_image_records ; index++) {
+                const image = this.readImage(index + 1, includeAlpha);
+                images.push(image);
+            }
+
+            for (const index in images) {
+                const image = images[index];
+                const {invert_offset} = image.workRecord;
+                const invertIndex = index + invert_offset;
+                if (0 <= invertIndex && invertIndex < index) {
+                    image.workRecord = images[invertIndex];
+                }
+                const {bitmap_id} = image.workRecord;
+                if (0 <= bitmap_id && bitmap_id < bitmaps.length) {
+                    bitmaps[bitmap_id].images.push(image);
+                    image.parent = bitmaps[bitmap_id];
+                }
+            }
+
+            return images;
+        }
+
+        readImage(index, includeAlpha) {
+            const image = {
+                parent: null,
+                error: null,
+                imageId: index,
+                record: this.stream.readDict([
+                    ["offset", "readUInt32LE"],
+                    ["length", "readUInt32LE"],
+                    ["uncompressed_length", "readUInt32LE"],
+                    [undefined, "skip", [4]], // 4 zero bytes
+                    ["invert_offset", "readInt32LE"],
+                    ["width", "readInt16LE"],
+                    ["height", "readInt16LE"],
+                    // 26 unknown bytes, mostly zero, first four are 2 shorts
+                    [undefined, "skip", [26]],
+                    ["type", "readInt16LE"],
+                    ["flags", "readList", [[
+                        ["readChar"],
+                        ["readChar"],
+                        ["readChar"],
+                        ["readChar"],
+                    ]]],
+                    ["bitmap_id", "readUInt8LE"],
+                    [undefined, "skip", [7]], // 3 bytes + 4 zero bytes
+                ]),
+            };
+            image.invert = !!image.record.invert_offset;
+            // For D6 and up SG3 versions: alpha masks
+            if (includeAlpha) {
+                Object.assign(image, this.stream.readDict([
+                    ["alpha_offset", "readUInt32LE"],
+                    ["alpha_length", "readUInt32LE"],
+                ]));
+            } else {
+                Object.assign(image, {
+                    alpha_offset: 0,
+                    alpha_length: 0,
+                });
+            }
+
+            image.workRecord = image.record;
+
+            return image
+        }
+
+        maxBitmapRecords(header) {
+            if (header.version == 0xd3) {
+                return 100; // SG2
+            } else {
+                return 200; // SG3
+            }
+        }
+
+        checkVersion(header) {
+            if (header.version === 0xd3) {
+                // SG2 file: filesize = 74480 or 522680 (depending on whether
+                // it's a "normal" sg2 or an enemy sg2
+                if (header.sg_filesize === 74480
+                    || header.sg_filesize === 522680) {
+                    return true;
+                } else {
+                    throw new Error(
+                        `Expected reported file size to be 74480 or 522680, `
+                        + `but was ${header.sg_filesize}`)
+                }
+            } else if (header.version === 0xd5 || header.version === 0xd6) {
+                // SG3 file: filesize = the actual size of the sg3 file
+                if (header.sg_filesize == 74480
+                    || this.stream.length == header.sg_filesize) {
+                    return true;
+                } else {
+                    throw new Error(
+                        `Expected reported file size to be 74480 or equal to `
+                        + `the actual file size(${this.stream.length}), but `
+                        + `was ${header.sg_filesize}`);
+                }
+            } else {
+                throw new Error(
+                    `Expected version to be 0xd3, 0xd5, or 0xd6, but was `
+                    + `0x${header.version.toString(16)}`);
+            }
+        }
+    }
+
+    class Stream {
+        constructor(contents, filename) {
+            this.contents = contents;
+            const bytes = contents.split("").map(c => c.charCodeAt(0));
+            this.dataView = new DataView(Uint8Array.from(bytes).buffer);
+            this.index = 0;
+            this.length = this.dataView.byteLength;
+            this.filename = filename;
+        }
+
+        readDict(ops) {
+            const data = {};
+
+            for (const [key, op, args] of ops) {
+                const value = this[op].apply(this, args || []);
+                if (typeof key !== typeof undefined) {
+                    data[key] = value;
+                }
+            }
+
+            return data;
+        }
+
+        readList(ops) {
+            const data = [];
+
+            for (const [op, args, ignore=false] of ops) {
+                const value = this[op].apply(this, args || []);
+                if (!ignore) {
+                    data.push(value);
+                }
+            }
+
+            return data;
+        }
+
+        get(length) {
+            if ((this.index + length) > this.length) {
+                throw new Error("Past buffer end");
+            }
+
+            const index = this.index;
+            this.index += length;
+            return index;
+        }
+
+        readUInt32LE() {
+            return this.dataView.getUint32(this.get(4), true);
+        }
+
+        readUInt8LE() {
+            return this.dataView.getUint8(this.get(1), true);
+        }
+
+        readInt32LE() {
+            return this.dataView.getInt32(this.get(4), true);
+        }
+
+        readInt16LE() {
+            return this.dataView.getInt16(this.get(2), true);
+        }
+
+        skip(length) {
+            this.get(length);
+        }
+
+        readString(length, trimAtNull=true) {
+            let value = this.contents.substr(this.get(length), length);
+            if (trimAtNull) {
+                const end = value.indexOf('\0');
+                if (end >= 0) {
+                    value = value.substr(0, end);
+                }
+            }
+            return value;
+        }
+
+        readChar() {
+            return this.readString(1, false);
+        }
+    }
+</script>
+</head>
+<body>
+<form action='#' onsubmit="return false;">
+<input type='file' id='fileinput'>
+<input type='button' id='btnLoad' value='Load' onclick='loadFile();'>
+</form>
+</body>
+</html>
