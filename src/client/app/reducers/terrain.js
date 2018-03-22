@@ -1,6 +1,6 @@
 import * as actions from '../actions/actions.js'
 import { Reducer } from './base.js'
-import { lattice, choice, toDict } from '../utils.js'
+import { lattice, choice, range, toDict } from '../utils.js'
 
 export const GROUND_TYPES = toDict([
     'GRASS',
@@ -50,6 +50,7 @@ export class TerrainReducer extends Reducer {
                 subType: type === TILE_TYPES.GROUND
                     ? GROUND_TYPES.GRASS // choice(Object.keys(GROUND_TYPES))
                     : undefined,
+                randomValue: choice(range(16)),
             }
         }
 

@@ -2,6 +2,7 @@ import * as actions from '../actions/actions.js'
 import { Reducer } from './base.js'
 import { STRUCTURES } from './structures.js'
 import { PEOPLE } from './people.js'
+import { choice, range } from '../utils.js'
 
 export class StateReducer extends Reducer {
     static createInitialState() {
@@ -41,6 +42,10 @@ export class StateReducer extends Reducer {
         }}, {version: 2, migrate: state => {
             state.allocatedWorkers = 0;
             state.neededWorkers = 0;
+        }}, {version: 3, migrate: state => {
+            for (const tile of Object.values(state.terrain)) {
+                tile.randomValue = choice(range(16));
+            }
         }},
     ];
 

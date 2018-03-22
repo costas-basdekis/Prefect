@@ -151,13 +151,14 @@ export class BaseGrid extends React.PureComponent {
     }
 
     tileUseImage({x, y, id}) {
-        return <use href={`#${id}`} x={x} y={y} />
+        return <use href={`#${id}`} x={x} y={y} z={x + y} />
     }
 
     tileImage({x=0, y=0, href, transform=""}) {
         return <image
             xlinkHref={href}
-            transform={`translate(${x} ${y}) ${transform}`} />
+            transform={`translate(${x} ${y}) ${transform}`}
+            z={x + y} />
     }
 
     onTileHover = (x, y) => (e) => {
