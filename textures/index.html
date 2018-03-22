@@ -69,7 +69,7 @@ body {
 
     function load555(fr, filename) {
         window.sg2Reader.reader555 = new Reader555(fr, filename);
-        $(".load-image-button[data-auto-load=true]").click();
+        $(".load-image-button[data-auto-load=true]:not(.loaded)").click();
     }
 
     function showResult(fr, filename) {
@@ -97,6 +97,7 @@ body {
     function asSG2(fr, filename) {
         window.sg2Reader = new SG2Reader(fr, filename);
         const {header, bitmaps, images} = window.sg2Reader.read();
+
         $("body")
             .append($("<h2>").text("Header"))
             .append($("<table>")
@@ -147,6 +148,67 @@ body {
                 ))
                 : ""
             );
+
+        function createImageRows(bitmapIndex, imageIndex, count=32) {
+            const bitmap = bitmaps[bitmapIndex];
+            const images = bitmap.images.slice(imageIndex, imageIndex + count);
+            const rows = images.map(image => $("<tr>")
+                .css("background-color", bitmapIndex % 2 ? "salmon" : "white")
+                .append($("<td>").append(
+                    $("<button>")
+                        .text("Load image")
+                        .addClass("load-image-button")
+                        .attr("data-auto-load", image.record.width <= 320 && image.record.height <= 320)
+                        .attr("data-bitmap-index", bitmapIndex)
+                        .attr("data-image-index", bitmap.images.indexOf(image))
+                        .attr("onclick", `window.sg2Reader.showImage(this)`)))
+                .append(Object.entries(image).map(([key, value]) =>
+                    (value !== null && value.constructor === Array)
+                    ? $("<td>").text(value.length)
+                    : key === "parent"
+                    ? value.record.filename
+                    : key === "record"
+                    ? $("<td>").text(JSON.stringify(value, 4))
+                    : $("<td>").text(value)
+                )));
+
+            const nextImageIndex = imageIndex + count;
+            const imagesLeft = bitmap.images.length - nextImageIndex;
+            if (imagesLeft > 0) {
+                rows.push(
+                    $("<tr>")
+                        .css("background-color", bitmapIndex % 2 ? "salmon" : "white")
+                        .append($("<td>")
+                            .append($("<button>")
+                                .text(`Add more images (${imagesLeft} left)`)
+                                .addClass("add-more-button")
+                                .attr("data-bitmap-index", bitmapIndex)
+                                .attr("data-image-index", nextImageIndex)
+                                .attr("onclick", `window.addMoreImages(this)`))
+                            .append($("<button>")
+                                .text(`Add all images (${imagesLeft} left)`)
+                                .addClass("add-all-button")
+                                .attr("data-bitmap-index", bitmapIndex)
+                                .attr("data-image-index", nextImageIndex)
+                                .attr("onclick", `window.addMoreImages(this, true)`))));
+            }
+
+            return rows;
+        }
+
+        window.addMoreImages = function addMoreImages(target, all=false) {
+            const {bitmapIndex: rawBitmapIndex, imageIndex: rawImageIndex} = target.dataset;
+            const [bitmapIndex, imageIndex] = [parseInt(rawBitmapIndex), parseInt(rawImageIndex)];
+            const $tr = $(target).parent().parent();
+            const count = all ? 100000 : undefined;
+            $tr.after(createImageRows(bitmapIndex, imageIndex, count));
+            $tr.remove();
+
+            if (window.sg2Reader.reader555) {
+                $(".load-image-button[data-auto-load=true]:not(.loaded)").click();
+            }
+        }
+
         $("body")
             .append($("<h2>").text(`Images (${images.length})`))
             .append(images.length ? $("<table>")
@@ -156,26 +218,9 @@ body {
                         $("<th>").text(key))
                     )
                 )
-                .append(images.filter(image => image.parent.images.indexOf(image) < 32).map((image, index) => $("<tr>")
-                    .append($("<td>").append(
-                        $("<button>")
-                            .attr("data-index", index)
-                            .text("Load image")
-                            .addClass("load-image-button")
-                            .attr("data-auto-load", image.record.width <= 320 && image.record.height <= 320)
-                            .attr("data-bitmap-index", bitmaps.indexOf(image.parent))
-                            .attr("data-image-index", image.parent.images.indexOf(image))
-                            .attr("onclick", `window.sg2Reader.showImage(this)`)))
-                    .append(Object.entries(image).map(([key, value]) =>
-                        (value !== null && value.constructor === Array)
-                        ? $("<td>").text(value.length)
-                        : key === "parent"
-                        ? value.record.filename
-                        : key === "record"
-                        ? $("<td>").text(JSON.stringify(value, 4))
-                        : $("<td>").text(value)
-                    )
-                )))
+                .append(bitmaps
+                    .map((bitmap, index) => createImageRows(index, 0, 2))
+                    .reduce((total, rows) => total.concat(rows), []))
                 : ""
             );
     }
@@ -428,6 +473,8 @@ body {
                 0, 0, loadedImage.width, loadedImage.height);
             imageData.data.set(loadedImage.data8);
             ctx.putImageData(imageData, 0, 0);
+
+            $(target).addClass("loaded");
         }
     }
 

@@ -9,6 +9,8 @@ export class BaseGrid extends React.PureComponent {
         properties: (state, ownProps) => state.properties,
     };
 
+    USE_IMAGES = {};
+
     constructor(props) {
         super(props);
         this.size = this.constructor.size;
@@ -49,6 +51,9 @@ export class BaseGrid extends React.PureComponent {
                 translate(${centerX * Math.sqrt(2) / 3} ${centerY * Math.sqrt(2) / 3 + 30})
                 rotate(45 ${centerX} ${centerY})
             `} style={this.mouseEvents ? {} : {pointerEvents: "none"}}>
+            {Object.entries(this.USE_IMAGES).map(([key, options]) =>
+                <symbol key={key} id={key}>{this.tileImage(options)}</symbol>
+            )}
             {this.props.tiles.map(tile => this.renderTile(tile))}
         </g>;
     }
@@ -67,26 +72,50 @@ export class BaseGrid extends React.PureComponent {
 
     baseRenderTile({x, y, key, stroke="transparent", fill="transparent",
                     structureWidth=1, structureHeight=1,
-                    strokeWidth=1, text=null, textOptions={}}) {
+                    strokeWidth=1, text=null, textOptions={},
+                    imageOptions=null, useImage=null}) {
         const rectX = x * this.size, rectY = y * this.size;
         const width = this.size * structureWidth;
         const height = this.size * structureHeight;
         const tileRect = this.tileRect({
             x, y, rectX, rectY, width, height, key, stroke, fill, strokeWidth});
-        if (!text) {
+        if (!text && !imageOptions && !useImage) {
             return tileRect;
         }
-        textOptions = {
-            ...textOptions,
-            x: rectX,
-            y: rectY,
-            width,
-            height,
-            text,
-        };
+        let tileText;
+        if (text) {
+            textOptions = {
+                ...textOptions,
+                x: rectX,
+                y: rectY,
+                width,
+                height,
+                text,
+            };
+            tileText = this.tileText(textOptions);
+        }
+        let tileImage;
+        if (imageOptions) {
+            imageOptions = {
+                ...imageOptions,
+                x: rectX,
+                y: rectY,
+                width,
+                height,
+            };
+            tileImage = this.tileImage(imageOptions);
+        } else if (useImage) {
+            const useImageOptions = {
+                id: useImage,
+                x: rectX,
+                y: rectY,
+            };
+            tileImage = this.tileUseImage(useImageOptions);
+        }
         return <g key={key}>
             {tileRect}
-            {this.tileText(textOptions)}
+            {tileImage}
+            {tileText}
         </g>;
     }
 
@@ -119,6 +148,16 @@ export class BaseGrid extends React.PureComponent {
                 </tspan>
             )}
         </text>;
+    }
+
+    tileUseImage({x, y, id}) {
+        return <use href={`#${id}`} x={x} y={y} />
+    }
+
+    tileImage({x=0, y=0, href, transform=""}) {
+        return <image
+            xlinkHref={href}
+            transform={`translate(${x} ${y}) ${transform}`} />
     }
 
     onTileHover = (x, y) => (e) => {
