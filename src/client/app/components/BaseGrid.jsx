@@ -7,6 +7,7 @@ export class BaseGrid extends React.PureComponent {
     mouseEvents = false;
     static selectors = {
         properties: (state, ownProps) => state.properties,
+        useTextures: (state, ownProps) => ownProps.useTextures,
     };
 
     USE_IMAGES = {};
@@ -24,6 +25,7 @@ export class BaseGrid extends React.PureComponent {
                 x: this.size * options.properties.width / 2,
                 y: this.size * options.properties.height / 2,
             },
+            useTextures: options.useTextures,
         };
     }
 
@@ -79,7 +81,7 @@ export class BaseGrid extends React.PureComponent {
         const height = this.size * structureHeight;
         const tileRect = this.tileRect({
             x, y, rectX, rectY, width, height, key, stroke, fill, strokeWidth});
-        if (!text && !imageOptions && !useImage) {
+        if (!text && (!this.props.useTextures || (!imageOptions && !useImage))) {
             return tileRect;
         }
         let tileText;
@@ -109,12 +111,16 @@ export class BaseGrid extends React.PureComponent {
                 id: useImage,
                 x: rectX,
                 y: rectY,
+                key,
             };
             tileImage = this.tileUseImage(useImageOptions);
         }
+        if (tileImage) {
+            return tileImage;
+        }
+
         return <g key={key}>
             {tileRect}
-            {tileImage}
             {tileText}
         </g>;
     }
@@ -150,8 +156,8 @@ export class BaseGrid extends React.PureComponent {
         </text>;
     }
 
-    tileUseImage({x, y, id}) {
-        return <use href={`#${id}`} x={x} y={y} z={x + y} />
+    tileUseImage({x, y, id, key}) {
+        return <use href={`#${id}`} key={key} x={x} y={y} z={x + y} />
     }
 
     tileImage({x=0, y=0, href, transform=""}) {

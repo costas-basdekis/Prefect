@@ -1,6 +1,7 @@
 import React from 'react';
 import FPSStats from 'react-stats-zavatta'
 import { MapProperties } from '../components/MapProperties.jsx';
+import { TextureSettings } from '../components/TextureSettings.jsx';
 import { Grid } from '../components/Grid.jsx';
 import { Terrain } from '../components/Terrain.jsx';
 import { Toolbox } from '../components/Toolbox.jsx';
@@ -24,6 +25,7 @@ export class UCRoot extends React.Component {
         },
         tool: {toolType: null, data: null},
         running: true,
+        useTextures: false,
     };
 
     static mapStateToProps(state, ownProps) {
@@ -52,11 +54,12 @@ export class UCRoot extends React.Component {
     render() {
         return <div>
             <MapProperties />
+            <TextureSettings useTextures={this.state.useTextures} toggleUseTextures={this.toggleUseTextures} />
             <br />
             <svg width={900} height={800} style={{
                 border: "1px solid black",
             }}>
-                <Terrain />
+                <Terrain useTextures={this.state.useTextures} />
                 <Structures />
                 <People />
                 <Grid
@@ -273,6 +276,12 @@ export class UCRoot extends React.Component {
                 end: {x: null, y: null},
             },
         }));
+    }
+
+    toggleUseTextures = useTextures =>  {
+        this.setState(state => ({
+            useTextures,
+        }))
     }
 }
 

@@ -60,8 +60,8 @@ class UCTerrain extends BaseGrid {
     TILE_TYPE_OPTIONS = {
         [TILE_TYPES.GROUND]: {
             [GROUND_TYPES.GRASS]: {
-                stroke: "transparent", // "green",
-                fill: "transparent", // "lightgreen",
+                stroke: "green",
+                fill: "lightgreen",
                 useImageTemplate: `${TILE_TYPES.GROUND}.${GROUND_TYPES.GRASS}`,
                 useImageCount: 8,
             },
