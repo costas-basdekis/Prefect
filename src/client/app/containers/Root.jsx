@@ -9,6 +9,7 @@ import { StatusBar } from '../components/StatusBar.jsx';
 import { Structures } from '../components/Structures.jsx';
 import { People } from '../components/People.jsx';
 import { connect4, lattice } from '../utils.js'
+import { SG2Manager } from '../SG2Manager.js'
 
 const TICK_DURATION = 2000;
 const ANIMATION_TICK_DURATION = 250;
@@ -26,6 +27,7 @@ export class UCRoot extends React.Component {
         tool: {toolType: null, data: null},
         running: true,
         useTextures: false,
+        sg2Manager: null,
     };
 
     static mapStateToProps(state, ownProps) {
@@ -54,12 +56,17 @@ export class UCRoot extends React.Component {
     render() {
         return <div>
             <MapProperties />
-            <TextureSettings useTextures={this.state.useTextures} toggleUseTextures={this.toggleUseTextures} />
+            <TextureSettings
+                useTextures={this.state.useTextures}
+                toggleUseTextures={this.toggleUseTextures}
+                loadSgFiles={this.loadSgFiles} />
             <br />
             <svg width={900} height={800} style={{
                 border: "1px solid black",
             }}>
-                <Terrain useTextures={this.state.useTextures} />
+                <Terrain
+                    useTextures={this.state.useTextures}
+                    sg2Manager={this.state.sg2Manager} />
                 <Structures />
                 <People />
                 <Grid
@@ -282,6 +289,37 @@ export class UCRoot extends React.Component {
         this.setState(state => ({
             useTextures,
         }))
+    }
+
+    loadSgFiles = ({fileSg2, file555}) => {
+        const frSg2 = new FileReader();
+        frSg2.onload = () => {
+            const fr555 = new FileReader();
+            fr555.onload = () => {
+                let sg2Manager;
+                try {
+                    sg2Manager = new SG2Manager(
+                        frSg2.result, fileSg2.name, fr555.result, file555.name);
+                } catch (e) {
+                    alert(`Error while loading texures: ${e}`);
+                    return;
+                }
+                alert(
+                    `Loaded ${sg2Manager.sg2Reader.images.length} images in `
+                    + `${sg2Manager.sg2Reader.bitmaps.length} bitmaps`);
+                this.setState({sg2Manager});
+            }
+            try {
+                fr555.readAsBinaryString(file555);
+            } catch (e) {
+                alert(`Error while loading 555: ${e}`);
+            }
+        };
+        try {
+            frSg2.readAsBinaryString(fileSg2);
+        } catch (e) {
+            alert(`Error while loading SG2: ${e}`);
+        }
     }
 }
 

@@ -50,7 +50,7 @@ export class TerrainReducer extends Reducer {
                 subType: type === TILE_TYPES.GROUND
                     ? GROUND_TYPES.GRASS // choice(Object.keys(GROUND_TYPES))
                     : undefined,
-                randomValue: choice(range(16)),
+                randomValue: choice(range(64)),
             }
         }
 

@@ -44,7 +44,7 @@ export class StateReducer extends Reducer {
             state.neededWorkers = 0;
         }}, {version: 3, migrate: state => {
             for (const tile of Object.values(state.terrain)) {
-                tile.randomValue = choice(range(16));
+                tile.randomValue = choice(range(64));
             }
         }},
     ];

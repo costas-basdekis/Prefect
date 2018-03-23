@@ -1,6 +1,6 @@
 import React from 'react';
 import { createSelector } from 'reselect';
-import { connect4, select4, lattice } from '../utils.js'
+import { connect4, select4, lattice, dict } from '../utils.js'
 
 export class BaseGrid extends React.PureComponent {
     static size = 20;
@@ -8,9 +8,10 @@ export class BaseGrid extends React.PureComponent {
     static selectors = {
         properties: (state, ownProps) => state.properties,
         useTextures: (state, ownProps) => ownProps.useTextures,
+        sg2Manager: (state, ownProps) => ownProps.sg2Manager,
     };
 
-    USE_IMAGES = {};
+    static TEXTURES_DEFINITIONS = null;
 
     constructor(props) {
         super(props);
@@ -18,6 +19,15 @@ export class BaseGrid extends React.PureComponent {
     }
 
     static mapStateToProps(options) {
+        const texturesByKey = (options.sg2Manager && this.TEXTURES_DEFINITIONS)
+            ? Object.assign({}, ...this.TEXTURES_DEFINITIONS
+                .map(definition => definition(options.sg2Manager)))
+            : null;
+        const textures = texturesByKey
+            ? Object.assign({}, ...Object.values(texturesByKey))
+            : null;
+        const texturesKeys = texturesByKey ? dict(Object.entries(texturesByKey)
+            .map(([key, items]) => [key, Object.keys(items)])) : null;
         return {
             properties: options.properties,
             tiles: this.createTiles(options),
@@ -26,6 +36,8 @@ export class BaseGrid extends React.PureComponent {
                 y: this.size * options.properties.height / 2,
             },
             useTextures: options.useTextures,
+            textures,
+            texturesKeys,
         };
     }
 
@@ -53,10 +65,18 @@ export class BaseGrid extends React.PureComponent {
                 translate(${centerX * Math.sqrt(2) / 3} ${centerY * Math.sqrt(2) / 3 + 30})
                 rotate(45 ${centerX} ${centerY})
             `} style={this.mouseEvents ? {} : {pointerEvents: "none"}}>
-            {Object.entries(this.USE_IMAGES).map(([key, options]) =>
-                <symbol key={key} id={key}>{this.tileImage(options)}</symbol>
-            )}
-            {this.props.tiles.map(tile => this.renderTile(tile))}
+            <g key="symbols" className="symbols">
+                {this.props.textures
+                    ? Object.entries(this.props.textures)
+                        .map(([key, options]) =>
+                            <symbol key={key} id={key}>
+                                {this.tileImage(options)}
+                            </symbol>)
+                    : ""}
+            </g>
+            <g key="tiles" className="tiles">
+                {this.props.tiles.map(tile => this.renderTile(tile))}
+            </g>
         </g>;
     }
 
@@ -66,6 +86,12 @@ export class BaseGrid extends React.PureComponent {
 
     renderTile(tile) {
         const options = this.getTileOptions(tile) || {};
+        if (options.useImageTemplate && this.props.texturesKeys) {
+            const texturesKeys = this.props.texturesKeys[
+                options.useImageTemplate];
+            const index = tile.tile.randomValue % texturesKeys.length;
+            options.useImage = texturesKeys[index];
+        }
         return this.baseRenderTile({
             ...tile,
             ...options,
@@ -81,7 +107,7 @@ export class BaseGrid extends React.PureComponent {
         const height = this.size * structureHeight;
         const tileRect = this.tileRect({
             x, y, rectX, rectY, width, height, key, stroke, fill, strokeWidth});
-        if (!text && (!this.props.useTextures || (!imageOptions && !useImage))) {
+        if (!text && (!this.props.useTextures || !this.props.textures || (!imageOptions && !useImage))) {
             return tileRect;
         }
         let tileText;

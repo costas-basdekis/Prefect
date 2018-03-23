@@ -32,6 +32,16 @@ class UCTextureSettings extends React.Component {
                         checked={this.props.useTextures}
                         onChange={this.onChangeUseTextres} />Use textures
                 </label>
+                <br />
+                <label key="fileSG2">
+                    SG2 file: <input name="fileSg2" type="file" onChange={this.onFileChange} />
+                </label>
+                <br />
+                <label key="file555">
+                    555 file: <input name="file555" type="file" onChange={this.onFileChange} />
+                </label>
+                <br />
+                <button key="load" onClick={this.loadSgFiles} >Load</button>
             </div>,
         ];
     }
@@ -43,6 +53,15 @@ class UCTextureSettings extends React.Component {
 
     onChangeUseTextres = e => {
         this.props.toggleUseTextures(e.target.checked);
+    }
+
+    loadSgFiles = () => {
+        const {fileSg2, file555} = this.state;
+        this.props.loadSgFiles({fileSg2, file555});
+    }
+
+    onFileChange = e => {
+        this.setState({[e.target.name]: e.target.files[0]});
     }
 }
 
