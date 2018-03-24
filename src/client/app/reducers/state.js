@@ -46,6 +46,12 @@ export class StateReducer extends Reducer {
             for (const tile of Object.values(state.terrain)) {
                 tile.randomValue = choice(range(64));
             }
+            for (const tile of Object.values(state.structures)) {
+                if (tile.main) {
+                    continue;
+                }
+                tile.randomValue = choice(range(64));
+            }
         }},
     ];
 

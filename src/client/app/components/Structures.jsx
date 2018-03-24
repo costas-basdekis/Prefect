@@ -1,6 +1,16 @@
 import React from 'react';
 import { connect4 } from '../utils.js'
-import { BaseGrid } from './BaseGrid.jsx'
+import { STRUCTURE_TYPES } from '../reducers/structures.js'
+import { BaseGrid, TILE_TRANSFORM } from './BaseGrid.jsx'
+
+function HouseTextures(level, start, count) {
+    return sg2Manager => sg2Manager.loadRange({
+        filename: "Housng1a.bmp",
+        start,
+        count,
+        key: `${STRUCTURE_TYPES.HOUSE}.${level}`,
+    }, () =>  ({transform: TILE_TRANSFORM}))
+}
 
 class UCStructures extends BaseGrid {
     static selectors = {
@@ -19,13 +29,32 @@ class UCStructures extends BaseGrid {
         return structure;
     }
 
+    static TEXTURES_DEFINITIONS = [
+        HouseTextures(0, 44, 1),
+        HouseTextures(1, 1, 2),
+        HouseTextures(2, 2, 2),
+        HouseTextures(3, 6, 2),
+        HouseTextures(4, 8, 2),
+        HouseTextures(5, 12, 2),
+        HouseTextures(6, 14, 2),
+        HouseTextures(7, 18, 2),
+        HouseTextures(8, 20, 2),
+        HouseTextures(9, 24, 2),
+        HouseTextures(10, 26, 2),
+    ];
+
     getTileOptions({tile}) {
+        let useImageTemplate;
+        if (tile.type === STRUCTURE_TYPES.HOUSE) {
+            useImageTemplate = `${STRUCTURE_TYPES.HOUSE}.${tile.data.level}`;
+        }
         return {
             ...tile.renderOptions,
             text: (tile.getText ? tile.getText(tile) : null),
             textOptions: tile.textRenderOptions || {},
             structureWidth: tile.structureSize.width,
             structureHeight: tile.structureSize.height,
+            useImageTemplate,
         };
     }
 }

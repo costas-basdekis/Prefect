@@ -17,12 +17,12 @@ export class SG2Manager {
         for (const index in images) {
             const image = images[index];
             const loadedImage = this.reader555.readImage(image)
-            const imageData = ctx.getImageData(
-                0, 0, loadedImage.width, loadedImage.height);
-            imageData.data.set(loadedImage.data8);
+            const {width, height, data8} = loadedImage;
+            const imageData = ctx.getImageData(0, 0, width, height);
+            imageData.data.set(data8);
             ctx.putImageData(imageData, 0, 0);
             const href = canvas.toDataURL();
-            const result = {href};
+            const result = {href, width, height};
             Object.assign(result, getOptions(result) || result);
             results[`${key}#${index}`] = result;
         }

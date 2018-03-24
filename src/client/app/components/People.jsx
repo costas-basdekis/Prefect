@@ -26,8 +26,8 @@ export class UCPeople extends React.PureComponent {
     render() {
         const {x: centerX, y: centerY} =  this.props.center;
         return <g transform={`
-                scale(1 0.8)
-                translate(${centerX * Math.sqrt(2) / 3} ${centerY * Math.sqrt(2) / 3 + 30})
+                scale(1 0.517241379)
+                translate(${centerX * Math.sqrt(2) / 3} ${centerY * Math.sqrt(2) / 3 + 60})
                 rotate(45 ${centerX} ${centerY})
             `}>
             {Object.values(this.props.people).map(person => this.renderPerson(person))}

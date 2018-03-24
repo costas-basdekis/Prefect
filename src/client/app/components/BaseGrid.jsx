@@ -2,6 +2,14 @@ import React from 'react';
 import { createSelector } from 'reselect';
 import { connect4, select4, lattice, dict } from '../utils.js'
 
+export const TILE_TRANSFORM = `
+    translate(10 10)
+    scale(0.8137 0.6592)
+    translate(-29 5)
+    skewY(-35)
+    rotate(62 29 15)
+`;
+
 export class BaseGrid extends React.PureComponent {
     static size = 20;
     mouseEvents = false;
@@ -61,8 +69,8 @@ export class BaseGrid extends React.PureComponent {
     render() {
         const {x: centerX, y: centerY} =  this.props.center;
         return <g transform={`
-                scale(1 0.8)
-                translate(${centerX * Math.sqrt(2) / 3} ${centerY * Math.sqrt(2) / 3 + 30})
+                scale(1 0.517241379)
+                translate(${centerX * Math.sqrt(2) / 3} ${centerY * Math.sqrt(2) / 3 + 60})
                 rotate(45 ${centerX} ${centerY})
             `} style={this.mouseEvents ? {} : {pointerEvents: "none"}}>
             <g key="symbols" className="symbols">
@@ -132,7 +140,7 @@ export class BaseGrid extends React.PureComponent {
                 height,
             };
             tileImage = this.tileImage(imageOptions);
-        } else if (useImage) {
+        } else if (useImage && this.props.textures) {
             const useImageOptions = {
                 id: useImage,
                 x: rectX,
@@ -141,7 +149,7 @@ export class BaseGrid extends React.PureComponent {
             };
             tileImage = this.tileUseImage(useImageOptions);
         }
-        if (tileImage) {
+        if (tileImage && this.props.useTextures) {
             return tileImage;
         }
 

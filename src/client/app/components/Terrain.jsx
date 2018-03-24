@@ -2,15 +2,7 @@ import React from 'react';
 import { createSelector } from 'reselect';
 import { connect4, lattice, range } from '../utils.js'
 import { TILE_TYPES, GROUND_TYPES } from '../reducers/terrain.js'
-import { BaseGrid } from './BaseGrid.jsx'
-
-const TILE_TRANSFORM = `
-    translate(10 10)
-    scale(0.8137 0.6592)
-    translate(-29 5)
-    skewY(-35)
-    rotate(62 29 15)
-`;
+import { BaseGrid, TILE_TRANSFORM } from './BaseGrid.jsx'
 
 class UCTerrain extends BaseGrid {
     static selectors = {
@@ -37,7 +29,6 @@ class UCTerrain extends BaseGrid {
                 stroke: "green",
                 fill: "lightgreen",
                 useImageTemplate: `${TILE_TYPES.GROUND}.${GROUND_TYPES.GRASS}`,
-                useImageCount: 8,
             },
             [GROUND_TYPES.DESERT]: {
                 stroke: "yellow",

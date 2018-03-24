@@ -67,7 +67,9 @@ export class UCRoot extends React.Component {
                 <Terrain
                     useTextures={this.state.useTextures}
                     sg2Manager={this.state.sg2Manager} />
-                <Structures />
+                <Structures
+                    useTextures={this.state.useTextures}
+                    sg2Manager={this.state.sg2Manager} />
                 <People />
                 <Grid
                     hovered={this.state.hovered}
@@ -304,9 +306,11 @@ export class UCRoot extends React.Component {
                     alert(`Error while loading texures: ${e}`);
                     return;
                 }
+                const endTime = new Date(), duration = endTime - startTime;
                 alert(
                     `Loaded ${sg2Manager.sg2Reader.images.length} images in `
-                    + `${sg2Manager.sg2Reader.bitmaps.length} bitmaps`);
+                    + `${sg2Manager.sg2Reader.bitmaps.length} bitmaps, in `
+                    + `${(duration / 1000).toFixed(1)}s`);
                 this.setState({sg2Manager});
             }
             try {
@@ -315,6 +319,7 @@ export class UCRoot extends React.Component {
                 alert(`Error while loading 555: ${e}`);
             }
         };
+        const startTime = new Date();
         try {
             frSg2.readAsBinaryString(fileSg2);
         } catch (e) {
