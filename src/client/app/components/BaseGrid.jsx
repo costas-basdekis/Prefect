@@ -1,6 +1,6 @@
 import React from 'react';
 import { createSelector } from 'reselect';
-import { connect4, select4, lattice, dict } from '../utils.js'
+import { connect4, select4, lattice, dict, withKey } from '../utils.js'
 
 const RECT_WIDTH = 20, RECT_HEIGHT = 20;
 const TILE_WIDTH = 58, TILE_HEIGHT = 30;
@@ -101,16 +101,26 @@ export class BaseGrid extends React.PureComponent {
                     : ""}
             </g>
             <g key="tiles" className="tiles">
-                {this.props.tiles.map(tile => this.renderTile(tile))}
+                {this.props.tiles
+                    .map(tile => [tile, this.getFullTileOptions(tile)])
+                    .map(([tile, options]) =>
+                        [tile, options, this.getTileOrder(tile, options)])
+                    .sort(withKey(([tile, options, order]) => order))
+                    .map(([tile, options, order]) => this.renderTile(tile, options))}
             </g>
         </g>;
+    }
+
+    getTileOrder(tile, options) {
+        return (tile.x + options.structureWidth - 1)
+            + (tile.y + options.structureHeight - 1);
     }
 
     getTileOptions(tile) {
         throw new Error("Not implemented");
     }
 
-    renderTile(tile) {
+    getFullTileOptions(tile) {
         const options = this.getTileOptions(tile) || {};
         if (options.useImageTemplate && this.props.texturesKeys) {
             const texturesKeys = this.props.texturesKeys[
@@ -124,6 +134,11 @@ export class BaseGrid extends React.PureComponent {
                     + `"${options.useImageTemplate}"`);
             }
         }
+
+        return options;
+    }
+
+    renderTile(tile, options) {
         return this.baseRenderTile({
             ...tile,
             ...options,
