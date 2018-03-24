@@ -1,6 +1,6 @@
 import * as actions from '../actions/actions.js'
 import { Reducer } from './base.js'
-import { lattice, toDict, dict } from '../utils.js'
+import { lattice, toDict, dict, choice, range } from '../utils.js'
 
 export const STRUCTURE_TYPES = toDict([
     'ENTRY',
@@ -675,6 +675,7 @@ export class StructuresReducer extends Reducer {
             textRenderOptions: structureType.textRenderOptions,
             getText: structureType.getText,
             structureSize: structureType.size,
+            randomValue: choice(range(64)),
         };
         structure.data = (structureType.makeData || (() => null))(
             structure, extraData);
