@@ -50,6 +50,14 @@ class UCStructures extends BaseGrid {
     }
 
     static TEXTURES_DEFINITIONS = [
+        StructureTextures(`${STRUCTURE_TYPES.ENTRY}.up`, "land3a.BMP", 84, 1),
+        StructureTextures(`${STRUCTURE_TYPES.ENTRY}.right`, "land3a.BMP", 87, 1),
+        StructureTextures(`${STRUCTURE_TYPES.ENTRY}.down`, "land3a.BMP", 86, 1),
+        StructureTextures(`${STRUCTURE_TYPES.ENTRY}.left`, "land3a.BMP", 85, 1),
+        StructureTextures(`${STRUCTURE_TYPES.EXIT}.up`, "land3a.BMP", 88, 1),
+        StructureTextures(`${STRUCTURE_TYPES.EXIT}.right`, "land3a.BMP", 91, 1),
+        StructureTextures(`${STRUCTURE_TYPES.EXIT}.down`, "land3a.BMP", 90, 1),
+        StructureTextures(`${STRUCTURE_TYPES.EXIT}.left`, "land3a.BMP", 89, 1),
         HouseTextures(0, 44, 1),
         HouseTextures(1, 1, 2),
         HouseTextures(2, 2, 2),
@@ -92,18 +100,32 @@ class UCStructures extends BaseGrid {
 
     getTileOptions({tile}) {
         let useImageTemplate;
+        const offsets = [
+            {name: "up", dx: 0, dy: -1},
+            {name: "right", dx: 1, dy: 0},
+            {name: "down", dx: 0, dy: 1},
+            {name: "left", dx: -1, dy: 0},
+        ];
         if (this.props.texturesKeys) {
-            if (tile.type === STRUCTURE_TYPES.HOUSE) {
+            if (tile.type === STRUCTURE_TYPES.ENTRY) {
+                const neighbours = offsets.map(({name, dx, dy}) => ({name, x: tile.start.x + dx, y: tile.start.y + dy}));
+                const isOutOfMap = neighbours.filter(({x, y}) =>
+                    (x < 0) || (x >= this.props.properties.width)
+                    || (y < 0) || (y >= this.props.properties.height));
+                const direction = (isOutOfMap[0] || {name: "up"}).name;
+                useImageTemplate = `${STRUCTURE_TYPES.ENTRY}.${direction}`;
+            } else if (tile.type === STRUCTURE_TYPES.EXIT) {
+                const neighbours = offsets.map(({name, dx, dy}) => ({name, x: tile.start.x + dx, y: tile.start.y + dy}));
+                const isOutOfMap = neighbours.filter(({x, y}) =>
+                    (x < 0) || (x >= this.props.properties.width)
+                    || (y < 0) || (y >= this.props.properties.height));
+                const direction = (isOutOfMap[0] || {name: "up"}).name;
+                useImageTemplate = `${STRUCTURE_TYPES.EXIT}.${direction}`;
+            } else if (tile.type === STRUCTURE_TYPES.HOUSE) {
                 useImageTemplate = `${STRUCTURE_TYPES.HOUSE}.${tile.data.level}`;
             } else if (tile.type === STRUCTURE_TYPES.SMALL_TEMPLE) {
                 useImageTemplate = `${STRUCTURE_TYPES.SMALL_TEMPLE}.${tile.data.dedicatedTo}`;
             } else if (tile.type === STRUCTURE_TYPES.ROAD) {
-                const offsets = [
-                    {name: "up", dx: 0, dy: -1},
-                    {name: "right", dx: 1, dy: 0},
-                    {name: "down", dx: 0, dy: 1},
-                    {name: "left", dx: -1, dy: 0},
-                ];
                 const keys = offsets.map(({dx, dy}) => `${tile.start.x + dx}.${tile.start.y + dy}`);
                 const isRoad = keys.map(key =>
                     (this.props.structures[key] || {}).type
