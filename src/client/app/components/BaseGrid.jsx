@@ -4,11 +4,15 @@ import { connect4, select4, lattice, dict } from '../utils.js'
 
 const RECT_WIDTH = 20, RECT_HEIGHT = 20;
 const TILE_WIDTH = 58, TILE_HEIGHT = 30;
-// We assume they all have the same width, and any extra height is on the
-// top of the tile
-export const getTileTransform = (width, height) => [
+// We want to align the bottom-right edges of the tiles, so we assume that:
+//  * any extra height is on the top of the tile
+//  * any extra width is on both sides of the tile
+export const getTileTransform = (width, height, xCount=1, yCount=1) => [
     // Align the bottom of the tile, with the bottom of a ground tile
     `translate(0 ${TILE_HEIGHT - height})`,
+    // Align the bottom-middle of the tile, with the bottom-middle of a ground
+    // tile
+    `translate(${(TILE_WIDTH - width) / 2} 0)`,
     // Align the center of the tile (as if it was a ground tile), with the
     // center of the square
     `translate(${-TILE_WIDTH / 2 + RECT_WIDTH / 2} ${-TILE_HEIGHT / 2 + RECT_HEIGHT / 2})`,
@@ -19,6 +23,8 @@ export const getTileTransform = (width, height) => [
     `translate(${RECT_WIDTH / 2 * (1 - TILE_HEIGHT / TILE_WIDTH)} 0)`,
     // Rotate the tile, to match the square
     `rotate(-45 ${RECT_WIDTH / 2} ${RECT_WIDTH / 2})`,
+    // Move to align, according to xCount and yCount
+    `translate(${(xCount - 1) * RECT_WIDTH} ${(yCount - 1) * RECT_HEIGHT})`,
 ].reverse().join("\n");
 export const TILE_TRANSFORM = getTileTransform(TILE_WIDTH, TILE_HEIGHT);
 
@@ -109,8 +115,14 @@ export class BaseGrid extends React.PureComponent {
         if (options.useImageTemplate && this.props.texturesKeys) {
             const texturesKeys = this.props.texturesKeys[
                 options.useImageTemplate];
-            const index = tile.tile.randomValue % texturesKeys.length;
-            options.useImage = texturesKeys[index];
+            if (texturesKeys) {
+                const index = tile.tile.randomValue % texturesKeys.length;
+                options.useImage = texturesKeys[index];
+            } else {
+                console.warn(
+                    `Could not find textures from template `
+                    + `"${options.useImageTemplate}"`);
+            }
         }
         return this.baseRenderTile({
             ...tile,
