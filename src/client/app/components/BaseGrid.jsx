@@ -2,12 +2,12 @@ import React from 'react';
 import { createSelector } from 'reselect';
 import { connect4, select4, lattice, dict } from '../utils.js'
 
+const TILE_WIDTH = 58, TILE_HEIGHT = 30;
 export const TILE_TRANSFORM = `
-    translate(10 10)
-    scale(0.8137 0.6592)
-    translate(-29 5)
-    skewY(-35)
-    rotate(62 29 15)
+    translate(-12 -4)
+    scale(0.55 0.55)
+    rotate(-45 ${TILE_WIDTH / 2} ${TILE_HEIGHT / 2})
+    scale(1 ${TILE_WIDTH / TILE_HEIGHT})
 `;
 
 export class BaseGrid extends React.PureComponent {
