@@ -2,13 +2,25 @@ import React from 'react';
 import { createSelector } from 'reselect';
 import { connect4, select4, lattice, dict } from '../utils.js'
 
+const RECT_WIDTH = 20, RECT_HEIGHT = 20;
 const TILE_WIDTH = 58, TILE_HEIGHT = 30;
-export const TILE_TRANSFORM = `
-    translate(-12 -4)
-    scale(0.55 0.55)
-    rotate(-45 ${TILE_WIDTH / 2} ${TILE_HEIGHT / 2})
-    scale(1 ${TILE_WIDTH / TILE_HEIGHT})
-`;
+// We assume they all have the same width, and any extra height is on the
+// top of the tile
+export const getTileTransform = (width, height) => [
+    // Align the bottom of the tile, with the bottom of a ground tile
+    `translate(0 ${TILE_HEIGHT - height})`,
+    // Align the center of the tile (as if it was a ground tile), with the
+    // center of the square
+    `translate(${-TILE_WIDTH / 2 + RECT_WIDTH / 2} ${-TILE_HEIGHT / 2 + RECT_HEIGHT / 2})`,
+    // Squash the width, to be the same as the rect diagonal
+    `scale(${TILE_HEIGHT / TILE_WIDTH} 1)`,
+    // Re-aligh the center of the tile (as if it was a ground tile), with the
+    // center of the square
+    `translate(${RECT_WIDTH / 2 * (1 - TILE_HEIGHT / TILE_WIDTH)} 0)`,
+    // Rotate the tile, to match the square
+    `rotate(-45 ${RECT_WIDTH / 2} ${RECT_WIDTH / 2})`,
+].reverse().join("\n");
+export const TILE_TRANSFORM = getTileTransform(TILE_WIDTH, TILE_HEIGHT);
 
 export class BaseGrid extends React.PureComponent {
     static size = 20;
@@ -191,7 +203,12 @@ export class BaseGrid extends React.PureComponent {
     }
 
     tileUseImage({x, y, id, key}) {
-        return <use href={`#${id}`} key={key} x={x} y={y} z={x + y} />
+        const texture = this.props.textures[id];
+        const transform = texture.useTransform || "";
+        return <use
+            href={`#${id}`}
+            key={key}
+            transform={`translate(${x} ${y}) ${transform}`} />
     }
 
     tileImage({x=0, y=0, href, transform=""}) {

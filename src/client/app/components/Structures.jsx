@@ -1,7 +1,7 @@
 import React from 'react';
 import { connect4 } from '../utils.js'
 import { STRUCTURE_TYPES } from '../reducers/structures.js'
-import { BaseGrid, TILE_TRANSFORM } from './BaseGrid.jsx'
+import { BaseGrid, getTileTransform } from './BaseGrid.jsx'
 
 function HouseTextures(level, start, count) {
     return sg2Manager => sg2Manager.loadRange({
@@ -9,7 +9,7 @@ function HouseTextures(level, start, count) {
         start,
         count,
         key: `${STRUCTURE_TYPES.HOUSE}.${level}`,
-    }, () =>  ({transform: TILE_TRANSFORM}))
+    }, ({width, height}) =>  ({useTransform: getTileTransform(width, height)}))
 }
 
 class UCStructures extends BaseGrid {
