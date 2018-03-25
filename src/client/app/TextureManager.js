@@ -3,6 +3,7 @@ import { dict, range } from './utils.js'
 export class TextureManager {
     constructor() {
         this.imageCache = new Map();
+        this.definitionsCache = new Map();
     }
 
     loadList(definitions) {
@@ -44,13 +45,17 @@ export class TextureManager {
     }
 
     loadDefinitions(definitions) {
-        const texturesByKey = Object.assign({}, ...definitions
-                .map(definition => definition(this)))
-        const textures = Object.assign({}, ...Object.values(texturesByKey));
-        const texturesKeys = dict(Object.entries(texturesByKey)
-            .map(([key, items]) => [key, Object.keys(items)]));
+        if (!this.definitionsCache.has(definitions)) {
+            const texturesByKey = Object.assign({}, ...definitions
+                    .map(definition => definition(this)))
+            const textures = Object.assign({}, ...Object.values(texturesByKey));
+            const texturesKeys = dict(Object.entries(texturesByKey)
+                .map(([key, items]) => [key, Object.keys(items)]));
 
-        return {textures, texturesKeys};
+            this.definitionsCache.set(definitions, {textures, texturesKeys});
+        }
+
+        return this.definitionsCache.get(definitions);
     }
 
     getImageReference(texturesKeys, key, randomValue) {

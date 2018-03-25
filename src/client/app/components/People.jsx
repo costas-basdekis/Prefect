@@ -1,4 +1,5 @@
 import React from 'react';
+import { Symbols } from './Symbols.jsx';
 import { PEOPLE_TYPES } from '../reducers/people.js'
 import { connect4, range, withKey } from '../utils.js'
 
@@ -197,15 +198,10 @@ export class UCPeople extends React.PureComponent {
                 translate(${centerX * Math.sqrt(2) / 3} ${centerY * Math.sqrt(2) / 3 + 60})
                 rotate(45 ${centerX} ${centerY})
             `}>
-            <g key="symbols" className="symbols">
-                {this.props.textures
-                    ? Object.entries(this.props.textures)
-                        .map(([key, options]) =>
-                            <symbol key={key} id={key}>
-                                {this.tileImage(options)}
-                            </symbol>)
-                    : ""}
-            </g>
+            <Symbols
+                symbolsKey={this.constructor.name}
+                sg2Manager={this.props.sg2Manager}
+                texturesDefinitions={this.constructor.TEXTURES_DEFINITIONS} />
             <g key="people" className="people">
                 {Object.values(this.props.people)
                     .map(person => this.renderPerson(person))}

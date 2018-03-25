@@ -1,4 +1,5 @@
 import React from 'react';
+import { Symbols } from './Symbols.jsx';
 import { createSelector } from 'reselect';
 import { connect4, select4, lattice, dict, withKey } from '../utils.js'
 
@@ -87,15 +88,10 @@ export class BaseGrid extends React.PureComponent {
                 translate(${centerX * Math.sqrt(2) / 3} ${centerY * Math.sqrt(2) / 3 + 60})
                 rotate(45 ${centerX} ${centerY})
             `} style={this.mouseEvents ? {} : {pointerEvents: "none"}}>
-            <g key="symbols" className="symbols">
-                {this.props.textures
-                    ? Object.entries(this.props.textures)
-                        .map(([key, options]) =>
-                            <symbol key={key} id={key}>
-                                {this.tileImage(options)}
-                            </symbol>)
-                    : ""}
-            </g>
+            <Symbols
+                symbolsKey={this.constructor.name}
+                sg2Manager={this.props.sg2Manager}
+                texturesDefinitions={this.constructor.TEXTURES_DEFINITIONS} />
             <g key="tiles" className="tiles">
                 {this.props.tiles
                     .map(tile => [tile, this.getFullTileOptions(tile)])
@@ -147,7 +143,7 @@ export class BaseGrid extends React.PureComponent {
         const height = this.size * structureHeight;
         const tileRect = this.tileRect({
             x, y, rectX, rectY, width, height, key, stroke, fill, strokeWidth});
-        if (!text && (!this.props.useTextures || !this.props.textures || (!imageOptions && !useImage))) {
+        if (!text && (!this.props.useTextures || !this.props.texturesKeys || (!imageOptions && !useImage))) {
             return tileRect;
         }
         let tileText;
@@ -172,7 +168,7 @@ export class BaseGrid extends React.PureComponent {
                 height,
             };
             tileImage = this.tileImage(imageOptions);
-        } else if (useImage && this.props.textures) {
+        } else if (useImage && this.props.texturesKeys) {
             const useImageOptions = {
                 id: useImage,
                 x: rectX,
