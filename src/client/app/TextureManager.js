@@ -14,10 +14,12 @@ export class TextureManager {
     loadRange({start, count, key, ...imageParams}, getOptions) {
         const results = {};
 
-        for (const index of range(start, start + count)) {
-            const cacheKey = `${key}#${index}`;
+        const indexes = range(start, start + count);
+        for (const variantIndex in indexes) {
+            const index = indexes[variantIndex]
+            const cacheKey = `${key}#${variantIndex}`;
             const result = this.loadImage({cacheKey, index, ...imageParams}, getOptions);
-            results[`${key}#${index}`] = result;
+            results[cacheKey] = result;
         }
 
         return {[key]: results};
