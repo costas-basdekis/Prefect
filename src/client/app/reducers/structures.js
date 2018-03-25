@@ -308,7 +308,7 @@ export class StructuresReducer extends Reducer {
     static [ actions.TICK] (state, action) {
         const newState = {...state};
 
-        this.upgradeHouses(newState);
+        this.regradeHouses(newState);
         this.updateWorks(newState);
         this.updateProduction(newState);
         this.updateLayers(newState);
@@ -318,7 +318,8 @@ export class StructuresReducer extends Reducer {
         return newState;
     }
 
-    static upgradeHouses(state) {
+    static regradeHouses(state) {
+        const oldStructures = state.structures
         for (let structure of Object.values(state.structures)) {
             if (structure.main) {
                 continue;
@@ -326,20 +327,30 @@ export class StructuresReducer extends Reducer {
             if (structure.type !== STRUCTURE_TYPES.HOUSE) {
                 continue;
             }
-            const houseStats = HOUSE_STATS[structure.data.level];
-            if (!houseStats.canUpgrade) {
+            const nonUpgradableLevels = HOUSE_STATS
+                .map((houseStats, level) => [level + 1, houseStats.canUpgrade ?
+                    houseStats.canUpgrade(structure, state) : false])
+                .filter(([level, canUpgrade]) => !canUpgrade)
+                .map(([level]) => level);
+            const nextLevel = nonUpgradableLevels[0] || HOUSE_STATS.length;
+            const targetLevel = nextLevel - 1;
+            const currentLevel = structure.data.level;
+            if (targetLevel === currentLevel) {
                 continue;
             }
-            if (!houseStats.canUpgrade(structure, state)) {
-                continue;
+            let newLevel = targetLevel > currentLevel
+                ? currentLevel + 1
+                : currentLevel - 1;
+            const newHouseStats = HOUSE_STATS[newLevel];
+            if (oldStructures === state.structures) {
+                state.structures = {...state.structures};
             }
-            const nextHouseStats = HOUSE_STATS[structure.data.level + 1];
             structure = state.structures[structure.key] = {
                 ...structure,
                 data: {
                     ...structure.data,
-                    ...nextHouseStats.newData,
-                    level: structure.data.level + 1,
+                    ...newHouseStats.newData,
+                    level: newLevel,
                 },
             };
         }
