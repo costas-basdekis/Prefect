@@ -49,7 +49,7 @@ function DirectionsTextures(key, filename, start, animationIndex, directions=DIR
 function AnimatedDirectionsTextures(key, filename, start, animationCount=12, directions=DIRECTIONS) {
     const methods = range(animationCount)
         .map(animationIndex =>
-            DirectionsTextures(key, filename, start, animationIndex, directions))
+            DirectionsTextures(key, filename, start + animationIndex * directions.length, animationIndex, directions))
         .reduce((total, items) => total.concat(items), []);
     return sg2Manager => sg2Manager.loadList(methods);
 }
