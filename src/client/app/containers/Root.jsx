@@ -70,7 +70,9 @@ export class UCRoot extends React.Component {
                 <Structures
                     useTextures={this.state.useTextures}
                     sg2Manager={this.state.sg2Manager} />
-                <People />
+                <People
+                    useTextures={this.state.useTextures}
+                    sg2Manager={this.state.sg2Manager} />
                 <Grid
                     hovered={this.state.hovered}
                     isHovered={this.isHovered}

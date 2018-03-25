@@ -52,6 +52,9 @@ export class StateReducer extends Reducer {
                 }
                 tile.randomValue = choice(range(64));
             }
+            for (const person of Object.values(state.people)) {
+                person.randomValue = choice(range(64));
+            }
         }},
     ];
 

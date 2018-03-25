@@ -1,7 +1,7 @@
 import * as actions from '../actions/actions.js'
 import { Reducer } from './base.js'
 import { STRUCTURE_TYPES } from './structures.js'
-import { toDict, dict, sum, lattice, withKey } from '../utils.js'
+import { toDict, dict, sum, lattice, withKey, choice, range } from '../utils.js'
 
 export const PEOPLE_TYPES = toDict([
     'NEWCOMER',
@@ -1603,6 +1603,7 @@ export class PeopleReducer extends Reducer {
             type,
             position,
             targetStructureId,
+            randomValue: choice(range(64)),
         }
         state.nextPersonId += 1;
         state.people[person.id] = person;

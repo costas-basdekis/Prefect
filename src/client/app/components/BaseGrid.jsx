@@ -45,15 +45,10 @@ export class BaseGrid extends React.PureComponent {
     }
 
     static mapStateToProps(options) {
-        const texturesByKey = (options.sg2Manager && this.TEXTURES_DEFINITIONS)
-            ? Object.assign({}, ...this.TEXTURES_DEFINITIONS
-                .map(definition => definition(options.sg2Manager)))
-            : null;
-        const textures = texturesByKey
-            ? Object.assign({}, ...Object.values(texturesByKey))
-            : null;
-        const texturesKeys = texturesByKey ? dict(Object.entries(texturesByKey)
-            .map(([key, items]) => [key, Object.keys(items)])) : null;
+        const {textures=null, texturesKeys=null} =
+            (options.sg2Manager && this.TEXTURES_DEFINITIONS)
+                ? options.sg2Manager.loadDefinitions(this.TEXTURES_DEFINITIONS)
+                : {};
         return {
             properties: options.properties,
             tiles: this.createTiles(options),
@@ -61,6 +56,7 @@ export class BaseGrid extends React.PureComponent {
                 x: this.size * options.properties.width / 2,
                 y: this.size * options.properties.height / 2,
             },
+            sg2Manager: options.sg2Manager,
             useTextures: options.useTextures,
             textures,
             texturesKeys,
@@ -123,16 +119,9 @@ export class BaseGrid extends React.PureComponent {
     getFullTileOptions(tile) {
         const options = this.getTileOptions(tile) || {};
         if (options.useImageTemplate && this.props.texturesKeys) {
-            const texturesKeys = this.props.texturesKeys[
-                options.useImageTemplate];
-            if (texturesKeys) {
-                const index = tile.tile.randomValue % texturesKeys.length;
-                options.useImage = texturesKeys[index];
-            } else {
-                console.warn(
-                    `Could not find textures from template `
-                    + `"${options.useImageTemplate}"`);
-            }
+            options.useImage = this.props.sg2Manager.getImageReference(
+                this.props.texturesKeys, options.useImageTemplate,
+                tile.tile.randomValue);
         }
 
         return options;
