@@ -5,6 +5,7 @@ import { toDict, dict, sum, lattice, withKey, choice, range } from '../utils.js'
 
 export const PEOPLE_TYPES = toDict([
     'NEWCOMER',
+    'HOMELESS',
     'WORKER_SEEKER',
     'PREFECT',
     'ENGINEER',
@@ -18,6 +19,13 @@ export const PEOPLE = {
     [PEOPLE_TYPES.NEWCOMER]: {
         renderOptions: {
             stroke: "yellow",
+            fill: "orange",
+        },
+        speed: 1,
+    },
+    [PEOPLE_TYPES.HOMELESS]: {
+        renderOptions: {
+            stroke: "red",
             fill: "orange",
         },
         speed: 1,
@@ -109,6 +117,7 @@ export class PeopleReducer extends Reducer {
         this.calculateWorkers(newState);
         this.assignWorkers(newState);
         this.tickNewcomers(newState);
+        this.tickHomeless(newState);
         this.tickSeekerWorkers(newState);
         this.tickMarketSellers(newState);
         this.tickMarketBuyers(newState);
@@ -279,6 +288,7 @@ export class PeopleReducer extends Reducer {
 
     static movePeople(state, fraction) {
         this.moveNewcomers(state, fraction);
+        this.moveHomeless(state, fraction);
         this.moveWorkerSeekers(state, fraction);
         this.moveMarketSellers(state, fraction);
         this.movePrefects(state, fraction);
@@ -600,6 +610,22 @@ export class PeopleReducer extends Reducer {
         return state;
     }
 
+    static moveHomeless(state, fraction) {
+        const oldPeople = state.people;
+        for (let person of this.getPeopleOfType(state, PEOPLE_TYPES.HOMELESS)) {
+            const {x, y} = person.position;
+            const {x: targetX, y: targetY} = person.targetPosition;
+            if (x !== targetX || y !== targetY) {
+                if (oldPeople === state.people) {
+                    state.people = {...state.people};
+                }
+                this.movePerson(state, person, {targetX, targetY}, fraction);
+            }
+        }
+
+        return state;
+    }
+
     static movePerson(state, person, {targetX, targetY}, fraction) {
         const {x, y} = person.position;
         const dX = targetX - x, dY = targetY - y;
@@ -704,6 +730,8 @@ export class PeopleReducer extends Reducer {
     static shouldRemovePerson(state, person) {
         if (person.type === PEOPLE_TYPES.NEWCOMER) {
             return this.shouldRemoveNewcomer(state, person);
+        } else if (person.type === PEOPLE_TYPES.HOMELESS) {
+            return this.shouldRemoveHomeless(state, person);
         } else if (person.type === PEOPLE_TYPES.WORKER_SEEKER) {
             return this.shouldRemoveWorkerSeeker(state, person);
         } else if (person.type === PEOPLE_TYPES.PREFECT) {
@@ -735,6 +763,15 @@ export class PeopleReducer extends Reducer {
         if (structure.id !== person.targetStructureId) {
             return true;
         }
+        return false;
+    }
+
+    static shouldRemoveHomeless(state, person) {
+        if (person.position.x === person.targetPosition.x
+            && person.position.y === person.targetPosition.y) {
+            return true;
+        }
+
         return false;
     }
 
@@ -890,6 +927,32 @@ export class PeopleReducer extends Reducer {
             const newcomer = this.createNewcomer(state, spaceLeft, oldHouse.id);
             const house = state.structures[oldHouse.key] = {...oldHouse, data: {...oldHouse.data}};
             house.data.newcomers.push(newcomer.id);
+        }
+
+        return state;
+    }
+
+    static tickHomeless(state) {
+        const oldStructures = state.structures;
+        const houses = this.getStructuresOfType(state, STRUCTURE_TYPES.HOUSE);
+        for (const oldHouse of houses) {
+            const spaceOverused = oldHouse.data.occupants - oldHouse.data.space;
+                - sum(oldHouse.data.newcomers.map(newcomerId => state.people[newcomerId].count));
+            if (spaceOverused <= 0) {
+                continue;
+            }
+            if (oldStructures === state.structures) {
+                state.structures = {...state.structures};
+                state.people = {...state.people};
+            }
+            const homeless = this.createHomeless(state, spaceOverused, oldHouse);
+            const house = state.structures[oldHouse.key] = {
+                ...oldHouse,
+                data: {
+                    ...oldHouse.data,
+                    occupants: oldHouse.data.occupants - spaceOverused,
+                },
+            };
         }
 
         return state;
@@ -1593,6 +1656,18 @@ export class PeopleReducer extends Reducer {
         return newcomer;
     }
 
+    static createHomeless(state, count, sourceStructure) {
+        const newcomer = this.createPerson(state, {
+            type: PEOPLE_TYPES.HOMELESS,
+            position: sourceStructure.start,
+            nextPosition: null,
+            targetPosition: this.getExit(state),
+            count,
+        });
+
+        return newcomer;
+    }
+
     static createPerson(state, args) {
         const {type, position={x: 0, y: 0}, targetStructureId=null} = args;
         const peopleType = PEOPLE[type];
@@ -1617,9 +1692,20 @@ export class PeopleReducer extends Reducer {
             .filter(tile => tile.type === STRUCTURE_TYPES.ENTRY)
             [0];
         if (!entryTile) {
-            return;
+            return {x: 0, y: 0};
         }
 
         return entryTile.start;
+    }
+
+    static getExit(state) {
+        const exitTile = Object.values(state.structures)
+            .filter(tile => tile.type === STRUCTURE_TYPES.EXIT)
+            [0];
+        if (!exitTile) {
+            return {x: state.properties.width - 1, y: state.properties.height - 1};
+        }
+
+        return exitTile.start;
     }
 }

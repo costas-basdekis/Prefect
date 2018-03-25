@@ -163,8 +163,8 @@ export class UCPeople extends React.PureComponent {
             [`${PEOPLE_TYPES.PREFECT}_FIGHTING`, 6],
             [`${PEOPLE_TYPES.PREFECT}_CARRYING_WATER`, DEFAULT_ANIMATION_COUNT],
             [`${PEOPLE_TYPES.PREFECT}_THROWING`, 6],
-            [`HOMELESS`, DEFAULT_ANIMATION_COUNT],
-            [`HOMELESS.DYING`, DEFAULT_DYING_ANIMATION_COUNT, ["main"]],
+            [PEOPLE_TYPES.HOMELESS, DEFAULT_ANIMATION_COUNT],
+            [`${PEOPLE_TYPES.HOMELESS}.DYING`, DEFAULT_DYING_ANIMATION_COUNT, ["main"]],
         ]),
         // ManyAnimatedDirectionsTextures("citizen03.BMP", [
         //     ['LION', DEFAULT_ANIMATION_COUNT],
