@@ -10,6 +10,7 @@ import { Structures } from '../components/Structures.jsx';
 import { People } from '../components/People.jsx';
 import { connect4, lattice } from '../utils.js'
 import { SG2Manager } from '../SG2Manager.js'
+import { JsonTextureManager } from '../JsonTextureManager.js'
 
 const TICK_DURATION = 2000;
 const ANIMATION_TICK_DURATION = 250;
@@ -58,8 +59,10 @@ export class UCRoot extends React.Component {
             <MapProperties />
             <TextureSettings
                 useTextures={this.state.useTextures}
+                sg2Manager={this.state.sg2Manager}
                 toggleUseTextures={this.toggleUseTextures}
-                loadSgFiles={this.loadSgFiles} />
+                loadSgFiles={this.loadSgFiles}
+                loadJsonFiles={this.loadJsonFiles} />
             <br />
             <svg width={900} height={800} style={{
                 border: "1px solid black",
@@ -326,6 +329,31 @@ export class UCRoot extends React.Component {
             frSg2.readAsBinaryString(fileSg2);
         } catch (e) {
             alert(`Error while loading SG2: ${e}`);
+        }
+    }
+
+    loadJsonFiles = ({fileJson}) => {
+        const frJson = new FileReader();
+        frJson.onload = () => {
+            let jsonTextureManager;
+            const startTime = new Date();
+            try {
+                jsonTextureManager = new JsonTextureManager(frJson.result);
+            } catch (e) {
+                alert(`Error while loading textures: ${e}`);
+                return;
+            }
+            const endTime = new Date(), duration = endTime - startTime;
+            alert(
+                `Loaded ${Object.values(jsonTextureManager.content).length} `
+                + `images, in ${(duration / 1000).toFixed(1)}s`);
+            this.setState({sg2Manager: jsonTextureManager});
+        }
+        const startTime = new Date();
+        try {
+            frJson.readAsText(fileJson);
+        } catch (e) {
+            alert(`Error while loading JSON: ${e}`);
         }
     }
 }

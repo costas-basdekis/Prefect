@@ -41,7 +41,13 @@ class UCTextureSettings extends React.Component {
                     555 file: <input name="file555" type="file" onChange={this.onFileChange} />
                 </label>
                 <br />
-                <button key="load" onClick={this.loadSgFiles} >Load</button>
+                <button key="load" onClick={this.loadSgFiles} >Load SG2/555</button>
+                <br />
+                <label key="fileJson">
+                    JSON textures file: <input name="fileJson" type="file" onChange={this.onFileChange} />
+                </label>
+                <br />
+                <button key="loadJson" onClick={this.loadJsonFiles} >Load JSON</button>
             </div>,
         ];
     }
@@ -58,6 +64,11 @@ class UCTextureSettings extends React.Component {
     loadSgFiles = () => {
         const {fileSg2, file555} = this.state;
         this.props.loadSgFiles({fileSg2, file555});
+    }
+
+    loadJsonFiles = () => {
+        const {fileJson} = this.state;
+        this.props.loadJsonFiles({fileJson});
     }
 
     onFileChange = e => {
