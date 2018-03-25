@@ -13,7 +13,8 @@ import { SG2Manager } from '../SG2Manager.js'
 import { JsonTextureManager } from '../JsonTextureManager.js'
 
 const TICK_DURATION = 2000;
-const ANIMATION_TICK_DURATION = 250;
+const ANIMATIONS_PER_TICK = 12;
+const ANIMATION_TICK_DURATION = TICK_DURATION / ANIMATIONS_PER_TICK;
 const ANIMATION_FRACTION = ANIMATION_TICK_DURATION / TICK_DURATION;
 
 export class UCRoot extends React.Component {
