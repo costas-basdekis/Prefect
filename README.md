@@ -31,12 +31,14 @@ If you have any suggestions let me know.
 * [x] Goods deliverers and seekers
 * [x] Service workers
 * [x] Temples & priests
+* [x] Determine worker percentage
+* [x] Allocate workers via available workers
+* [x] Use textures from real game
 
 # Working on
-* [ ] Determine worker percentage
-* [ ] Allocate workers via available workers
 
 # Next features
+* [ ] Texture animation
 * [ ] Allocate workers per industry
 * [ ] Proper demographics
 * [ ] Fire & damage
