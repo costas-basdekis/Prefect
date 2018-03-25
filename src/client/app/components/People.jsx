@@ -216,9 +216,15 @@ export class UCPeople extends React.PureComponent {
         let useImageTemplate;
         if (this.props.texturesKeys) {
             const direction = this.getDirection(person);
-            const key = `${person.type}.${direction}.0`;
+            let animationIndex = parseInt((person.animationFraction || 0) * DEFAULT_ANIMATION_COUNT);
+            if (animationIndex >= DEFAULT_ANIMATION_COUNT) {
+                animationIndex = 0;
+            }
+            const key = `${person.type}.${direction}.${animationIndex}`;
             if (key in this.props.texturesKeys) {
                 useImageTemplate = key;
+            } else {
+                console.warn(`Key not in textures: "${key}"`);
             }
         }
         return {

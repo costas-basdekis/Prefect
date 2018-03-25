@@ -1604,6 +1604,7 @@ export class PeopleReducer extends Reducer {
             position,
             targetStructureId,
             randomValue: choice(range(64)),
+            animationFraction: 0,
         }
         state.nextPersonId += 1;
         state.people[person.id] = person;

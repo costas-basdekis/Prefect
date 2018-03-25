@@ -55,6 +55,10 @@ export class StateReducer extends Reducer {
             for (const person of Object.values(state.people)) {
                 person.randomValue = choice(range(64));
             }
+        }}, {version: 4, migrate: state => {
+            for (const person of Object.values(state.people)) {
+                person.animationFraction = 0;
+            }
         }},
     ];
 

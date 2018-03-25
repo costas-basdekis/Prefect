@@ -1,9 +1,11 @@
 import * as actions from '../actions/actions.js'
 import { Reducer } from './base.js'
+import { dict } from '../utils.js'
 
 export class TickReducer extends Reducer {
     static actions = [
         actions.TICK,
+        actions.ANIMATION_TICK,
     ];
 
     static [actions.TICK] (state, action) {
@@ -12,6 +14,7 @@ export class TickReducer extends Reducer {
 
     static tick(state) {
         this.tickDate(state);
+        this.resetAnimationIndex(state);
 
         return state;
     }
@@ -30,6 +33,30 @@ export class TickReducer extends Reducer {
                 state.date.year += 1;
             }
         }
+
+        return state;
+    }
+
+    static resetAnimationIndex(state) {
+        state.people = dict(Object.entries(state.people).map(([id, person]) =>
+            [id, {
+                ...person,
+                animationFraction: 0,
+            }]
+        ));
+    }
+
+    static [actions.ANIMATION_TICK] (state, {fraction}) {
+        return this.advanceAnimationIndex({...state}, fraction);
+    }
+
+    static advanceAnimationIndex(state, fraction) {
+        state.people = dict(Object.entries(state.people).map(([id, person]) =>
+            [id, {
+                ...person,
+                animationFraction: person.animationFraction + fraction,
+            }]
+        ));
 
         return state;
     }
