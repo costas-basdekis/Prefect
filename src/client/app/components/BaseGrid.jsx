@@ -109,7 +109,11 @@ export class BaseGrid extends React.PureComponent {
 
     getTileOrder(tile, options) {
         return (tile.x + options.structureWidth - 1)
-            + (tile.y + options.structureHeight - 1);
+            + (tile.y + options.structureHeight - 1)
+            // Large buildings should be rendered before 1-tile buildings, in
+            // the same line
+            + ((options.strokeWidth > 1 || options.structureHeight > 1)
+                ? -0.5 : 0);
     }
 
     getTileOptions(tile) {
