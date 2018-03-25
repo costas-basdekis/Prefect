@@ -6,6 +6,10 @@ export class TextureManager {
         this.definitionsCache = new Map();
     }
 
+    exportJson() {
+        return JSON.stringify(dict(this.imageCache.entries()), null, 4);
+    }
+
     loadList(definitions) {
         return Object.assign({}, ...definitions
             .map(method => method(this)));

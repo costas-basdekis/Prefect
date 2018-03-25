@@ -42,6 +42,9 @@ class UCTextureSettings extends React.Component {
                 </label>
                 <br />
                 <button key="load" onClick={this.loadSgFiles} >Load SG2/555</button>
+                {this.props.sg2Manager
+                    ? <button key="save" onClick={this.saveJsonFiles} >Save JSON</button>
+                    : ""}
                 <br />
                 <label key="fileJson">
                     JSON textures file: <input name="fileJson" type="file" onChange={this.onFileChange} />
@@ -64,6 +67,22 @@ class UCTextureSettings extends React.Component {
     loadSgFiles = () => {
         const {fileSg2, file555} = this.state;
         this.props.loadSgFiles({fileSg2, file555});
+    }
+
+    saveJsonFiles = () => {
+        const json = this.props.sg2Manager.exportJson();
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(json).then(() => {
+                alert("Copied JSON textures to clipboard");
+            }, () => {
+                alert(
+                    "Failed to copy JSON textures to clipboard, check console");
+                console.log("JSON textures:\n", json);
+            })
+        } else {
+            console.log("JSON textures:\n", json);
+            alert("Copy to clipboard is disabled, so copied to console");
+        }
     }
 
     loadJsonFiles = () => {
