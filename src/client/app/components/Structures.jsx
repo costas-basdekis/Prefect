@@ -38,7 +38,7 @@ class UCStructures extends BaseGrid {
         };
     }
 
-    static createTile({structures}, {key}) {
+    static createTile({structures}, {x, y, key}) {
         const structure = structures[key];
         if (!structure) {
             return null;
@@ -46,6 +46,18 @@ class UCStructures extends BaseGrid {
         if (structure.main) {
             return null;
         }
+
+        if (structure.type === STRUCTURE_TYPES.WHEAT_FARM) {
+            return [
+                {x, y, key, tile: {...structure, structureSize: {width: 2, height: 2}}},
+                {x, y: y + 2, key: `${key}.crop.0`, tile: {parent: structure, type: `${STRUCTURE_TYPES.WHEAT_FARM}.crop`, index: 0, randomValue: 0, renderOptions: {...structure.renderOptions, structureWidth: 1, structureHeight: 1}}},
+                {x: x + 1, y: y + 2, key: `${key}.crop.1`, tile: {parent: structure, type: `${STRUCTURE_TYPES.WHEAT_FARM}.crop`, index: 1, randomValue: 0, renderOptions: {...structure.renderOptions, structureWidth: 1, structureHeight: 1}}},
+                {x: x + 2, y: y + 2, key: `${key}.crop.2`, tile: {parent: structure, type: `${STRUCTURE_TYPES.WHEAT_FARM}.crop`, index: 2, randomValue: 0, renderOptions: {...structure.renderOptions, structureWidth: 1, structureHeight: 1}}},
+                {x: x + 2, y: y + 1, key: `${key}.crop.3`, tile: {parent: structure, type: `${STRUCTURE_TYPES.WHEAT_FARM}.crop`, index: 3, randomValue: 0, renderOptions: {...structure.renderOptions, structureWidth: 1, structureHeight: 1}}},
+                {x: x + 2, y, key: `${key}.crop.4`, tile: {parent: structure, type: `${STRUCTURE_TYPES.WHEAT_FARM}.crop`, index: 4, randomValue: 0, renderOptions: {...structure.renderOptions, structureWidth: 1, structureHeight: 1}}},
+            ];
+        }
+
         return structure;
     }
 
@@ -73,6 +85,11 @@ class UCStructures extends BaseGrid {
         StructureTextures(STRUCTURE_TYPES.MARKET, "Commerce.bmp", 0, 1, 2, 2),
         StructureTextures(STRUCTURE_TYPES.GRANARY, "Commerce.bmp", 139, 1, 3, 3),
         StructureTextures(STRUCTURE_TYPES.WHEAT_FARM, "Commerce.bmp", 11, 1, 2, 2),
+        StructureTextures(`${STRUCTURE_TYPES.WHEAT_FARM}.crop.0`, "Commerce.bmp", 12, 1),
+        StructureTextures(`${STRUCTURE_TYPES.WHEAT_FARM}.crop.1`, "Commerce.bmp", 13, 1),
+        StructureTextures(`${STRUCTURE_TYPES.WHEAT_FARM}.crop.2`, "Commerce.bmp", 14, 1),
+        StructureTextures(`${STRUCTURE_TYPES.WHEAT_FARM}.crop.3`, "Commerce.bmp", 15, 1),
+        StructureTextures(`${STRUCTURE_TYPES.WHEAT_FARM}.crop.4`, "Commerce.bmp", 16, 1),
         StructureTextures(STRUCTURE_TYPES.PREFECTURE, "Security.bmp", 0, 1),
         StructureTextures(STRUCTURE_TYPES.ENGINEERS_POST, "transport.BMP", 55, 1),
         SmallTempleTextures("CERES", 44),
@@ -131,18 +148,34 @@ class UCStructures extends BaseGrid {
                     (this.props.structures[key] || {}).type
                     === STRUCTURE_TYPES.ROAD);
                 useImageTemplate = `${STRUCTURE_TYPES.ROAD}.${isRoad.join(".")}`;
+            } else if (tile.type === `${STRUCTURE_TYPES.WHEAT_FARM}.crop`) {
+                const CROP_COUNT = 5;
+                const CROP_ANIMATION_COUNT = 5;
+                const CROP_PERCENTAGE = 1 / CROP_COUNT;
+                const status = tile.parent.data.product.status % 1;
+                const minStatus = CROP_PERCENTAGE * tile.index, maxStatus = CROP_PERCENTAGE * (tile.index + 1);
+                const cropStatus = ((status < minStatus) ? minStatus : ((status > maxStatus) ? maxStatus : status)) - minStatus;
+                const cropIndex = parseInt((cropStatus / CROP_PERCENTAGE * (CROP_ANIMATION_COUNT - 1)).toFixed(0));
+                useImageTemplate = `${STRUCTURE_TYPES.WHEAT_FARM}.crop.${cropIndex}`;
             } else if (tile.type in this.props.texturesKeys) {
                 useImageTemplate = tile.type;
             }
         }
-        return {
-            ...tile.renderOptions,
-            text: (tile.getText ? tile.getText(tile) : null),
-            textOptions: tile.textRenderOptions || {},
-            structureWidth: tile.structureSize.width,
-            structureHeight: tile.structureSize.height,
-            useImageTemplate,
-        };
+        if (!tile.parent) {
+            return {
+                ...tile.renderOptions,
+                text: (tile.getText ? tile.getText(tile) : null),
+                textOptions: tile.textRenderOptions || {},
+                structureWidth: tile.structureSize.width,
+                structureHeight: tile.structureSize.height,
+                useImageTemplate,
+            };
+        } else {
+            return {
+                ...tile.renderOptions,
+                useImageTemplate,
+            };
+        }
     }
 }
 

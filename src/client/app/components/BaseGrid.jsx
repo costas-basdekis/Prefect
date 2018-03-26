@@ -65,16 +65,24 @@ export class BaseGrid extends React.PureComponent {
     }
 
     static createTiles(options) {
-        return lattice(options.properties.width,
-            options.properties.height).map(([x, y]) => ({
+        const coordinates = lattice(
+            options.properties.width, options.properties.height);
+        return coordinates
+            .map(([x, y]) => ({
                 x, y,
                 key: `${x}.${y}`,
-            })).map(tile => ({
+            }))
+            .map(tile => ({
                 ...tile,
-                tile: this.createTile(options, tile),
-            })).filter(tile =>
+                tileOrTiles: this.createTile(options, tile),
+            }))
+            .map(tile => (tile.tileOrTiles && tile.tileOrTiles.constructor === Array)
+                ? tile.tileOrTiles
+                : [{...tile, tile: tile.tileOrTiles}])
+            .reduce((total, item) => total.concat(item), [])
+            .filter(tile =>
                 (tile.tile !== null)
-                && (typeof tile.tile !== typeof undefined));
+                && (typeof tile.tile !== typeof undefined))
     }
 
     static createTile(options, tile) {
