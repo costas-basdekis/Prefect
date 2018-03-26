@@ -31,7 +31,7 @@ export class StateReducer extends Reducer {
                 start: {year: -50, month: 0, day: 1},
             },
             money: 10000,
-            version: 2,
+            version: 4,
         };
     }
 
