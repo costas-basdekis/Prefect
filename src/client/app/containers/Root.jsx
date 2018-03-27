@@ -6,6 +6,7 @@ import { Grid } from '../components/Grid.jsx';
 import { Terrain } from '../components/Terrain.jsx';
 import { Toolbox } from '../components/Toolbox.jsx';
 import { StatusBar } from '../components/StatusBar.jsx';
+import { Animations } from '../components/Animations.jsx';
 import { Structures } from '../components/Structures.jsx';
 import { People } from '../components/People.jsx';
 import { connect4, lattice } from '../utils.js'
@@ -30,6 +31,7 @@ export class UCRoot extends React.Component {
         running: true,
         useTextures: false,
         sg2Manager: null,
+        showAnimations: false,
     };
 
     static mapStateToProps(state, ownProps) {
@@ -93,7 +95,11 @@ export class UCRoot extends React.Component {
                     setTool={this.setTool} />
                 <StatusBar
                     running={this.state.running}
-                    tickToggle={this.tickToggle}/>
+                    tickToggle={this.tickToggle}
+                    showAnimations={this.showAnimations}
+                    toggleAnimations={this.toggleAnimations} />
+                {this.state.showAnimations ? <Animations
+                    sg2Manager={this.state.sg2Manager} /> : ""}
             </svg>
             <FPSStats isActive={true} bottom="auto" left="auto" top="0" right="0" />
         </div>;
@@ -357,6 +363,10 @@ export class UCRoot extends React.Component {
         } catch (e) {
             alert(`Error while loading JSON: ${e}`);
         }
+    }
+
+    toggleAnimations = () => {
+        this.setState(state => ({showAnimations: !state.showAnimations}));
     }
 }
 

@@ -82,7 +82,7 @@ function fillAnimationsDefinitions(typesAndCounts) {
         .filter(([key]) => key);
 }
 
-const ANIMATIONS_DEFINITIONS = [
+export const ANIMATIONS_DEFINITIONS = [
     ["Citizen01.bmp", [
         [PEOPLE_TYPES.WORKER_SEEKER, DEFAULT_ANIMATION_COUNT],
         [`${PEOPLE_TYPES.WORKER_SEEKER}.DYING`, DEFAULT_DYING_ANIMATION_COUNT, ["main"]],

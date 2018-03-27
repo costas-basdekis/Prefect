@@ -3,24 +3,29 @@ import { connect4, lattice } from '../utils.js'
 
 class UCStatusBar extends React.PureComponent {
     LABELS = [
-        {key: 'save', getText: () => "Save", onClick: () => this.props.save(), width: 75},
-        {key: 'load', getText: () => "Load", onClick: () => this.props.load(), width: 75},
-        {key: 'date', getText: () => `
-            ${this.props.running ? '\u25B6\uFE0F' : '\u23F8\uFE0F'}
-            ${this.props.date.day}
-            ${this.MONTHS[this.props.date.month]}
-            ${Math.abs(this.props.date.year)}
-            ${this.props.date.year < 0 ? 'BC' : 'AD'}
-        `, onClick: () => this.props.tickToggle()},
-        {key: 'population', getText: () => `${this.props.population} people`, width: 100},
-        {key: 'workers', getText: () => (
-            this.props.workers === 0
-            ? `${this.props.allocatedWorkers}a/${this.props.workers}w`
-            : this.props.neededWorkers <= this.props.workers
-                ? `${this.props.allocatedWorkers}a/${this.props.workers}w [+${this.props.workers - this.props.allocatedWorkers}/+${(100 - 100 * this.props.allocatedWorkers / this.props.workers).toFixed()}%]`
-                : `${this.props.allocatedWorkers}a/${this.props.workers}w/${this.props.neededWorkers}n [-${this.props.neededWorkers - this.props.workers}/-${(100 * this.props.neededWorkers / this.props.workers - 100).toFixed()}%]`
-        ), width: 200},
-        {key: 'money', getText: () => `${this.props.money} denarii`, width: 100},
+        [
+            {key: 'save', getText: () => "Save", onClick: () => this.props.save(), width: 75},
+            {key: 'load', getText: () => "Load", onClick: () => this.props.load(), width: 75},
+            {key: 'date', getText: () => `
+                ${this.props.running ? '\u25B6\uFE0F' : '\u23F8\uFE0F'}
+                ${this.props.date.day}
+                ${this.MONTHS[this.props.date.month]}
+                ${Math.abs(this.props.date.year)}
+                ${this.props.date.year < 0 ? 'BC' : 'AD'}
+            `, onClick: () => this.props.tickToggle()},
+            {key: 'population', getText: () => `${this.props.population} people`, width: 100},
+            {key: 'workers', getText: () => (
+                this.props.workers === 0
+                ? `${this.props.allocatedWorkers}a/${this.props.workers}w`
+                : this.props.neededWorkers <= this.props.workers
+                    ? `${this.props.allocatedWorkers}a/${this.props.workers}w [+${this.props.workers - this.props.allocatedWorkers}/+${(100 - 100 * this.props.allocatedWorkers / this.props.workers).toFixed()}%]`
+                    : `${this.props.allocatedWorkers}a/${this.props.workers}w/${this.props.neededWorkers}n [-${this.props.neededWorkers - this.props.workers}/-${(100 * this.props.neededWorkers / this.props.workers - 100).toFixed()}%]`
+            ), width: 200},
+            {key: 'money', getText: () => `${this.props.money} denarii`, width: 100},
+        ],
+        [
+            {key: 'animations', getText: () => "Animations", onClick: () => this.props.toggleAnimations(), width: 75},
+        ],
     ];
 
     MONTHS = [
@@ -52,20 +57,26 @@ class UCStatusBar extends React.PureComponent {
     }
 
     render() {
-        const x0 = 0, y0 = 0, height = 25;
+        return <g>
+            {this.LABELS.map((labels, index) => this.renderLabels(labels, index))}
+        </g>
+    }
+
+    renderLabels(labels, lineIndex) {
+        const x0 = 0, height = 25, y0 = lineIndex * (height + 5);
         let nextX = 0;
         function addX(width) {
             const x = nextX;
             nextX += width;
             return x;
         }
-        return <g>
-            {this.LABELS.map(({key, getText, onClick, width=200}, i) => this.renderLabel({
+        return <g key={lineIndex}>
+            {labels.map(({key, getText, onClick, width=200}, i) => this.renderLabel({
                 x: addX(width + 5), y: y0,
                 width, height, key, text: getText(),
                 onClick,
             }))}
-        </g>
+        </g>;
     }
 
     renderLabel({x, y, width, height, key, text, onClick}) {
