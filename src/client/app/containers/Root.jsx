@@ -67,6 +67,7 @@ export class UCRoot extends React.Component {
             <br />
             <svg width={900} height={800} style={{
                 border: "1px solid black",
+                backgroundColor: "black",
             }}>
                 <Terrain
                     useTextures={this.state.useTextures}
