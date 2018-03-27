@@ -58,7 +58,14 @@ function AnimatedDirectionsTextures(key, filename, start, animationCount=DEFAULT
 }
 
 function ManyAnimatedDirectionsTextures(filename, typesAndCounts) {
-    const methods = typesAndCounts
+    const methods = fillAnimationsDefinitions(typesAndCounts)
+        .map(([key, animationCount, directions, start]) =>
+            AnimatedDirectionsTextures(key, filename, start, animationCount, directions));
+    return sg2Manager => sg2Manager.loadList(methods);
+}
+
+function fillAnimationsDefinitions(typesAndCounts) {
+    return typesAndCounts
         .map(([key, animationCount=DEFAULT_ANIMATION_COUNT, directions=DIRECTIONS, start]) =>
             [key, animationCount, directions, start])
         .map(([key, animationCount, directions, start], index, array) =>
@@ -72,11 +79,89 @@ function ManyAnimatedDirectionsTextures(filename, typesAndCounts) {
                 ? keyOrKeys.map(key => [key, animationCount, directions, start])
                 : [[keyOrKeys, animationCount, directions, start]])
         .reduce((total, item) => total.concat(item), [])
-        .filter(([key]) => key)
-        .map(([key, animationCount, directions, start]) =>
-            AnimatedDirectionsTextures(key, filename, start, animationCount, directions));
-    return sg2Manager => sg2Manager.loadList(methods);
+        .filter(([key]) => key);
 }
+
+const ANIMATIONS_DEFINITIONS = [
+    ["Citizen01.bmp", [
+        [PEOPLE_TYPES.WORKER_SEEKER, DEFAULT_ANIMATION_COUNT],
+        [`${PEOPLE_TYPES.WORKER_SEEKER}.DYING`, DEFAULT_DYING_ANIMATION_COUNT, ["main"]],
+        ['BATH_WORKER', DEFAULT_ANIMATION_COUNT],
+        ['BATH_WORKER.DYING', DEFAULT_DYING_ANIMATION_COUNT, ["main"]],
+        [PEOPLE_TYPES.PRIEST, DEFAULT_ANIMATION_COUNT],
+        [`${PEOPLE_TYPES.PRIEST}.DYING`, DEFAULT_DYING_ANIMATION_COUNT, ["main"]],
+        ['ACTOR', DEFAULT_ANIMATION_COUNT],
+        ['ACTOR.DYING', DEFAULT_DYING_ANIMATION_COUNT, ["main"]],
+        ['LION_TAMER', DEFAULT_ANIMATION_COUNT],
+        ['LION_TAMER.DYING', DEFAULT_DYING_ANIMATION_COUNT, ["main"]],
+        ['LION_TAMER.FIGHTING', 12],
+        ['TAX_COLECTOR', DEFAULT_ANIMATION_COUNT],
+        ['TAX_COLECTOR.DYING', DEFAULT_DYING_ANIMATION_COUNT, ["main"]],
+        ['SCHOOL_BOY', DEFAULT_ANIMATION_COUNT],
+        ['SCHOOL_BOY.DYING', DEFAULT_DYING_ANIMATION_COUNT, ["main"]],
+        [[
+            PEOPLE_TYPES.MARKET_SELLER,
+            PEOPLE_TYPES.MARKET_BUYER,
+        ], DEFAULT_ANIMATION_COUNT],
+        [[
+            `${PEOPLE_TYPES.MARKET_SELLER}.DYING`,
+            `${PEOPLE_TYPES.MARKET_BUYER}.DYING`,
+        ], DEFAULT_DYING_ANIMATION_COUNT, ["main"]],
+        [PEOPLE_TYPES.CART_PUSHER, DEFAULT_ANIMATION_COUNT],
+        [`${PEOPLE_TYPES.CART_PUSHER}.DYING}`, DEFAULT_DYING_ANIMATION_COUNT, ["main"]],
+        [PEOPLE_TYPES.NEWCOMER, DEFAULT_ANIMATION_COUNT],
+        [`${PEOPLE_TYPES.NEWCOMER}.DYING`, DEFAULT_DYING_ANIMATION_COUNT, ["main"]],
+        [PEOPLE_TYPES.ENGINEER, DEFAULT_ANIMATION_COUNT],
+        [`${PEOPLE_TYPES.ENGINEER}.DYING`, DEFAULT_DYING_ANIMATION_COUNT, ["main"]],
+    ]],
+    ["citizen02.BMP", [
+        ['GLADIATOR', DEFAULT_ANIMATION_COUNT],
+        ['GLADIATOR.DYING', DEFAULT_DYING_ANIMATION_COUNT, ["main"]],
+        [null, 94, ["?"]], // Gladiator 2?
+        ['GLADIATOR3', DEFAULT_ANIMATION_COUNT],
+        ['GLADIATOR3.DYING', DEFAULT_DYING_ANIMATION_COUNT, ["main"]],
+        ['GLADIATOR3.FIGHTING', 6],
+        ['RIOTER', DEFAULT_ANIMATION_COUNT],
+        ['RIOTER.DYING', DEFAULT_DYING_ANIMATION_COUNT, ["main"]],
+        ['RIOTER.STANDING', 8, ["main"]],
+        ['BARBER', DEFAULT_ANIMATION_COUNT],
+        ['BARBER.DYING', DEFAULT_DYING_ANIMATION_COUNT, ["main"]],
+        [null, 48, ["?"]], // Riots?
+        [PEOPLE_TYPES.PREFECT, DEFAULT_ANIMATION_COUNT],
+        [`${PEOPLE_TYPES.PREFECT}_FIGHTING`, 6],
+        [`${PEOPLE_TYPES.PREFECT}_CARRYING_WATER`, DEFAULT_ANIMATION_COUNT],
+        [`${PEOPLE_TYPES.PREFECT}_THROWING`, 6],
+        [PEOPLE_TYPES.HOMELESS, DEFAULT_ANIMATION_COUNT],
+        [`${PEOPLE_TYPES.HOMELESS}.DYING`, DEFAULT_DYING_ANIMATION_COUNT, ["main"]],
+    ]],
+    [ "citizen03.BMP", [
+        ['LION', DEFAULT_ANIMATION_COUNT],
+        ['GUARD', DEFAULT_ANIMATION_COUNT],
+        ['GUARD.FIGHTING', 5],
+        ['GUARD.DYING', DEFAULT_DYING_ANIMATION_COUNT, ["main"]],
+        ['JAVELIN', DEFAULT_ANIMATION_COUNT],
+        ['JAVELIN.FIGHTING', 5],
+        ['JAVELIN.STANDING', 1],
+        ['JAVELIN.DYING', DEFAULT_DYING_ANIMATION_COUNT, ["main"]],
+        ['IMPERIAL.FIGHTING', 6],
+        ['IMPERIAL', DEFAULT_ANIMATION_COUNT],
+        ['IMPERIAL.STANDING', 1],
+        ['IMPERIAL.DYING', DEFAULT_DYING_ANIMATION_COUNT, ["main"]],
+        ['LEGIONARY', DEFAULT_ANIMATION_COUNT],
+        ['LEGIONARY.FIGHTING', 6],
+        ['LEGIONARY.STANDING', 1],
+        ['LEGIONARY.DYING', DEFAULT_DYING_ANIMATION_COUNT, ["main"]],
+        ['PATRICIAN', DEFAULT_ANIMATION_COUNT],
+        ['PATRICIAN.DYING', DEFAULT_DYING_ANIMATION_COUNT, ["main"]],
+        ['DOCTOR', DEFAULT_ANIMATION_COUNT],
+        ['DOCTOR.DYING', DEFAULT_DYING_ANIMATION_COUNT, ["main"]],
+        ['MISSIONARY', DEFAULT_ANIMATION_COUNT],
+        ['MISSIONARY.DYING', DEFAULT_DYING_ANIMATION_COUNT, ["main"]],
+        ['LIBRARIAN', DEFAULT_ANIMATION_COUNT],
+        ['LIBRARIAN.DYING', DEFAULT_DYING_ANIMATION_COUNT, ["main"]],
+    ]],
+].map(([filename, typesAndCounts]) =>
+    [filename, fillAnimationsDefinitions(typesAndCounts)]);
 
 export class UCPeople extends React.PureComponent {
     static rectSize = 20;
@@ -114,85 +199,9 @@ export class UCPeople extends React.PureComponent {
         };
     }
 
-    static TEXTURES_DEFINITIONS = [
-        ManyAnimatedDirectionsTextures("Citizen01.bmp", [
-            [PEOPLE_TYPES.WORKER_SEEKER, DEFAULT_ANIMATION_COUNT],
-            [`${PEOPLE_TYPES.WORKER_SEEKER}.DYING`, DEFAULT_DYING_ANIMATION_COUNT, ["main"]],
-            ['BATH_WORKER', DEFAULT_ANIMATION_COUNT],
-            ['BATH_WORKER.DYING', DEFAULT_DYING_ANIMATION_COUNT, ["main"]],
-            [PEOPLE_TYPES.PRIEST, DEFAULT_ANIMATION_COUNT],
-            [`${PEOPLE_TYPES.PRIEST}.DYING`, DEFAULT_DYING_ANIMATION_COUNT, ["main"]],
-            ['ACTOR', DEFAULT_ANIMATION_COUNT],
-            ['ACTOR.DYING', DEFAULT_DYING_ANIMATION_COUNT, ["main"]],
-            ['LION_TAMER', DEFAULT_ANIMATION_COUNT],
-            ['LION_TAMER.DYING', DEFAULT_DYING_ANIMATION_COUNT, ["main"]],
-            ['LION_TAMER.FIGHTING', 12],
-            ['TAX_COLECTOR', DEFAULT_ANIMATION_COUNT],
-            ['TAX_COLECTOR.DYING', DEFAULT_DYING_ANIMATION_COUNT, ["main"]],
-            ['SCHOOL_BOY', DEFAULT_ANIMATION_COUNT],
-            ['SCHOOL_BOY.DYING', DEFAULT_DYING_ANIMATION_COUNT, ["main"]],
-            [[
-                PEOPLE_TYPES.MARKET_SELLER,
-                PEOPLE_TYPES.MARKET_BUYER,
-            ], DEFAULT_ANIMATION_COUNT],
-            [[
-                `${PEOPLE_TYPES.MARKET_SELLER}.DYING`,
-                `${PEOPLE_TYPES.MARKET_BUYER}.DYING`,
-            ], DEFAULT_DYING_ANIMATION_COUNT, ["main"]],
-            [PEOPLE_TYPES.CART_PUSHER, DEFAULT_ANIMATION_COUNT],
-            [`${PEOPLE_TYPES.CART_PUSHER}.DYING}`, DEFAULT_DYING_ANIMATION_COUNT, ["main"]],
-            [PEOPLE_TYPES.NEWCOMER, DEFAULT_ANIMATION_COUNT],
-            [`${PEOPLE_TYPES.NEWCOMER}.DYING`, DEFAULT_DYING_ANIMATION_COUNT, ["main"]],
-            [PEOPLE_TYPES.ENGINEER, DEFAULT_ANIMATION_COUNT],
-            [`${PEOPLE_TYPES.ENGINEER}.DYING`, DEFAULT_DYING_ANIMATION_COUNT, ["main"]],
-        ]),
-        ManyAnimatedDirectionsTextures("citizen02.BMP", [
-            ['GLADIATOR', DEFAULT_ANIMATION_COUNT],
-            ['GLADIATOR.DYING', DEFAULT_DYING_ANIMATION_COUNT, ["main"]],
-            [null, 94, ["?"]], // Gladiator 2?
-            ['GLADIATOR3', DEFAULT_ANIMATION_COUNT],
-            ['GLADIATOR3.DYING', DEFAULT_DYING_ANIMATION_COUNT, ["main"]],
-            ['GLADIATOR3.FIGHTING', 6],
-            ['RIOTER', DEFAULT_ANIMATION_COUNT],
-            ['RIOTER.DYING', DEFAULT_DYING_ANIMATION_COUNT, ["main"]],
-            ['RIOTER.STANDING', 8, ["main"]],
-            ['BARBER', DEFAULT_ANIMATION_COUNT],
-            ['BARBER.DYING', DEFAULT_DYING_ANIMATION_COUNT, ["main"]],
-            [null, 48, ["?"]], // Riots?
-            [PEOPLE_TYPES.PREFECT, DEFAULT_ANIMATION_COUNT],
-            [`${PEOPLE_TYPES.PREFECT}_FIGHTING`, 6],
-            [`${PEOPLE_TYPES.PREFECT}_CARRYING_WATER`, DEFAULT_ANIMATION_COUNT],
-            [`${PEOPLE_TYPES.PREFECT}_THROWING`, 6],
-            [PEOPLE_TYPES.HOMELESS, DEFAULT_ANIMATION_COUNT],
-            [`${PEOPLE_TYPES.HOMELESS}.DYING`, DEFAULT_DYING_ANIMATION_COUNT, ["main"]],
-        ]),
-        // ManyAnimatedDirectionsTextures("citizen03.BMP", [
-        //     ['LION', DEFAULT_ANIMATION_COUNT],
-        //     ['GUARD', DEFAULT_ANIMATION_COUNT],
-        //     ['GUARD.FIGHTING', 5],
-        //     ['GUARD.DYING', DEFAULT_DYING_ANIMATION_COUNT, ["main"]],
-        //     ['JAVELIN', DEFAULT_ANIMATION_COUNT],
-        //     ['JAVELIN.FIGHTING', 5],
-        //     ['JAVELIN.STANDING', 1],
-        //     ['JAVELIN.DYING', DEFAULT_DYING_ANIMATION_COUNT, ["main"]],
-        //     ['IMPERIAL.FIGHTING', 6],
-        //     ['IMPERIAL', DEFAULT_ANIMATION_COUNT],
-        //     ['IMPERIAL.STANDING', 1],
-        //     ['IMPERIAL.DYING', DEFAULT_DYING_ANIMATION_COUNT, ["main"]],
-        //     ['LEGIONARY', DEFAULT_ANIMATION_COUNT],
-        //     ['LEGIONARY.FIGHTING', 6],
-        //     ['LEGIONARY.STANDING', 1],
-        //     ['LEGIONARY.DYING', DEFAULT_DYING_ANIMATION_COUNT, ["main"]],
-        //     ['PATRICIAN', DEFAULT_ANIMATION_COUNT],
-        //     ['PATRICIAN.DYING', DEFAULT_DYING_ANIMATION_COUNT, ["main"]],
-        //     ['DOCTOR', DEFAULT_ANIMATION_COUNT],
-        //     ['DOCTOR.DYING', DEFAULT_DYING_ANIMATION_COUNT, ["main"]],
-        //     ['MISSIONARY', DEFAULT_ANIMATION_COUNT],
-        //     ['MISSIONARY.DYING', DEFAULT_DYING_ANIMATION_COUNT, ["main"]],
-        //     ['LIBRARIAN', DEFAULT_ANIMATION_COUNT],
-        //     ['LIBRARIAN.DYING', DEFAULT_DYING_ANIMATION_COUNT, ["main"]],
-        // ]),
-    ];
+    static TEXTURES_DEFINITIONS = ANIMATIONS_DEFINITIONS.map(
+        ([filename, typesAndCounts]) =>
+            ManyAnimatedDirectionsTextures(filename, typesAndCounts));
 
     render() {
         const {x: centerX, y: centerY} =  this.props.center;
