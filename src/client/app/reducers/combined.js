@@ -4,6 +4,7 @@ import { TerrainReducer } from './terrain.js'
 import { StructuresReducer } from './structures.js'
 import { PeopleReducer } from './people.js'
 import { TickReducer } from './tick.js'
+import { BulkImmutableHandler } from '../BulkImmutable.js'
 
 class CombinedReducer {
     static reducers = [
@@ -31,12 +32,25 @@ class CombinedReducer {
         return state;
     }
 
+    static handler = null;
+
     static reduce(state, action) {
-        const oldWorks = Object.values(state.structures).filter(s => s && s.data && s.data.workerSeekerId);
-        let newState = state;
-        for (const reducer of this.reducers) {
-            newState = reducer.reduce(newState, action);
+        if (!this.handler || this.handler.cached !== state) {
+            this.handler = new BulkImmutableHandler(state);
         }
+        let proxy = this.handler.proxy;
+
+        for (const reducer of this.reducers) {
+            const reducedState = reducer.reduce(proxy, action);
+            if (reducedState
+                && this.handler.cached !== reducedState
+                && this.handler.proxy !== reducedState) {
+                this.handler = new BulkImmutableHandler(reducedState);
+                proxy = this.handler.proxy;
+            }
+        }
+
+        const newState = this.handler.freeze();
 
         return newState;
     }

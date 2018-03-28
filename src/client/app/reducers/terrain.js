@@ -26,16 +26,11 @@ export class TerrainReducer extends Reducer {
     static [actions.RESIZE_TERRAIN] (state, action) {
         const newWidth = parseInt(action.width),
             newHeight = parseInt(action.height);
-        const newState = this.resizeTerrain({
-            ...state,
-            properties: {
-                ...state.properties,
-                width: newWidth,
-                height: newHeight,
-            },
+        Object.assign(state.properties, {
+            width: newWidth,
+            height: newHeight,
         });
-
-        return newState;
+        this.resizeTerrain(state);
     }
 
     static resizeTerrain(state) {

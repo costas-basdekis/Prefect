@@ -9,7 +9,7 @@ export class TickReducer extends Reducer {
     ];
 
     static [actions.TICK] (state, action) {
-        return this.tick({...state});
+        this.tick(state);
     }
 
     static tick(state) {
@@ -20,11 +20,8 @@ export class TickReducer extends Reducer {
     }
 
     static tickDate(state) {
-        state.date = {
-            ...state.date,
-            day: state.date.day + 1,
-            ticks: state.date.ticks + 1,
-        };
+        state.date.day += 1;
+        state.date.ticks += 1;
         if (state.date.day >= 31) {
             state.date.day = 1;
             state.date.month += 1;
@@ -33,31 +30,21 @@ export class TickReducer extends Reducer {
                 state.date.year += 1;
             }
         }
-
-        return state;
     }
 
     static resetAnimationIndex(state) {
-        state.people = dict(Object.entries(state.people).map(([id, person]) =>
-            [id, {
-                ...person,
-                animationFraction: 0,
-            }]
-        ));
+        for (const person of Object.values(state.people)) {
+            person.animationFraction = 0;
+        }
     }
 
     static [actions.ANIMATION_TICK] (state, {fraction}) {
-        return this.advanceAnimationIndex({...state}, fraction);
+        this.advanceAnimationIndex(state, fraction);
     }
 
     static advanceAnimationIndex(state, fraction) {
-        state.people = dict(Object.entries(state.people).map(([id, person]) =>
-            [id, {
-                ...person,
-                animationFraction: person.animationFraction + fraction,
-            }]
-        ));
-
-        return state;
+        for (const person of Object.values(state.people)) {
+            person.animationFraction += fraction;
+        }
     }
 }

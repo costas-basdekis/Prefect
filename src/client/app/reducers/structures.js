@@ -322,22 +322,17 @@ export class StructuresReducer extends Reducer {
         actions.TICK,
     ];
 
-    static [ actions.TICK] (state, action) {
-        const newState = {...state};
-
-        this.regradeHouses(newState);
-        this.updateWorks(newState);
-        this.updateProduction(newState);
-        this.updateLayers(newState);
-        this.consumeFood(newState);
-        this.updateHousesNeeds(newState);
-
-        return newState;
+    static [actions.TICK] (state, action) {
+        this.regradeHouses(state);
+        this.updateWorks(state);
+        this.updateProduction(state);
+        this.updateLayers(state);
+        this.consumeFood(state);
+        this.updateHousesNeeds(state);
     }
 
     static regradeHouses(state) {
-        const oldStructures = state.structures
-        for (let structure of Object.values(state.structures)) {
+        for (const structure of Object.values(state.structures)) {
             if (structure.main) {
                 continue;
             }
@@ -355,29 +350,19 @@ export class StructuresReducer extends Reducer {
             if (targetLevel === currentLevel) {
                 continue;
             }
-            let newLevel = targetLevel > currentLevel
+            const newLevel = targetLevel > currentLevel
                 ? currentLevel + 1
                 : currentLevel - 1;
             const newHouseStats = HOUSE_STATS[newLevel];
-            if (oldStructures === state.structures) {
-                state.structures = {...state.structures};
-            }
-            structure = state.structures[structure.key] = {
-                ...structure,
-                data: {
-                    ...structure.data,
-                    ...newHouseStats.newData,
-                    level: newLevel,
-                },
-            };
+            structure.data.level = newLevel;
+            Object.assign(structure.data, newHouseStats.newData);
         }
 
         return state;
     }
 
     static updateHousesNeeds(state) {
-        const oldStructures = state.structures;
-        for (let house of this.getStructuresOfType(state, STRUCTURE_TYPES.HOUSE)) {
+        for (const house of this.getStructuresOfType(state, STRUCTURE_TYPES.HOUSE)) {
             const occupants = house.data.occupants;
             const {needsPerOccupant, needs} = house.data.reserves;
             const newNeeds =
@@ -387,35 +372,19 @@ export class StructuresReducer extends Reducer {
             if (!newNeeds.length) {
                 continue;
             }
-            if (oldStructures === state.structures) {
-                state.structures = {...state.structures};
-            }
-            house = state.structures[house.key] = {
-                ...house,
-                data: {
-                    ...house.data,
-                    reserves: {
-                        ...house.data.reserves,
-                        needs: {
-                            ...house.data.reserves.needs,
-                            ...dict(newNeeds),
-                        },
-                    },
-                },
-            };
+            Object.assign(house.data.reserves.needs, dict(newNeeds));
         }
 
         return state;
     }
 
     static consumeFood(state) {
-        const oldStructures = state.structures;
-        for (let house of this.getStructuresOfType(state, STRUCTURE_TYPES.HOUSE)) {
+        for (const house of this.getStructuresOfType(state, STRUCTURE_TYPES.HOUSE)) {
             const occupants = house.data.occupants;
             if (!occupants) {
                 continue;
             }
-            let {consumesPerOccupant, has} = house.data.reserves;
+            const {consumesPerOccupant, has} = house.data.reserves;
             const willConsume = Object.entries(consumesPerOccupant)
                 .map(([key, consumes]) =>
                     [key, Math.min(occupants * consumes, (has[key] || 0))])
@@ -423,47 +392,18 @@ export class StructuresReducer extends Reducer {
             if (!willConsume.length) {
                 continue;
             }
-            if (oldStructures === state.structures) {
-                state.structures = {...state.structures};
-            }
-            house = state.structures[house.key] = {
-                ...house,
-                data: {
-                    ...house.data,
-                    reserves: {
-                        ...house.data.reserves,
-                        has: {
-                            ...has,
-                            ...dict(willConsume
-                                .map(([key, consume]) => [key, has[key] - consume])),
-                        },
-                    },
-                },
-            };
-            ({consumesPerOccupant, has} = house.data.reserves);
+            Object.assign(house.data.reserves.has, dict(willConsume
+                .map(([key, consume]) => [key, has[key] - consume])))
         }
 
         return state;
     }
 
     static updateWorks(state) {
-        const oldStructures = state.structures;
         for (const work of this.getStructuresWithDataAttribute(
                 state, 'workers')) {
             if (work.data.workers.available && (work.data.workers.availableUntil < state.date.ticks)) {
-                if (oldStructures === state.structures) {
-                    state.structures = {...state.structures};
-                }
-                state.structures[work.key] = {
-                    ...work,
-                    data: {
-                        ...work.data,
-                        workers: {
-                            ...work.data.workers,
-                            available: false,
-                        },
-                    },
-                };
+                work.dta.workers.available = false;
             }
         }
 
@@ -471,9 +411,8 @@ export class StructuresReducer extends Reducer {
     }
 
     static updateProduction(state) {
-        const oldStructures = state.structures;
         const works = this.getStructuresWithDataAttribute(state, 'product')
-        for (let work of works) {
+        for (const work of works) {
             const {workers: {allocated, needed}, product: {status, rate, max}} =
                 work.data;
             if (status >= max) {
@@ -482,19 +421,8 @@ export class StructuresReducer extends Reducer {
             if (!allocated) {
                 continue;
             }
-            if (oldStructures === state.structures) {
-                state.structures = {...state.structures};
-            }
-            work = state.structures[work.key] = {
-                ...work,
-                data: {
-                    ...work.data,
-                    product: {
-                        ...work.data.product,
-                        status: Math.min(status + rate * allocated / needed, max),
-                    },
-                },
-            };
+            work.data.product.status =
+                Math.min(status + rate * allocated / needed, max);
         }
 
         return state;
@@ -509,10 +437,7 @@ export class StructuresReducer extends Reducer {
     static updateWater(state, reset=false) {
         const waterStructures = this.getStructuresOfType(
             state, STRUCTURE_TYPES.WELL);
-        state.layers = {
-            ...state.layers,
-            water: {},
-        };
+        state.layers.water = {};
         const waterLayer = state.layers.water;
         for (const structure of waterStructures) {
             const {x: centerX, y: centerY} = structure.start;
@@ -535,25 +460,14 @@ export class StructuresReducer extends Reducer {
 
         const houses = Object.values(state.structures)
             .filter(structure => structure.type === STRUCTURE_TYPES.HOUSE);
-        let oldStructures = state.structures;
-        for (let house of houses) {
+        for (const house of houses) {
             let waterLevel = 0;
             for (const [x, y] of lattice([house.start.x, house.end.x + 1],
                                          [house.start.y, house.end.y + 1])) {
                 const key = `${x}.${y}`;
                 waterLevel = Math.max(waterLevel, waterLayer[key] || 0);
             }
-            if (house.data.water !== waterLevel) {
-                if (oldStructures === state.structures) {
-                    state.structures = {...state.structures};
-                }
-                state.structures[house.key] = house = {
-                    ...house, data: {
-                        ...house.data,
-                        water: waterLevel,
-                    },
-                };
-            }
+            house.data.water = waterLevel;
         }
     }
 
@@ -568,7 +482,7 @@ export class StructuresReducer extends Reducer {
     }
 
     static [actions.RESIZE_TERRAIN] (state, action) {
-        return this.resizeStructures({...state});
+        this.resizeStructures(state);
     }
 
     static resizeStructures(state) {
@@ -608,7 +522,6 @@ export class StructuresReducer extends Reducer {
 
     static resizeLayers(state) {
         const mapLattice = lattice(width, height);
-        state.layers = {...state.layers};
         for (const layerName in state.layers) {
             state.layers[layerName] = toDict(mapLattice, key => null);
         }
@@ -628,14 +541,12 @@ export class StructuresReducer extends Reducer {
         const {tool, selectedTiles} = action;
 
         if (tool.toolType === 'SINGLE_STRUCTURE') {
-            return this.setStructure({...state}, tool, selectedTiles);
+            return this.setStructure(state, tool, selectedTiles);
         } else if (tool.toolType === 'RANGE_OF_STRUCTURES') {
-            return this.setStructures({...state}, tool, selectedTiles);
+            return this.setStructures(state, tool, selectedTiles);
         } else if (tool.toolType === 'CLEAR') {
-            return this.clearSpace({...state}, selectedTiles);
+            return this.clearSpace(state, selectedTiles);
         }
-
-        return state;
     }
 
     static clearSpace(state, selectedTiles) {
@@ -645,7 +556,6 @@ export class StructuresReducer extends Reducer {
     }
 
     static clearStructures(state, selectedTiles) {
-        const oldStructures = state.structures;
         for (const {key} of selectedTiles) {
             let structure = state.structures[key];
             if (!structure) {
@@ -653,9 +563,6 @@ export class StructuresReducer extends Reducer {
             }
             if (structure.main) {
                 structure = state.structures[structure.main];
-            }
-            if (oldStructures === state.structures) {
-                state.structures = {...state.structures};
             }
             for (const [x, y] of this.getStructureTiles(structure)) {
                 delete state.structures[`${x}.${y}`];
@@ -714,9 +621,6 @@ export class StructuresReducer extends Reducer {
                 return state;
             }
         }
-
-        state.structures = {...state.structures};
-        state.structuresKeysById = {...state.structuresKeysById};
 
         for (const [eX, eY] of this.getStructureTiles(structure)) {
             const key = `${eX}.${eY}`;
