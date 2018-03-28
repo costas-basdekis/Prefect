@@ -316,23 +316,23 @@ export const HOUSE_STATS = [
 ];
 
 export class StructuresReducer extends Reducer {
-    static actions = [
+    actions = [
         actions.RESIZE_TERRAIN,
         actions.SELECTION_END,
         actions.TICK,
     ];
 
-    static [actions.TICK] (state, action) {
-        this.regradeHouses(state);
-        this.updateWorks(state);
-        this.updateProduction(state);
-        this.updateLayers(state);
-        this.consumeFood(state);
-        this.updateHousesNeeds(state);
+    [actions.TICK] (action) {
+        this.regradeHouses();
+        this.updateWorks();
+        this.updateProduction();
+        this.updateLayers();
+        this.consumeFood();
+        this.updateHousesNeeds();
     }
 
-    static regradeHouses(state) {
-        for (const structure of Object.values(state.structures)) {
+    regradeHouses() {
+        for (const structure of this.structuresList) {
             if (structure.main) {
                 continue;
             }
@@ -341,7 +341,7 @@ export class StructuresReducer extends Reducer {
             }
             const nonUpgradableLevels = HOUSE_STATS
                 .map((houseStats, level) => [level + 1, houseStats.canUpgrade ?
-                    houseStats.canUpgrade(structure, state) : false])
+                    houseStats.canUpgrade(structure, this.state) : false])
                 .filter(([level, canUpgrade]) => !canUpgrade)
                 .map(([level]) => level);
             const nextLevel = nonUpgradableLevels[0] || HOUSE_STATS.length;
@@ -357,12 +357,10 @@ export class StructuresReducer extends Reducer {
             structure.data.level = newLevel;
             Object.assign(structure.data, newHouseStats.newData);
         }
-
-        return state;
     }
 
-    static updateHousesNeeds(state) {
-        for (const house of this.getStructuresOfType(state, STRUCTURE_TYPES.HOUSE)) {
+    updateHousesNeeds() {
+        for (const house of this.getStructuresOfType(STRUCTURE_TYPES.HOUSE)) {
             const occupants = house.data.occupants;
             const {needsPerOccupant, needs} = house.data.reserves;
             const newNeeds =
@@ -374,12 +372,10 @@ export class StructuresReducer extends Reducer {
             }
             Object.assign(house.data.reserves.needs, dict(newNeeds));
         }
-
-        return state;
     }
 
-    static consumeFood(state) {
-        for (const house of this.getStructuresOfType(state, STRUCTURE_TYPES.HOUSE)) {
+    consumeFood() {
+        for (const house of this.getStructuresOfType(STRUCTURE_TYPES.HOUSE)) {
             const occupants = house.data.occupants;
             if (!occupants) {
                 continue;
@@ -395,23 +391,19 @@ export class StructuresReducer extends Reducer {
             Object.assign(house.data.reserves.has, dict(willConsume
                 .map(([key, consume]) => [key, has[key] - consume])))
         }
-
-        return state;
     }
 
-    static updateWorks(state) {
-        for (const work of this.getStructuresWithDataAttribute(
-                state, 'workers')) {
-            if (work.data.workers.available && (work.data.workers.availableUntil < state.date.ticks)) {
+    updateWorks() {
+        for (const work of this.getStructuresWithDataProperty('workers')) {
+            if (work.data.workers.available
+                && (work.data.workers.availableUntil < this.ticks)) {
                 work.dta.workers.available = false;
             }
         }
-
-        return state;
     }
 
-    static updateProduction(state) {
-        const works = this.getStructuresWithDataAttribute(state, 'product')
+    updateProduction() {
+        const works = this.getStructuresWithDataProperty('product')
         for (const work of works) {
             const {workers: {allocated, needed}, product: {status, rate, max}} =
                 work.data;
@@ -424,21 +416,16 @@ export class StructuresReducer extends Reducer {
             work.data.product.status =
                 Math.min(status + rate * allocated / needed, max);
         }
-
-        return state;
     }
 
-    static updateLayers(state, reset=false) {
-        this.updateWater(state, reset);
-
-        return state;
+    updateLayers(reset=false) {
+        this.updateWater(reset);
     }
 
-    static updateWater(state, reset=false) {
-        const waterStructures = this.getStructuresOfType(
-            state, STRUCTURE_TYPES.WELL);
-        state.layers.water = {};
-        const waterLayer = state.layers.water;
+    updateWater(reset=false) {
+        const waterStructures = this.getStructuresOfType(STRUCTURE_TYPES.WELL);
+        this.state.layers.water = {};
+        const waterLayer = this.state.layers.water;
         for (const structure of waterStructures) {
             const {x: centerX, y: centerY} = structure.start;
             const {range, level} = structure.data;
@@ -447,8 +434,8 @@ export class StructuresReducer extends Reducer {
                 y: Math.max(0, centerY - range),
             };
             const end = {
-                x: Math.min(centerX + range + 1, state.properties.width) ,
-                y: Math.min(centerY + range + 1, state.properties.height),
+                x: Math.min(centerX + range + 1, this.state.properties.width) ,
+                y: Math.min(centerY + range + 1, this.state.properties.height),
             };
             for (const [x, y] of lattice([start.x, end.x], [start.y, end.y])) {
                 const key = `${x}.${y}`;
@@ -458,8 +445,7 @@ export class StructuresReducer extends Reducer {
             }
         }
 
-        const houses = Object.values(state.structures)
-            .filter(structure => structure.type === STRUCTURE_TYPES.HOUSE);
+        const houses = this.getStructuresOfType(STRUCTURE_TYPES.HOUSE);
         for (const house of houses) {
             let waterLevel = 0;
             for (const [x, y] of lattice([house.start.x, house.end.x + 1],
@@ -471,25 +457,14 @@ export class StructuresReducer extends Reducer {
         }
     }
 
-    static getStructuresOfType(state, type) {
-        return Object.values(state.structures)
-            .filter(structure => structure.type === type);
+    [actions.RESIZE_TERRAIN] (action) {
+        this.resizeStructures();
     }
 
-    static getStructuresWithDataAttribute(state, attribute) {
-        return Object.values(state.structures)
-            .filter(structure => structure.data && attribute in structure.data);
-    }
-
-    static [actions.RESIZE_TERRAIN] (state, action) {
-        this.resizeStructures(state);
-    }
-
-    static resizeStructures(state) {
-        const oldStructures = state.structures;
-        const {width, height} = state.properties;
-        state.structures = {};
-        state.population = 0;
+    resizeStructures() {
+        const {width, height} = this.state.properties;
+        this.state.structures = {};
+        this.state.population = 0;
         for (const [x, y] of lattice(width, height)) {
             const key = `${x}.${y}`;
             const oldStructure = oldStructures[key];
@@ -500,12 +475,12 @@ export class StructuresReducer extends Reducer {
             if (endX >= width || endY >= height) {
                 continue;
             }
-            state.structures[key] = oldStructure;
-            state.population += oldStructure.occupants;
+            this.structures[key] = oldStructure;
+            this.state.population += oldStructure.occupants;
         }
         for (const [x, y] of lattice(width, height)) {
             const key = `${x}.${y}`;
-            const structure = state.structures[key];
+            const structure = this.structures[key];
             if (!structure || !structure.main) {
                 continue;
             }
@@ -513,89 +488,79 @@ export class StructuresReducer extends Reducer {
                 if (eX === x && eY === y) {
                     continue;
                 }
-                state.structures[`${eX}.${eY}`] = {main: key};
+                this.structures[`${eX}.${eY}`] = {main: key};
             }
         }
-
-        return state;
     }
 
-    static resizeLayers(state) {
+    resizeLayers() {
         const mapLattice = lattice(width, height);
-        for (const layerName in state.layers) {
-            state.layers[layerName] = toDict(mapLattice, key => null);
+        for (const layerName in this.state.layers) {
+            this.state.layers[layerName] = toDict(mapLattice, key => null);
         }
 
-        this.updateLayers(state, true);
-
-        return state;
+        this.updateLayers(true);
     }
 
-    static getStructureTiles(structure) {
+    getStructureTiles(structure) {
         return lattice(
             [structure.start.x, structure.end.x + 1],
             [structure.start.y, structure.end.y + 1]);
     }
 
-    static [actions.SELECTION_END] (state, action) {
+    [actions.SELECTION_END] (action) {
         const {tool, selectedTiles} = action;
 
         if (tool.toolType === 'SINGLE_STRUCTURE') {
-            return this.setStructure(state, tool, selectedTiles);
+            return this.setStructure(tool, selectedTiles);
         } else if (tool.toolType === 'RANGE_OF_STRUCTURES') {
-            return this.setStructures(state, tool, selectedTiles);
+            return this.setStructures(tool, selectedTiles);
         } else if (tool.toolType === 'CLEAR') {
-            return this.clearSpace(state, selectedTiles);
+            return this.clearSpace(selectedTiles);
         }
     }
 
-    static clearSpace(state, selectedTiles) {
-        this.clearStructures(state, selectedTiles);
-
-        return state;
+    clearSpace(selectedTiles) {
+        this.clearStructures(selectedTiles);
     }
 
-    static clearStructures(state, selectedTiles) {
+    clearStructures(selectedTiles) {
         for (const {key} of selectedTiles) {
-            let structure = state.structures[key];
+            let structure = this.structures[key];
             if (!structure) {
                 continue;
             }
             if (structure.main) {
-                structure = state.structures[structure.main];
+                structure = this.structures[structure.main];
             }
             for (const [x, y] of this.getStructureTiles(structure)) {
-                delete state.structures[`${x}.${y}`];
+                delete this.structures[`${x}.${y}`];
             }
             if (structure.type === STRUCTURE_TYPES.HOUSE) {
-                state.population -= structure.data.occupants;
+                this.state.population -= structure.data.occupants;
             }
-            delete state.structuresKeysById[structure.id];
+            delete this.state.structuresKeysById[structure.id];
         }
-
-        return state;
     }
 
-    static setStructures(state, tile, selectedTiles) {
+    setStructures(tile, selectedTiles) {
         for (const selectedTile of selectedTiles) {
-            this.setStructure(state, tile, [selectedTile]);
+            this.setStructure(tile, [selectedTile]);
         }
-
-        return state;
     }
 
-    static setStructure(state, {data: {type, ...extraData}}, selectedTiles) {
+    setStructure({data: {type, ...extraData}}, selectedTiles) {
         const structureType = STRUCTURES[type];
         if (!structureType) {
             console.error("Unknown structure type: ", type);
-            return state
+            return;
         }
-        if (structureType.unique && this.structureTypeExists(state, type)) {
-            return state;
+        if (structureType.unique && this.structureTypeExists(type)) {
+            return;
         }
         const tile = selectedTiles[0];
-        const id = state.nextStructureId;
-        state.nextStructureId += 1;
+        const id = this.state.nextStructureId;
+        this.state.nextStructureId += 1;
 
         const structure = {
             id,
@@ -617,32 +582,20 @@ export class StructuresReducer extends Reducer {
 
         for (const [eX, eY] of this.getStructureTiles(structure)) {
             const key = `${eX}.${eY}`;
-            if (state.structures[key]) {
-                return state;
+            if (this.structures[key]) {
+                return;
             }
         }
 
         for (const [eX, eY] of this.getStructureTiles(structure)) {
             const key = `${eX}.${eY}`;
             if (eX === tile.x && eY === tile.y) {
-                state.structures[key] = structure;
+                this.structures[key] = structure;
             } else {
-                state.structures[key] = {main: structure.key, key};
+                this.structures[key] = {main: structure.key, key};
             }
         }
 
-        state.structuresKeysById[structure.id] = structure.key;
-
-        return state;
-    }
-
-    static structureTypeExists(state, structureType) {
-        for (const structure of Object.values(state.structures)) {
-            if (structure.type === structureType) {
-                return true;
-            }
-        }
-
-        return false;
+        this.state.structuresKeysById[structure.id] = structure.key;
     }
 }

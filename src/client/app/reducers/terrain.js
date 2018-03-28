@@ -15,32 +15,32 @@ export const TILE_TYPES = toDict([
 ], key => key);
 
 export class TerrainReducer extends Reducer {
-    static actions = [
+    actions = [
         actions.RESIZE_TERRAIN,
     ];
 
-    static initialiseState(state) {
-        return this.resizeTerrain(state);
+    initialiseState() {
+        this.resizeTerrain();
     }
 
-    static [actions.RESIZE_TERRAIN] (state, action) {
+    [actions.RESIZE_TERRAIN] (action) {
         const newWidth = parseInt(action.width),
             newHeight = parseInt(action.height);
-        Object.assign(state.properties, {
+        Object.assign(this.state.properties, {
             width: newWidth,
             height: newHeight,
         });
-        this.resizeTerrain(state);
+        this.resizeTerrain();
     }
 
-    static resizeTerrain(state) {
-        const oldTerrain = state.terrain;
-        const {width, height} = state.properties;
-        state.terrain = {};
+    resizeTerrain() {
+        const oldTerrain = this.state.terrain;
+        const {width, height} = this.state.properties;
+        this.state.terrain = {};
         for (const [x, y] of lattice(width, height)) {
             const key = `${x}.${y}`;
             const type = TILE_TYPES.GROUND; // choice(Object.keys(TILE_TYPES));
-            state.terrain[key] = oldTerrain[key] || {
+            this.state.terrain[key] = oldTerrain[key] || {
                 type: type,
                 subType: type === TILE_TYPES.GROUND
                     ? GROUND_TYPES.GRASS // choice(Object.keys(GROUND_TYPES))
@@ -48,7 +48,5 @@ export class TerrainReducer extends Reducer {
                 randomValue: choice(range(64)),
             }
         }
-
-        return state;
     }
 }

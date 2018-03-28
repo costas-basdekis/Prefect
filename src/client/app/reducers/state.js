@@ -79,30 +79,29 @@ export class StateReducer extends Reducer {
         return state;
     }
 
-    static actions = [
+    actions = [
         actions.SAVE,
         actions.LOAD,
     ];
 
-    static [actions.SAVE] (state, action) {
-        localStorage.setItem('state', JSON.stringify(state));
-        return state;
+    [actions.SAVE] (action) {
+        localStorage.setItem('state', JSON.stringify(this.state));
     }
 
-    static [actions.LOAD] (state, action) {
+    [actions.LOAD] (action) {
         const stateJson = localStorage.getItem('state');
         if (!stateJson || !stateJson.length) {
-            return state;
+            return;
         }
         let newState;
         try {
             newState = JSON.parse(stateJson);
         } catch (e) {
             console.error("Could not load state:", e);
-            return state;
+            return;
         }
 
-        newState = this.migrate(newState);
+        newState = this.constructor.migrate(newState);
 
         for (const structure of Object.values(newState.structures)) {
             const type = STRUCTURES[structure.type];

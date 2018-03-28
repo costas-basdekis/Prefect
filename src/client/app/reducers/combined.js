@@ -7,7 +7,7 @@ import { TickReducer } from './tick.js'
 import { BulkImmutableHandler } from '../BulkImmutable.js'
 
 class CombinedReducer {
-    static reducers = [
+    reducersClasses = [
         StateReducer,
         TerrainReducer,
         StructuresReducer,
@@ -15,33 +15,32 @@ class CombinedReducer {
         TickReducer,
     ];
 
-    static initialState() {
-        const state = this.createInitialState();
-        return this.initialiseState(state);
+    constructor() {
+        this.state = StateReducer.createInitialState();
+        this.reducers = this.reducersClasses.map(_class => new _class(this.state));
+        return this.initialiseState();
     }
 
-    static createInitialState() {
+    createInitialState() {
         return StateReducer.createInitialState();
     }
 
-    static initialiseState(state) {
+    initialiseState() {
         for (const reducer of this.reducers) {
-            state = reducer.initialiseState(state);
+            reducer.initialiseState();
         }
-
-        return state;
     }
 
-    static handler = null;
+    handler = null;
 
-    static onHandlerUpdate(handler, path, action, prop, value) {
+    onHandlerUpdate(handler, path, action, prop, value) {
         if (['animationFraction', 'x', 'y'].indexOf(prop) >= 0) {
             return;
         }
         console.log(path, action, prop, value);
     }
 
-    static makeHandler(state) {
+    makeHandler(state) {
         if (!state) {
             return this.handler;
         }
@@ -54,12 +53,12 @@ class CombinedReducer {
         return this.handler;
     }
 
-    static reduce(state, action) {
-        let proxy = this.makeHandler(state).proxy;
+    reduce(state, action) {
+        let proxy = this.state = this.makeHandler(state).proxy;
 
         for (const reducer of this.reducers) {
             const reducedState = reducer.reduce(proxy, action);
-            proxy = this.makeHandler(reducedState).proxy;
+            this.state = proxy = this.makeHandler(reducedState).proxy;
         }
 
         const newState = this.handler.freeze();
@@ -68,5 +67,6 @@ class CombinedReducer {
     }
 }
 
-export const reducer = CombinedReducer.reduce.bind(CombinedReducer);
-export const initialState = CombinedReducer.initialState.bind(CombinedReducer);
+export const reducerInstance = new CombinedReducer();
+export const reducer = reducerInstance.reduce.bind(reducerInstance);
+export const initialState = () => reducerInstance.state;

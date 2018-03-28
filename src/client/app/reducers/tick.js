@@ -3,47 +3,73 @@ import { Reducer } from './base.js'
 import { dict } from '../utils.js'
 
 export class TickReducer extends Reducer {
-    static actions = [
+    actions = [
         actions.TICK,
         actions.ANIMATION_TICK,
     ];
 
-    static [actions.TICK] (state, action) {
-        this.tick(state);
+    set ticks(value) {
+        this.state.date.ticks = value;
     }
 
-    static tick(state) {
-        this.tickDate(state);
-        this.resetAnimationIndex(state);
-
-        return state;
+    get day() {
+        return this.state.date.day;
     }
 
-    static tickDate(state) {
-        state.date.day += 1;
-        state.date.ticks += 1;
-        if (state.date.day >= 31) {
-            state.date.day = 1;
-            state.date.month += 1;
-            if (state.date.month >= 12) {
-                state.date.month = 0;
-                state.date.year += 1;
+    set day(value) {
+        this.state.date.day = value;
+    }
+
+    get month() {
+        return this.state.date.month;
+    }
+
+    set month(value) {
+        this.state.date.month = value;
+    }
+
+    get year() {
+        return this.state.date.year;
+    }
+
+    set year(value) {
+        this.state.date.year = value;
+    }
+
+    [actions.TICK] (action) {
+        this.tick();
+    }
+
+    tick() {
+        this.tickDate();
+        this.resetAnimationIndex();
+    }
+
+    tickDate() {
+        this.day += 1;
+        this.ticks += 1;
+        if (this.day >= 31) {
+            this.day = 1;
+            this.month += 1;
+            if (this.month >= 12) {
+                this.month = 0;
+                this.year += 1;
             }
         }
     }
 
-    static resetAnimationIndex(state) {
-        for (const person of Object.values(state.people)) {
+    resetAnimationIndex() {
+        for (const person of this.peopleList) {
             person.animationFraction = 0;
         }
     }
 
-    static [actions.ANIMATION_TICK] (state, {fraction}) {
-        this.advanceAnimationIndex(state, fraction);
+    [actions.ANIMATION_TICK] ({fraction}) {
+        this.advanceAnimationIndex(fraction);
     }
 
-    static advanceAnimationIndex(state, fraction) {
-        for (const person of Object.values(state.people)) {
+    advanceAnimationIndex(fraction) {
+        for (const person of this.peopleList) {
             person.animationFraction += fraction;
         }
     }
