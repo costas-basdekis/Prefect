@@ -34,20 +34,32 @@ class CombinedReducer {
 
     static handler = null;
 
-    static reduce(state, action) {
-        if (!this.handler || this.handler.cached !== state) {
-            this.handler = new BulkImmutableHandler(state);
+    static onHandlerUpdate(handler, path, action, prop, value) {
+        if (['animationFraction', 'x', 'y'].indexOf(prop) >= 0) {
+            return;
         }
-        let proxy = this.handler.proxy;
+        console.log(path, action, prop, value);
+    }
+
+    static makeHandler(state) {
+        if (!state) {
+            return this.handler;
+        }
+        if (this.handler && (this.handler.cached === state || this.handler.proxy === state) ) {
+            return this.handler;
+        }
+        this.handler = new BulkImmutableHandler(state);
+        // this.handler.updates.push(this.onHandlerUpdate.bind(this));
+
+        return this.handler;
+    }
+
+    static reduce(state, action) {
+        let proxy = this.makeHandler(state).proxy;
 
         for (const reducer of this.reducers) {
             const reducedState = reducer.reduce(proxy, action);
-            if (reducedState
-                && this.handler.cached !== reducedState
-                && this.handler.proxy !== reducedState) {
-                this.handler = new BulkImmutableHandler(reducedState);
-                proxy = this.handler.proxy;
-            }
+            proxy = this.makeHandler(reducedState).proxy;
         }
 
         const newState = this.handler.freeze();

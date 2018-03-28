@@ -1,10 +1,10 @@
 export class BulkImmutableHandler {
-    static proxyFor(obj) {
-        const handler = new this(obj);
+    static proxyFor(obj, name="<ROOT>", parent=null) {
+        const handler = new this(obj, name, parent);
         return [handler.proxy, handler.freeze.bind(handler)];
     }
 
-    constructor(obj) {
+    constructor(obj, name="<ROOT>", parent=null) {
         if (obj === null || obj === undefined || (obj.constructor !== Object && obj.constructor !== Array)) {
             let typeName;
             if (obj === null) {
@@ -16,14 +16,34 @@ export class BulkImmutableHandler {
             }
             throw new Error(`Please provide an object, not "${typeName}"`);
         }
+        this.name = name;
+        this.parent = parent;
         this.dirty = true;
         this.cached = null;
         this.handlers = {};
+        this.updates = [];
         this.obj = obj;
         this.proxy = new Proxy(obj, this);
         this.forceSet = true;
         this.reAssign(this.proxy);
         this.forceSet = false;
+    }
+
+    get path() {
+        if (!this.parent) {
+            return this.name
+        }
+        return `${this.parent.path}/${this.name}`;
+    }
+
+    update(path, action, prop, value) {
+        for (const update of this.updates) {
+            update(this, path, action, prop, value);
+        }
+    }
+
+    onChildUpdate(handler, path, action, prop, value) {
+        this.update(path, action, prop, value);
     }
 
     reAssign(obj, makeImmutable=false) {
@@ -96,7 +116,8 @@ export class BulkImmutableHandler {
             switch (constructor) {
                 case Array:
                 case Object:
-                    handler = new BulkImmutableHandler(value);
+                    handler = new BulkImmutableHandler(value, prop, this);
+                    handler.updates.push(this.onChildUpdate.bind(this));
                     value = handler.proxy;
                     break;
                 case Number:
@@ -108,6 +129,7 @@ export class BulkImmutableHandler {
                     throw new Error(`Unexpeted type "${constructor.name}"`);
             }
         }
+        this.update(this.path, prop in obj ? "update" : "add", prop, value);
         obj[prop] = value;
         if (handler) {
             this.handlers[prop] = handler;
@@ -122,6 +144,7 @@ export class BulkImmutableHandler {
         if (!(prop in obj)) {
             return true;
         }
+        this.update(this.path, "delete", prop, undefined);
         delete obj[prop];
         this.dirty = true;
         delete this.handlers[prop];
