@@ -53,6 +53,22 @@ const hasGetText = ({has}) => Object.keys(has)
     .map(key => `${key}: ${(has[key] * 100).toFixed(0)}`)
     .join(', ');
 
+const UNITS_PER_CART = 100;
+const DAYS_PER_MONTH = 30;
+const MONTHS_PER_YEAR = 12;
+
+const Carts = {
+    perYear: (x)  => ({
+        toDailyCarts: () => x / MONTHS_PER_YEAR / DAYS_PER_MONTH,
+        toMonthlyCarts: () => x / MONTHS_PER_YEAR,
+        toYearlyCarts: () => x,
+    }),
+};
+
+const Units = {
+    perYear: (x) => Carts.perYear(x / UNITS_PER_CART),
+};
+
 export const STRUCTURES = {
     [STRUCTURE_TYPES.ENTRY]: {
         size: {width: 1, height: 1},
@@ -92,12 +108,13 @@ export const STRUCTURES = {
             water: 0,
             reserves: {
                 needsPerOccupant: {
-                    WHEAT: 0.08,
+                    // Two month's worth
+                    WHEAT: Units.perYear(6).toMonthlyCarts() * 2,
                 },
                 needs: {},
                 has: {},
                 consumesPerOccupant: {
-                    WHEAT: 0.005,
+                    WHEAT: Units.perYear(6).toDailyCarts(),
                 },
             },
             religiousAccess: {},
@@ -178,7 +195,7 @@ export const STRUCTURES = {
             },
             product: {
                 status: 0,
-                rate: 0.1,
+                rate: Carts.perYear(19.2).toDailyCarts(),
                 max: 2,
                 type: 'WHEAT',
             },
