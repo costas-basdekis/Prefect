@@ -2,3 +2,4 @@ node_modules/
 src/client/public/*.hot-update.js
 src/client/public/*.hot-update.json
 package-lock.json
+*.goutputstream-*
