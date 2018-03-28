@@ -112,12 +112,7 @@ export class BaseGrid extends React.PureComponent {
     }
 
     getTileOrder(tile, options) {
-        return (tile.x + options.structureWidth - 1)
-            + (tile.y + options.structureHeight - 1)
-            // Large buildings should be rendered before 1-tile buildings, in
-            // the same line
-            + ((options.structureWidth > 1 || options.structureHeight > 1)
-                ? -0.5 : 0);
+        return (tile.x - 1) + (tile.y - 1);
     }
 
     getTileOptions(tile) {
@@ -202,10 +197,11 @@ export class BaseGrid extends React.PureComponent {
             stroke={stroke} strokeWidth={strokeWidth}
             fill={fill}
             key={key}
-            onMouseLeave={this.onTileUnHover(x, y)}
-            onMouseEnter={this.onTileHover(x, y)}
-            onMouseDown={this.onMouseDown(x, y)}
-            onMouseUp={this.onMouseUp(x, y)} />
+            data-x={x} data-y={y}
+            onMouseLeave={this.onTileUnHover}
+            onMouseEnter={this.onTileHover}
+            onMouseDown={this.onMouseDown}
+            onMouseUp={this.onMouseUp} />
     }
 
     tileText({x, y, width, height, text, stroke="default", fill="default"}) {
@@ -242,25 +238,33 @@ export class BaseGrid extends React.PureComponent {
             z={x + y} />
     }
 
-    onTileHover = (x, y) => (e) => {
+    onTileHover = (e) => {
+        const {x: rawX, y: rawY} = e.target.dataset;
+        const x = parseInt(rawX), y = parseInt(rawY);
         this.setHovered(x, y);
         if (e.buttons === 1) {
             this.setSelectionEnd(x, y);
         }
     }
 
-    onTileUnHover = (x, y) => (e) => {
+    onTileUnHover = (e) => {
+        const {x: rawX, y: rawY} = e.target.dataset;
+        const x = parseInt(rawX), y = parseInt(rawY);
         this.setHovered(null, null);
     }
 
-    onMouseDown = (x, y) => (e) => {
+    onMouseDown = (e) => {
+        const {x: rawX, y: rawY} = e.target.dataset;
+        const x = parseInt(rawX), y = parseInt(rawY);
         if (e.buttons !== 1) {
             return;
         }
         this.setSelectionStart(x, y);
     }
 
-    onMouseUp = (x, y) => (e) => {
+    onMouseUp = (e) => {
+        const {x: rawX, y: rawY} = e.target.dataset;
+        const x = parseInt(rawX), y = parseInt(rawY);
         if (e.buttons & 1) {
             return;
         }

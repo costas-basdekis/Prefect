@@ -115,6 +115,15 @@ class UCStructures extends BaseGrid {
         RoadTextures(true, true, true, true, 109),
     ];
 
+    getTileOrder(tile, options) {
+        return (tile.x + options.structureWidth - 1)
+            + (tile.y + options.structureHeight - 1)
+            // Large buildings should be rendered before 1-tile buildings, in
+            // the same line
+            + ((options.structureWidth > 1 || options.structureHeight > 1)
+                ? -0.5 : 0);
+    }
+
     getTileOptions({tile}) {
         let useImageTemplate;
         const offsets = [
