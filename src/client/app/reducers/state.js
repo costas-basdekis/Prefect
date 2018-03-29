@@ -1,7 +1,7 @@
 import * as actions from '../actions/actions.js'
 import { Reducer } from './base.js'
-import { STRUCTURES } from './structures.js'
-import { PEOPLE } from './people.js'
+import { STRUCTURES } from './structures/consts.js'
+import { PEOPLE } from './people/consts.js'
 import { choice, range } from '../utils.js'
 
 export class StateReducer extends Reducer {

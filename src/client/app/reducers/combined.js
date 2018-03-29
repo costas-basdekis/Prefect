@@ -3,6 +3,7 @@ import { StateReducer } from './state.js'
 import { TerrainReducer } from './terrain.js'
 import { StructuresReducer } from './structures.js'
 import { PeopleReducer } from './people.js'
+import { WorkerReducer } from './workers.js'
 import { TickReducer } from './tick.js'
 import { BulkImmutableHandler } from '../BulkImmutable.js'
 
@@ -12,8 +13,9 @@ class CombinedReducer {
         TerrainReducer,
         StructuresReducer,
         PeopleReducer,
+        WorkerReducer,
         TickReducer,
-    ];
+    ].concat(PeopleReducer.reducersClasses);
 
     constructor() {
         this.state = StateReducer.createInitialState();

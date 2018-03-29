@@ -1,6 +1,6 @@
 import React from 'react';
 import { Symbols } from './Symbols.jsx';
-import { PEOPLE_TYPES } from '../reducers/people.js'
+import { PEOPLE_TYPES } from '../reducers/people/consts.js'
 import { connect4, range, withKey } from '../utils.js'
 
 const RECT_WIDTH = 20, RECT_HEIGHT = 20;
