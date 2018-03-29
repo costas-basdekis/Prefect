@@ -20,6 +20,13 @@ export class TerrainReducer extends Reducer {
     ];
 
     initialiseState() {
+        Object.assign(this.state, {
+            properties: {
+                width: 25,
+                height: 25,
+            },
+            terrain: {},
+        });
         this.resizeTerrain();
     }
 

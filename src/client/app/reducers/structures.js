@@ -322,6 +322,17 @@ export class StructuresReducer extends Reducer {
         actions.TICK,
     ];
 
+    initialiseState() {
+        Object.assign(this.state, {
+            structures: {},
+            layers: {
+                water: {},
+            },
+            nextStructureId: 1,
+            structuresKeysById: {},
+        });
+    }
+
     [actions.TICK] (action) {
         this.regradeHouses();
         this.updateWorks();

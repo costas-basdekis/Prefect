@@ -109,6 +109,18 @@ export class PeopleReducer extends Reducer {
         actions.ANIMATION_TICK,
     ];
 
+    initialiseState() {
+        Object.assign(this.state, {
+            people: {},
+            nextPersonId: 1,
+            population: 0,
+            workers: 0,
+            allocatedWorkers: 0,
+            neededWorkers: 0,
+            workerRatio: 0.33,
+        });
+    }
+
     [actions.TICK] (action) {
         this.removePeople();
         this.settleNewcomers();

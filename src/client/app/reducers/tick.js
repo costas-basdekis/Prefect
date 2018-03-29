@@ -8,6 +8,16 @@ export class TickReducer extends Reducer {
         actions.ANIMATION_TICK,
     ];
 
+    initialiseState() {
+        Object.assign(this.state, {
+            date: {
+                year: -50, month: 0, day: 1,
+                ticks: 0,
+                start: {year: -50, month: 0, day: 1},
+            },
+        });
+    }
+
     set ticks(value) {
         this.state.date.ticks = value;
     }

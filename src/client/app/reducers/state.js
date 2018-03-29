@@ -7,29 +7,6 @@ import { choice, range } from '../utils.js'
 export class StateReducer extends Reducer {
     static createInitialState() {
         return {
-            properties: {
-                width: 25,
-                height: 25,
-            },
-            terrain: {},
-            structures: {},
-            layers: {
-                water: {},
-            },
-            nextStructureId: 1,
-            structuresKeysById: {},
-            people: {},
-            nextPersonId: 1,
-            population: 0,
-            workers: 0,
-            allocatedWorkers: 0,
-            neededWorkers: 0,
-            workerRatio: 0.33,
-            date: {
-                year: -50, month: 0, day: 1,
-                ticks: 0,
-                start: {year: -50, month: 0, day: 1},
-            },
             money: 10000,
             version: 4,
         };
