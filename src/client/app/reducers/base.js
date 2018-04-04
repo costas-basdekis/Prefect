@@ -1,24 +1,36 @@
 import { PEOPLE_TYPES } from './people/consts.js'
 import { STRUCTURE_TYPES } from './structures/consts.js'
+import { lattice, withKey, sum } from '../utils.js'
 
 export class Reducer {
     actions = null;
 
+    static asReducer(state) {
+        const reducer = new this(state || {});
+        return reducer.reduce.bind(this);
+    }
+
     constructor(state) {
+        if (!state) {
+            throw new Error("Got invalid state");
+        }
         this.state = state;
     }
 
+    initialiseState(state) {
+        //
+    }
+
     reduce(state, action) {
+        if (!state) {
+            throw new Error("Got invalid state");
+        }
         if (this.actions.indexOf(action.type) < 0) {
             return;
         }
 
         this.state = state;
         return this[action.type](action);
-    }
-
-    initialiseState(state) {
-        return state;
     }
 
     get ticks() {

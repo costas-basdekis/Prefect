@@ -1,6 +1,7 @@
 import { Person } from './person.js'
 import { PEOPLE_TYPES, PEOPLE } from './consts.js'
 import { STRUCTURE_TYPES } from '../structures/consts.js'
+import { sum } from '../../utils.js'
 
 export class Homeless extends Person {
     type = PEOPLE_TYPES.HOMELESS;
@@ -57,5 +58,9 @@ export class Homeless extends Person {
         }
 
         return false;
+    }
+
+    removePerson(person) {
+        //
     }
 }

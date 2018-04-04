@@ -4,9 +4,9 @@ import { createStore } from 'redux'
 import { Provider } from 'react-redux'
 
 import Root from './containers/Root.jsx';
-import { reducer, initialState } from './reducers/combined.js'
+import { MainReducer } from './reducers/main.js'
 
-const store = createStore(reducer, initialState());
+const store = createStore(MainReducer.asReducer());
 const appEl = document.getElementById('app');
 
 function render() {

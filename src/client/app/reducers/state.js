@@ -5,11 +5,11 @@ import { PEOPLE } from './people/consts.js'
 import { choice, range } from '../utils.js'
 
 export class StateReducer extends Reducer {
-    static createInitialState() {
-        return {
+    initialiseState() {
+        Object.assign(this.state, {
             money: 10000,
             version: 4,
-        };
+        });
     }
 
     static Migrations = [

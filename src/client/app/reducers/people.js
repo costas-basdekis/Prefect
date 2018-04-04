@@ -1,4 +1,4 @@
-import { Reducer } from './base.js'
+import { CombinedReducer } from './combined.js'
 import { Newcomer } from './people/newcomer.js'
 import { Homeless } from './people/homeless.js'
 import { WorkerSeeker } from './people/workerSeeker.js'
@@ -9,7 +9,7 @@ import { MarketSeller } from './people/marketSeller.js'
 import { MarketBuyer } from './people/marketBuyer.js'
 import { CartPusher } from './people/cartPusher.js'
 
-export class PeopleReducer extends Reducer {
+export class PeopleReducer extends CombinedReducer {
     static reducersClasses = [
         Newcomer,
         Homeless,
@@ -21,8 +21,6 @@ export class PeopleReducer extends Reducer {
         MarketBuyer,
         CartPusher,
     ];
-
-    actions = [];
 
     initialiseState() {
         Object.assign(this.state, {

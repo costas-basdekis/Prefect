@@ -1,6 +1,7 @@
 import { Person } from './person.js'
 import { PEOPLE_TYPES, PEOPLE } from './consts.js'
 import { STRUCTURE_TYPES } from '../structures/consts.js'
+import { sum } from '../../utils.js'
 
 export class Newcomer extends Person {
     type = PEOPLE_TYPES.NEWCOMER;

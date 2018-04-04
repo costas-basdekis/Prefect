@@ -1,5 +1,6 @@
 import { WorkerWanderer } from './workerWanderer.js'
 import { PEOPLE_TYPES, PEOPLE } from './consts.js'
+import { dict } from '../../utils.js'
 
 export class MarketSeller extends WorkerWanderer {
     type = PEOPLE_TYPES.MARKET_SELLER;
