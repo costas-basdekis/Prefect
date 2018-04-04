@@ -335,6 +335,9 @@ export class UCPeople extends React.PureComponent {
     }
 
     personCircle({x, y, circleX, circleY, radius, id, stroke, fill, strokeWidth}) {
+        if (isNaN(circleX) || isNaN(circleY)) {
+            throw new Error("Got NaN for circle coords");
+        }
         return <circle
             cx={circleX} cy={circleY}
             r={radius}

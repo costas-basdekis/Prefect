@@ -78,6 +78,9 @@ export class Person extends Reducer {
     }
 
     movePerson(person, {targetX, targetY}, fraction) {
+        if (targetX === undefined || targetY === undefined || isNaN(targetX) || isNaN(targetY)) {
+            throw new Error("Got invalid targetX and/or targetY");
+        }
         const {x, y} = person.position;
         const dX = targetX - x, dY = targetY - y;
         const delta = Math.sqrt(dX * dX + dY * dY);

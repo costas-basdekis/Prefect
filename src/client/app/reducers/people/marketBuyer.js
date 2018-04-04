@@ -40,6 +40,7 @@ export class MarketBuyer extends Person {
         const cartPusher = super.createPerson({
             type: this.type,
             position: path[0],
+            nextPosition: path[0],
             path: path.slice(1),
             workId: work.id,
             storeId: store.id,
@@ -139,6 +140,9 @@ export class MarketBuyer extends Person {
                         returning = person.returning;
                     }
                 }
+            }
+            if (nextPosition.x === undefined || nextPosition.y === undefined || isNaN(nextPosition.x) || isNaN(nextPosition.y)) {
+                throw new Error("Got invalid next position");
             }
             Object.assign(person, {
                 nextPosition: {...nextPosition},

@@ -1,30 +1,18 @@
-import * as actions from '../actions/actions.js'
-import { StateReducer } from './state.js'
-import { TerrainReducer } from './terrain.js'
-import { StructuresReducer } from './structures.js'
-import { PeopleReducer } from './people.js'
-import { WorkerReducer } from './workers.js'
-import { TickReducer } from './tick.js'
-import { BulkImmutableHandler } from '../BulkImmutable.js'
+import { Reducer } from './base.js'
 
-class CombinedReducer {
-    reducersClasses = [
-        StateReducer,
-        TerrainReducer,
-        StructuresReducer,
-        PeopleReducer,
-        WorkerReducer,
-        TickReducer,
-    ].concat(PeopleReducer.reducersClasses);
+export class CombinedReducer extends Reducer {
+    actions = [];
+    static reducersClasses = null;
 
-    constructor() {
-        this.state = StateReducer.createInitialState();
-        this.reducers = this.reducersClasses.map(_class => new _class(this.state));
-        return this.initialiseState();
+    static asReducer(state) {
+        const reducer = new this(state || {});
+        return reducer.reduce.bind(reducer);
     }
 
-    createInitialState() {
-        return StateReducer.createInitialState();
+    constructor(state) {
+        super(state);
+        this.reducers = this.constructor.reducersClasses.map(_class => new _class(state));
+        return this.initialiseState();
     }
 
     initialiseState() {
@@ -33,42 +21,11 @@ class CombinedReducer {
         }
     }
 
-    handler = null;
-
-    onHandlerUpdate(handler, path, action, prop, value) {
-        if (['animationFraction', 'x', 'y'].indexOf(prop) >= 0) {
-            return;
-        }
-        console.log(path, action, prop, value);
-    }
-
-    makeHandler(state) {
-        if (!state) {
-            return this.handler;
-        }
-        if (this.handler && (this.handler.cached === state || this.handler.proxy === state) ) {
-            return this.handler;
-        }
-        this.handler = new BulkImmutableHandler(state);
-        // this.handler.updates.push(this.onHandlerUpdate.bind(this));
-
-        return this.handler;
-    }
-
     reduce(state, action) {
-        let proxy = this.state = this.makeHandler(state).proxy;
-
         for (const reducer of this.reducers) {
-            const reducedState = reducer.reduce(proxy, action);
-            this.state = proxy = this.makeHandler(reducedState).proxy;
+            state = reducer.reduce(state, action) || state;
         }
 
-        const newState = this.handler.freeze();
-
-        return newState;
+        return state;
     }
 }
-
-export const reducerInstance = new CombinedReducer();
-export const reducer = reducerInstance.reduce.bind(reducerInstance);
-export const initialState = () => reducerInstance.state;
