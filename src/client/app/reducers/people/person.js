@@ -1,7 +1,7 @@
 import * as actions from '../../actions/actions.js'
 import { Reducer } from '../base.js'
 import { PEOPLE_TYPES, PEOPLE } from './consts.js'
-import { STRUCTURE_TYPES } from '../structures.js'
+import { STRUCTURE_TYPES } from '../structures/consts.js'
 
 export class Person extends Reducer {
     type = null;

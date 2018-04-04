@@ -1,6 +1,6 @@
 import React from 'react';
 import { connect4 } from '../utils.js'
-import { STRUCTURE_TYPES } from '../reducers/structures.js'
+import { STRUCTURE_TYPES } from '../reducers/structures/consts.js'
 import { BaseGrid, getTileTransform } from './BaseGrid.jsx'
 
 function StructureTextures(key, filename, start, count, xCount=1, yCount=1) {
