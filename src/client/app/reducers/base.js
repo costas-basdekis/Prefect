@@ -254,4 +254,15 @@ export class Reducer {
             .filter(structure => structure.data.occupants > 0);
         return housesWithPeople;
     }
+
+    getStructureTiles(structure) {
+        return lattice(
+            [structure.start.x, structure.end.x + 1],
+            [structure.start.y, structure.end.y + 1]);
+    }
+
+    getGridLattice() {
+        return lattice(this.state.properties.width, this.state.properties.height)
+            .map(([x, y]) => [x, y, `${x}.${y}`]);
+    }
 }

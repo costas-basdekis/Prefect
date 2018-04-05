@@ -28,5 +28,6 @@ export class PeopleReducer extends CombinedReducer {
             nextPersonId: 1,
             population: 0,
         });
+        super.initialiseState();
     }
 }
