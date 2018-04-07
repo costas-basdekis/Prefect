@@ -3,6 +3,7 @@ import { Symbols } from './Symbols.jsx';
 import { PEOPLE_TYPES } from '../reducers/people/consts.js'
 import { connect4, range, withKey } from '../utils.js'
 
+// eslint-disable-next-line
 const RECT_WIDTH = 20, RECT_HEIGHT = 20;
 const TILE_WIDTH = 58, TILE_HEIGHT = 30;
 const getPersonTransform = (width, height) => [
@@ -226,7 +227,7 @@ export class UCPeople extends React.PureComponent {
         let useImageTemplate;
         if (this.props.texturesKeys) {
             const direction = this.getDirection(person);
-            let animationIndex = parseInt((person.animationFraction || 0) * DEFAULT_ANIMATION_COUNT);
+            let animationIndex = parseInt((person.animationFraction || 0) * DEFAULT_ANIMATION_COUNT, 10);
             if (animationIndex >= DEFAULT_ANIMATION_COUNT) {
                 animationIndex = 0;
             }
@@ -274,6 +275,7 @@ export class UCPeople extends React.PureComponent {
             }, direction])
             .map(([{x, y}, direction]) => [Math.sqrt(x * x + y * y), direction])
             .sort(withKey(([distance, direction]) => distance));
+        // eslint-disable-next-line no-unused-vars
         const [distance, direction] = orderedDirectionsMap[0];
         return direction;
     }

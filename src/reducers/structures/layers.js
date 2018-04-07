@@ -1,4 +1,3 @@
-import * as actions from '../../actions/actions.js'
 import { CombinedReducer } from '../combined.js'
 import { WaterLayerReducer } from './layers/water.js'
 

@@ -229,7 +229,6 @@ export class UCRoot extends React.Component {
         } else {
             return this.isSelectedRoadYThenX(x, y);
         }
-        return false;
     }
 
     isSelectedRoadXThenY(x, y) {
@@ -344,7 +343,6 @@ export class UCRoot extends React.Component {
         const frJson = new FileReader();
         frJson.onload = () => {
             let jsonTextureManager;
-            const startTime = new Date();
             try {
                 jsonTextureManager = new JsonTextureManager(frJson.result);
             } catch (e) {

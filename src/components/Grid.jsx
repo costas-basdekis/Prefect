@@ -1,4 +1,3 @@
-import React from 'react';
 import { connect4 } from '../utils.js'
 import { BaseGrid } from './BaseGrid.jsx'
 

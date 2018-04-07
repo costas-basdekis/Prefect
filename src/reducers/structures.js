@@ -1,4 +1,3 @@
-import * as actions from '../actions/actions.js'
 import { CombinedReducer } from './combined.js'
 import { HouseReducer } from './structures/house.js'
 import { WorkReducer } from './structures/work.js'

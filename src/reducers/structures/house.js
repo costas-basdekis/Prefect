@@ -1,7 +1,7 @@
 import * as actions from '../../actions/actions.js'
 import { Reducer } from '../base.js'
 import { lattice, dict } from '../../utils.js'
-import { STRUCTURE_TYPES, STRUCTURES, HOUSE_STATS } from './consts.js'
+import { STRUCTURE_TYPES, HOUSE_STATS } from './consts.js'
 
 export class HouseReducer extends Reducer {
     actions = [
@@ -64,7 +64,7 @@ export class HouseReducer extends Reducer {
             const newNeeds =
                 Object.entries(needsPerOccupant)
                 .map(([key, value]) => [key, value * occupants])
-                .filter(([key, newNeed]) => newNeed != needs[key]);
+                .filter(([key, newNeed]) => newNeed !== needs[key]);
             if (!newNeeds.length) {
                 continue;
             }

@@ -1,4 +1,3 @@
-import * as actions from '../../../actions/actions.js'
 import { LayerReducer } from './layer.js'
 import { lattice } from '../../../utils.js'
 import { STRUCTURE_TYPES } from '../consts.js'

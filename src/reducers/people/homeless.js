@@ -1,5 +1,5 @@
 import { Person } from './person.js'
-import { PEOPLE_TYPES, PEOPLE } from './consts.js'
+import { PEOPLE_TYPES } from './consts.js'
 import { STRUCTURE_TYPES } from '../structures/consts.js'
 import { sum } from '../../utils.js'
 
@@ -9,12 +9,12 @@ export class Homeless extends Person {
     tickPeople() {
         const houses = this.getStructuresOfType(STRUCTURE_TYPES.HOUSE);
         for (const house of houses) {
-            const spaceOverused = house.data.occupants - house.data.space;
+            const spaceOverused = house.data.occupants - house.data.space
                 - sum(house.data.newcomers.map(newcomerId => this.people[newcomerId].count));
             if (spaceOverused <= 0) {
                 continue;
             }
-            const homeless = this.createPerson(spaceOverused, house);
+            this.createPerson(spaceOverused, house);
             house.data.occupants -= spaceOverused;
         }
     }
@@ -29,10 +29,6 @@ export class Homeless extends Person {
         });
 
         return newcomer;
-    }
-
-    reroutePeople() {
-        //
     }
 
     reroutePeople() {

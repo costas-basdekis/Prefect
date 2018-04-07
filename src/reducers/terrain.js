@@ -31,8 +31,8 @@ export class TerrainReducer extends Reducer {
     }
 
     [actions.RESIZE_TERRAIN] (action) {
-        const newWidth = parseInt(action.width),
-            newHeight = parseInt(action.height);
+        const newWidth = parseInt(action.width, 10),
+            newHeight = parseInt(action.height, 10);
         Object.assign(this.state.properties, {
             width: newWidth,
             height: newHeight,

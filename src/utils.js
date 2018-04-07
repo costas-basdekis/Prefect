@@ -27,7 +27,7 @@ export function range(startOrEnd, end, step=1) {
         start = startOrEnd;
     }
 
-    const size = parseInt(Math.abs(end - start));
+    const size = parseInt(Math.abs(end - start), 10);
     let array = Array.from(Array(size).keys());
     if (start) {
         array = array.map(i => i * step + start);

@@ -114,8 +114,7 @@ export class Reducer {
             return {};
         }
         const {store, path} = paths
-            .sort((lhs, rhs) => lhs.path.length - rhs.path.length)
-            [0];
+            .sort((lhs, rhs) => lhs.path.length - rhs.path.length)[0];
 
         return {store, path};
     }
@@ -139,8 +138,7 @@ export class Reducer {
             return {};
         }
         const {store, path} = paths
-            .sort((lhs, rhs) => lhs.path.length - rhs.path.length)
-            [0];
+            .sort((lhs, rhs) => lhs.path.length - rhs.path.length)[0];
 
         return {store, path};
     }
@@ -216,8 +214,7 @@ export class Reducer {
                 .map(([x, y]) => `${x}.${y}`)
                 .map(key => this.structures[key])
                 .filter(structure => structure)
-                .filter(structure => structure.type === STRUCTURE_TYPES.ROAD)
-                [0]
+                .filter(structure => structure.type === STRUCTURE_TYPES.ROAD)[0]
             );
 
         return adjacentBuildings;

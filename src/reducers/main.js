@@ -1,4 +1,3 @@
-import * as actions from '../actions/actions.js'
 import { CombinedImmutableReducer } from './combinedImmutable.js'
 import { StateReducer } from './state.js'
 import { TerrainReducer } from './terrain.js'
@@ -16,10 +15,6 @@ export class MainReducer extends CombinedImmutableReducer {
         WorkerReducer,
         TickReducer,
     ];
-
-    constructor(state) {
-        super(state);
-    }
 
     onHandlerUpdate(handler, path, action, prop, value) {
         if (['animationFraction', 'x', 'y'].indexOf(prop) >= 0) {

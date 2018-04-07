@@ -15,7 +15,7 @@ export class StateReducer extends Reducer {
     static Migrations = [
         {version: 1, migrate: state => {
             state.workerRatio = 0.33;
-            state.workers = parseInt(state.population * state.workerRatio);
+            state.workers = parseInt(state.population * state.workerRatio, 10);
         }}, {version: 2, migrate: state => {
             state.allocatedWorkers = 0;
             state.neededWorkers = 0;

@@ -1,6 +1,5 @@
 import * as actions from '../actions/actions.js'
 import { Reducer } from './base.js'
-import { dict } from '../utils.js'
 
 export class TickReducer extends Reducer {
     actions = [

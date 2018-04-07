@@ -1,5 +1,5 @@
 import { WorkerWanderer } from './workerWanderer.js'
-import { PEOPLE_TYPES, PEOPLE } from './consts.js'
+import { PEOPLE_TYPES } from './consts.js'
 import { dict } from '../../utils.js'
 
 export class MarketSeller extends WorkerWanderer {
@@ -18,7 +18,9 @@ export class MarketSeller extends WorkerWanderer {
                 const {needs, has} = house.data.reserves;
                 const willGet = dict(Object.keys(needs)
                     .filter(key => needs[key] > (has[key] || 0))
+                    // eslint-disable-next-line no-loop-func
                     .filter(key => (sellerHas[key] || 0) > 0)
+                    // eslint-disable-next-line no-loop-func
                     .map(key => [key, Math.min(needs[key] - (has[key] || 0), sellerHas[key])])
                 );
                 if (!Object.keys(willGet).length) {
@@ -26,10 +28,12 @@ export class MarketSeller extends WorkerWanderer {
                 }
                 Object.assign(work.data.reserves.has,
                     dict(Object.keys(willGet)
+                        // eslint-disable-next-line no-loop-func
                         .map(key => [key, sellerHas[key] - willGet[key]]))
                 );
                 Object.assign(work.data.reserves.needs,
                     dict(Object.keys(willGet)
+                        // eslint-disable-next-line no-loop-func
                         .map(key => [key, sellerNeeds[key] + willGet[key]]))
                 );
                 ({has: sellerHas, needs: sellerNeeds} = work.data.reserves);

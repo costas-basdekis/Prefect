@@ -1,5 +1,5 @@
 import React from 'react';
-import { connect4, lattice } from '../utils.js'
+import { connect4 } from '../utils.js'
 
 class UCStatusBar extends React.PureComponent {
     LABELS = [
@@ -64,7 +64,7 @@ class UCStatusBar extends React.PureComponent {
 
     renderLabels(labels, lineIndex) {
         const x0 = 0, height = 25, y0 = lineIndex * (height + 5);
-        let nextX = 0;
+        let nextX = x0;
         function addX(width) {
             const x = nextX;
             nextX += width;

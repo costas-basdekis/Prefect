@@ -23,7 +23,7 @@ export class WorkerReducer extends Reducer {
 
     calculateWorkers() {
         this.state.workers = parseInt(
-            this.state.population * this.state.workerRatio);
+            this.state.population * this.state.workerRatio, 10);
     }
 
     assignWorkers() {

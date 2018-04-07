@@ -186,7 +186,7 @@ class SG2Reader {
     }
 
     maxBitmapRecords(header) {
-        if (header.version == 0xd3) {
+        if (header.version === 0xd3) {
             return 100; // SG2
         } else {
             return 200; // SG3
@@ -207,8 +207,8 @@ class SG2Reader {
             }
         } else if (header.version === 0xd5 || header.version === 0xd6) {
             // SG3 file: filesize = the actual size of the sg3 file
-            if (header.sg_filesize == 74480
-                || this.stream.length == header.sg_filesize) {
+            if (header.sg_filesize === 74480
+                || this.stream.length === header.sg_filesize) {
                 return true;
             } else {
                 throw new Error(
@@ -314,7 +314,7 @@ class Reader555 {
         let i = 0;
         for (let y = 0 ; y < image.workRecord.height ; y++) {
             for (let x = 0 ; x < image.workRecord.width ; x++, i += 2) {
-                this.read555Pixel(image, pixels, x, y, buffer[i] | buffer[i + 1] << 8);
+                this.read555Pixel(image, pixels, x, y, buffer[i] | (buffer[i + 1] << 8));
             }
         }
     }
@@ -352,7 +352,7 @@ class Reader555 {
             tileBytes  = ISOMETRIC_TILE_BYTES;
             tileHeight = ISOMETRIC_TILE_HEIGHT;
             tileWidth  = ISOMETRIC_TILE_WIDTH;
-        } else if (ISOMETRIC_LARGE_TILE_HEIGHT * size == height) {
+        } else if (ISOMETRIC_LARGE_TILE_HEIGHT * size === height) {
             /* Large (emperor) tile */
             tileBytes  = ISOMETRIC_LARGE_TILE_BYTES;
             tileHeight = ISOMETRIC_LARGE_TILE_HEIGHT;
@@ -363,7 +363,7 @@ class Reader555 {
 
         // Check if buffer length is enough: (width + 2) * height / 2 * 2bpp
         const dataLength = (width + 2) * height;
-        if (dataLength != image.workRecord.uncompressed_length) {
+        if (dataLength !== image.workRecord.uncompressed_length) {
             throw new Error(
                 `Data length (${dataLength}) doesn't match footprint size `
                 + `({image.workRecord.uncompressed_length})`)

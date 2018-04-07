@@ -1,5 +1,5 @@
 import React from 'react';
-import { connect4, select4, lattice, dict, withKey } from '../utils.js'
+import { connect4, dict } from '../utils.js'
 
 const NOTHING = {};
 

@@ -1,5 +1,4 @@
 import { Wanderer } from './wanderer.js'
-import { PEOPLE_TYPES, PEOPLE } from './consts.js'
 
 export class WorkerWanderer extends Wanderer {
     shouldAddPerson(structure) {

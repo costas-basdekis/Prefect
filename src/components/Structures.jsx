@@ -1,4 +1,3 @@
-import React from 'react';
 import { connect4 } from '../utils.js'
 import { STRUCTURE_TYPES } from '../reducers/structures/consts.js'
 import { BaseGrid, getTileTransform } from './BaseGrid.jsx'
@@ -164,7 +163,7 @@ class UCStructures extends BaseGrid {
                 const status = tile.parent.data.product.status % 1;
                 const minStatus = CROP_PERCENTAGE * tile.index, maxStatus = CROP_PERCENTAGE * (tile.index + 1);
                 const cropStatus = ((status < minStatus) ? minStatus : ((status > maxStatus) ? maxStatus : status)) - minStatus;
-                const cropIndex = parseInt((cropStatus / CROP_PERCENTAGE * (CROP_ANIMATION_COUNT - 1)).toFixed(0));
+                const cropIndex = parseInt((cropStatus / CROP_PERCENTAGE * (CROP_ANIMATION_COUNT - 1)).toFixed(0), 10);
                 useImageTemplate = `${STRUCTURE_TYPES.WHEAT_FARM}.crop.${cropIndex}`;
             } else if (tile.type in this.props.texturesKeys) {
                 useImageTemplate = tile.type;

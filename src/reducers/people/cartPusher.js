@@ -1,5 +1,5 @@
 import { Person } from './person.js'
-import { PEOPLE_TYPES, PEOPLE } from './consts.js'
+import { PEOPLE_TYPES } from './consts.js'
 import { sum } from '../../utils.js'
 
 export class CartPusher extends Person {

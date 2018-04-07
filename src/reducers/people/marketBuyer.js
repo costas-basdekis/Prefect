@@ -1,5 +1,5 @@
 import { Person } from './person.js'
-import { PEOPLE_TYPES, PEOPLE } from './consts.js'
+import { PEOPLE_TYPES } from './consts.js'
 
 export class MarketBuyer extends Person {
     type = PEOPLE_TYPES.MARKET_BUYER;
@@ -12,15 +12,13 @@ export class MarketBuyer extends Person {
             }
             const biggestNeedAmount = Object.values(work.data.reserves.needs)
                 .sort()
-                .reverse()
-                [0];
+                .reverse()[0];
             if (!biggestNeedAmount) {
                 continue;
             }
             const biggestNeed = Object.keys(work.data.reserves.needs)
                 .filter(key => work.data.reserves.needs[key] === biggestNeedAmount)
-                .sort()
-                [0];
+                .sort()[0];
             const {startRoad, direction} = this.getFirstRoad(work);
             if (!startRoad || !direction) {
                 continue;

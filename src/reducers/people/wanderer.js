@@ -1,5 +1,4 @@
 import { Person } from './person.js'
-import { PEOPLE_TYPES, PEOPLE } from './consts.js'
 import { STRUCTURE_TYPES } from '../structures/consts.js'
 
 export class Wanderer extends Person {
@@ -109,7 +108,7 @@ export class Wanderer extends Person {
                     currentPosition: {...person.position},
                     nextPosition: {...nextRoad.start},
                     pastKeys: person.pastKeys
-                        .filter(key => key != nextRoad.key)
+                        .filter(key => key !== nextRoad.key)
                         .concat([nextRoad.key]),
                     direction,
                 });

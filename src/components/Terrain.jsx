@@ -1,6 +1,4 @@
-import React from 'react';
-import { createSelector } from 'reselect';
-import { connect4, lattice, range } from '../utils.js'
+import { connect4 } from '../utils.js'
 import { TILE_TYPES, GROUND_TYPES } from '../reducers/terrain.js'
 import { BaseGrid, TILE_TRANSFORM } from './BaseGrid.jsx'
 

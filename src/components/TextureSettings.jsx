@@ -1,6 +1,5 @@
 import React from 'react';
 import { connect4 } from '../utils.js'
-import { titleCase } from 'change-case'
 
 const shouldBeChecked = window.shouldBeChecked;
 const saveChecked = window.saveChecked;

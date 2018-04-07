@@ -1,7 +1,6 @@
 import React from 'react';
 import { Symbols } from './Symbols.jsx';
-import { createSelector } from 'reselect';
-import { connect4, select4, lattice, dict, withKey } from '../utils.js'
+import { lattice, withKey } from '../utils.js'
 
 const RECT_WIDTH = 20, RECT_HEIGHT = 20;
 const TILE_WIDTH = 58, TILE_HEIGHT = 30;
@@ -240,7 +239,7 @@ export class BaseGrid extends React.PureComponent {
 
     onTileHover = (e) => {
         const {x: rawX, y: rawY} = e.target.dataset;
-        const x = parseInt(rawX), y = parseInt(rawY);
+        const x = parseInt(rawX, 10), y = parseInt(rawY, 10);
         this.setHovered(x, y);
         if (e.buttons === 1) {
             this.setSelectionEnd(x, y);
@@ -248,14 +247,12 @@ export class BaseGrid extends React.PureComponent {
     }
 
     onTileUnHover = (e) => {
-        const {x: rawX, y: rawY} = e.target.dataset;
-        const x = parseInt(rawX), y = parseInt(rawY);
         this.setHovered(null, null);
     }
 
     onMouseDown = (e) => {
         const {x: rawX, y: rawY} = e.target.dataset;
-        const x = parseInt(rawX), y = parseInt(rawY);
+        const x = parseInt(rawX, 10), y = parseInt(rawY, 10);
         if (e.buttons !== 1) {
             return;
         }
@@ -263,8 +260,6 @@ export class BaseGrid extends React.PureComponent {
     }
 
     onMouseUp = (e) => {
-        const {x: rawX, y: rawY} = e.target.dataset;
-        const x = parseInt(rawX), y = parseInt(rawY);
         if (e.buttons & 1) {
             return;
         }

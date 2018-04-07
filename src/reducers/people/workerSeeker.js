@@ -1,5 +1,5 @@
 import { Wanderer } from './wanderer.js'
-import { PEOPLE_TYPES, PEOPLE } from './consts.js'
+import { PEOPLE_TYPES } from './consts.js'
 
 export class WorkerSeeker extends Wanderer {
     type = PEOPLE_TYPES.WORKER_SEEKER;

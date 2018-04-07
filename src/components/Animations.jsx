@@ -1,7 +1,7 @@
 import React from 'react';
 import { ANIMATIONS_DEFINITIONS } from './People.jsx';
 import { List } from './List.jsx';
-import { connect4, dict } from '../utils.js'
+import { dict } from '../utils.js'
 
 const PEOPLE_ANIMATIONS = ANIMATIONS_DEFINITIONS
     .reduce((total, [filename, item]) => total.concat(item), []);
@@ -22,8 +22,8 @@ export class Animations extends React.PureComponent {
 
     render() {
         const key = this.state.selectedKey;
+        // eslint-disable-next-line no-unused-vars
         const [animationCount, directions] = PEOPLE_ANIMATIONS_BY_KEY[key] || [0, []];
-        const direction = this.state.selectedDirection;
         let animationIndex = this.state.animationIndex;
         let images = [];
         if (key && directions && this.props.sg2Manager) {

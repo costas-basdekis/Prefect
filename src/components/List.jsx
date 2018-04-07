@@ -11,10 +11,10 @@ export class List extends React.PureComponent {
             x=0, y=0,
             width=120, height=300,
             itemWidth=100, itemHeight=20,
-            items=[], onSelect,
+            items=[],
             fill="#eee", stroke="gold", fontSize="8px"
         } = this.props;
-        const visibleItemCount = parseInt((height / (itemHeight + 5)).toFixed(0));
+        const visibleItemCount = parseInt((height / (itemHeight + 5)).toFixed(0), 10);
         const visibleItems = items
             .map((item, index) => [item, index])
             .slice(this.state.scrollIndex, this.state.scrollIndex + visibleItemCount)
@@ -78,7 +78,7 @@ export class List extends React.PureComponent {
     }
 
     select = (e) => {
-        const selectedIndex = parseInt(e.target.dataset.index);
+        const selectedIndex = parseInt(e.target.dataset.index, 10);
         const selectedItem = (this.props.items || [])[selectedIndex];
         this.setState({selectedIndex});
         if (this.props.onSelect) {
@@ -98,13 +98,11 @@ export class List extends React.PureComponent {
 
     moveDown = () => {
         const {
-            x=0, y=0,
-            width=120, height=300,
-            itemWidth=100, itemHeight=20,
-            items=[], onSelect,
-            fill="#eee", stroke="gold", fontSize="8px"
+            height=300,
+            itemHeight=20,
+            items=[],
         } = this.props;
-        const visibleItemCount = parseInt((height / (itemHeight + 5)).toFixed(0));
+        const visibleItemCount = parseInt((height / (itemHeight + 5)).toFixed(0), 10);
         const invisibleItemCount = items.length - visibleItemCount;
 
         this.setState(state => {
