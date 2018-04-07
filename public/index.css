@@ -1,0 +1,9 @@
+[name=description]:not(:checked) ~ #description {
+    display: none;
+}
+[name=roadmap]:not(:checked) ~ #roadmap {
+    display: none;
+}
+.hidden {
+    display: none;
+}

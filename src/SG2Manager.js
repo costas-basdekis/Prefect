@@ -1,11 +1,11 @@
-const sglib = require("exports-loader?SG2Reader,Reader555!../../../textures/sglib.js")
 import { TextureManager } from './TextureManager.js'
+import { SG2Reader, Reader555 } from './sglib.js';
 
 export class SG2Manager extends TextureManager {
     constructor(contentSg2, filenameSg2, content555, filename555) {
         super();
-        this.sg2Reader = new sglib.SG2Reader(contentSg2, filenameSg2);
-        this.reader555 = new sglib.Reader555(content555, filename555);
+        this.sg2Reader = new SG2Reader(contentSg2, filenameSg2);
+        this.reader555 = new Reader555(content555, filename555);
         this.sg2Reader.read();
         this.canvas = document.createElement('canvas');
         this.ctx = this.canvas.getContext('2d', {alpha: true, depth: true});

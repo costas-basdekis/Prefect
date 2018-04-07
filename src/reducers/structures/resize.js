@@ -17,7 +17,7 @@ export class ResizeReducer extends Reducer {
         this.state.population = 0;
         for (const [x, y] of lattice(width, height)) {
             const key = `${x}.${y}`;
-            const oldStructure = oldStructures[key];
+            const oldStructure = this.structures[key];
             if (!oldStructure || oldStructure.main) {
                 continue;
             }
