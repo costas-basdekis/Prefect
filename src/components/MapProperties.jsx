@@ -2,8 +2,8 @@ import React from 'react';
 import { connect4 } from '../utils.js';
 import { titleCase } from 'change-case';
 
-const shouldBeChecked = window.shouldBeChecked;
-const saveChecked = window.saveChecked;
+const shouldBeChecked = window.shouldBeChecked || (() => false);
+const saveChecked = window.saveChecked || (() => undefined);
 
 class UCMapProperties extends React.Component {
     static mapStateToProps(state, ownProps) {
